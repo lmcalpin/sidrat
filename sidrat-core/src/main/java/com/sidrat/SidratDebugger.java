@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.sidrat.event.SidratClock;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 import com.sidrat.event.tracking.LocalVariables;
@@ -49,6 +50,7 @@ public class SidratDebugger {
             store("sidrat");
         }
         DEBUGGER_CONTEXT.set(this);
+        SidratClock.instance().reset();
         
         // include the target classe's package
         includePackage(packageFromClassName(className));

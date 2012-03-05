@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
-import com.sidrat.event.SidratEvent;
+import com.google.common.collect.Maps;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventReader;
@@ -187,6 +187,9 @@ public class SidratReplay {
     }
 
     public Map<String, Object> locals() {
+        if (event == null) {
+            return Maps.newHashMap();
+        }
         return eventReader.locals(event.getTime());
     }
 

@@ -60,7 +60,7 @@ public class MethodInstrumenter {
                     String src = "com.sidrat.event.SidratCallback.exec(" + lineNumber + ");";
                     compile(iterator, frame.index, src, true);
                 }
-                // wrap assignments to track changes in variable values
+                // track assignments to fields
                 if (frame.decodedOp instanceof DecodedFieldOp) {
                     DecodedFieldOp op = (DecodedFieldOp) frame.decodedOp;
                     if (!op.isRead()) {
@@ -79,13 +79,16 @@ public class MethodInstrumenter {
                             compile(iterator, iterator.lookAhead().index, src, true);
                         }
                     }
+                // track assignments to local variables
                 } else if (frame.decodedOp instanceof DecodedLocalVariableOp) {
                     DecodedLocalVariableOp op = (DecodedLocalVariableOp) frame.decodedOp;
                     if (!op.load) {
-                        String localVariable = op.localVariable.name;
-                        String variableTag = SidratDebugger.instance().getLocalVariablesTracker().found(ctBehavior, op.localVariable);
-                        String src = "com.sidrat.event.SidratCallback.variableChanged(" + localVariable + ",\"" + variableTag + "\"," + lineNumber + ");";
-                        compile(iterator, iterator.lookAhead().index, src, true);
+                        if (op.localVariable != null) {
+                            String localVariable = op.localVariable.name;
+                            String variableTag = SidratDebugger.instance().getLocalVariablesTracker().found(ctBehavior, op.localVariable);
+                            String src = "com.sidrat.event.SidratCallback.variableChanged(" + localVariable + ",\"" + variableTag + "\"," + lineNumber + ");";
+                            compile(iterator, iterator.lookAhead().index, src, true);
+                        }
                     }
                 }
             }

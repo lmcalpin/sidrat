@@ -22,4 +22,8 @@ public class SidratClock {
     public long current() {
         return time.get();
     }
+    
+    public void reset() {
+        time.set(0L);
+    }
 }
