@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Sidrat
+Bundle-SymbolicName: sidrat-eclipse-plugin; singleton:=true
+Bundle-Version: 1.0.0.0
+Bundle-Activator: com.metatrope.sidrat.eclipse.Activator
+Bundle-Vendor: Metatrope
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

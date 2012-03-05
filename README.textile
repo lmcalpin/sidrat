@@ -1,0 +1,14 @@
+h1. sidrat
+
+This is intended to eventually become my implementation of a recording debugger, also known as a 'time travelling debugger'.
+
+The idea is to record every method invocation, as well as all field and Object instantiation and assignments, so you can replay
+the recording later.  Because you would be simply reviewing a recording, you can jump around 'in time' to see how fields and
+variables change over time; you could debug a system on a machine that can't access databases or other external systems that
+the application is dependent on.
+
+This system can record and replay events at and supports local variable tracking, but it's pretty far from being complete.
+
+If you are interested in the concept, look at the "Omniscient Debugger":http://www.lambdacs.com/debugger/.  I don't intend to 
+implement my debugger in quite the same way, but the idea is similar.
+
