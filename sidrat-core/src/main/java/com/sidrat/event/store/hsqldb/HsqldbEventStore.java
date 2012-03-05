@@ -85,7 +85,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         }
         Long variableID = persistedVariables.get(event.getUniqueID());
         Long eventID = event.getTime();
-        jdbcHelper.insert("INSERT INTO variable_updates VALUES(?, ?, ?, ?)", eventID, variableID, String.valueOf(event.getValue()), 0);
+        jdbcHelper.insert("INSERT INTO variable_updates VALUES(?, ?, ?, ?)", eventID, variableID, String.valueOf(event.getValue()), event.getReferenceUniqueID());
     }
 
     @Override
@@ -99,7 +99,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         }
         Long fieldID = persistedFields.get(variableUuid);
         Long eventID = event.getTime();
-        jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, fieldID, event.getValue(), 0);
+        jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, fieldID, event.getValue(), event.getReferenceUniqueID());
     }
     
     private Long foundObject(Object obj) {

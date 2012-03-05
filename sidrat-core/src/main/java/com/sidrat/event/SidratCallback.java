@@ -4,6 +4,7 @@ import java.util.Stack;
 
 import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.StackFrame;
+import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Objects;
@@ -47,7 +48,9 @@ public class SidratCallback {
     public static void variableChanged(Object val, String var) {
         StackFrame frame = currentFrame();
         TrackedVariable trackedVar = SidratDebugger.instance().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
-        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(val, trackedVar));
+        TrackedObject trackedObj = SidratDebugger.instance().getObjectTracker().found(val);
+        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj != null ? trackedObj : val,
+                trackedVar));
         if (logger.isDebugEnabled())
             logger.debug("variableChanged " + var + " set to " + val);
     }

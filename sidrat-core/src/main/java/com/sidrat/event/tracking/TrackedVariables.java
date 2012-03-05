@@ -9,12 +9,11 @@ import javassist.CtBehavior;
 
 import com.sidrat.util.Pair;
 
-
-public class LocalVariables {
-    private Map<String, TrackedVariable> observedVariables;
+public class TrackedVariables {
+    private Map<String, TrackedVariable> trackedVariables;
     
-    public LocalVariables() {
-        this.observedVariables = new HashMap<String, TrackedVariable>();
+    public TrackedVariables() {
+        this.trackedVariables = new HashMap<String, TrackedVariable>();
     }
     
     public void found(CtBehavior ctBehavior, LocalVariable var) {
@@ -24,13 +23,13 @@ public class LocalVariables {
     
     public void found(String className, String method, String var, Pair<Integer,Integer> lineNumberRange) {
         String id = TrackedVariable.getIdentity(className, method, var);
-        if (!observedVariables.containsKey(id))
-            observedVariables.put(id, new TrackedVariable(id, var, lineNumberRange));
+        if (!trackedVariables.containsKey(id))
+            trackedVariables.put(id, new TrackedVariable(id, var, lineNumberRange));
     }
     
     public TrackedVariable lookup(String className, String method, String var) {
         String id = TrackedVariable.getIdentity(className, method, var);
-        return observedVariables.get(id);
+        return trackedVariables.get(id);
     }
     
     public static Pair<Integer,Integer> getLineNumberRange(CtBehavior ctBehavior, LocalVariable lv) {

@@ -7,7 +7,8 @@ import java.util.List;
 import com.sidrat.event.SidratClock;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
-import com.sidrat.event.tracking.LocalVariables;
+import com.sidrat.event.tracking.TrackedObjects;
+import com.sidrat.event.tracking.TrackedVariables;
 import com.sidrat.instrument.InstrumentingClassLoader;
 import com.sidrat.util.Logger;
 
@@ -18,7 +19,8 @@ public class SidratDebugger {
     private List<String> allowedPackages = new ArrayList<String>();
 
     // data trackers
-    private LocalVariables localVariablesTracker = new LocalVariables();
+    private TrackedObjects objectsTracker = new TrackedObjects();
+    private TrackedVariables localVariablesTracker = new TrackedVariables();
     
     private EventStore eventStore;
     
@@ -77,11 +79,19 @@ public class SidratDebugger {
         return className.substring(0, className.lastIndexOf('.'));
     }
 
-    public LocalVariables getLocalVariablesTracker() {
+    public TrackedVariables getLocalVariablesTracker() {
         return localVariablesTracker;
+    }
+
+    public TrackedObjects getObjectTracker() {
+        return objectsTracker;
     }
 
     public EventStore getEventStore() {
         return eventStore;
+    }
+    
+    public boolean allow(Class<?> clazz) {
+        return allowedPackages.contains(clazz.getPackage().getName()); 
     }
 }

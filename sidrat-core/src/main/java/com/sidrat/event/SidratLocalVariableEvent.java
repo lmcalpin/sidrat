@@ -1,5 +1,7 @@
 package com.sidrat.event;
 
+import com.sidrat.event.tracking.TrackedObject;
+import com.sidrat.event.tracking.TrackedObjects;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Pair;
 
@@ -8,6 +10,7 @@ public class SidratLocalVariableEvent extends SidratEvent {
     private String variableName;
     private Object value;
     private Pair<Integer,Integer> variableValidityRange; // for local variables
+    private Long referenceUniqueID;
     
     public SidratLocalVariableEvent(Long time) {
         super(time);
@@ -22,41 +25,34 @@ public class SidratLocalVariableEvent extends SidratEvent {
         return event;
     }
     
+    public static SidratLocalVariableEvent variableChanged(TrackedObject val, TrackedVariable var) {
+        SidratLocalVariableEvent event = variableChanged(val.getValue(), var);
+        event.referenceUniqueID = val.getUniqueID();
+        return event;
+    }
+    
     public String getUniqueID() {
         return uniqueID;
-    }
-
-    public void setUniqueID(String uniqueID) {
-        this.uniqueID = uniqueID;
     }
 
     public String getVariableName() {
         return variableName;
     }
 
-    public void setVariableName(String variableName) {
-        this.variableName = variableName;
-    }
-
     public Object getValue() {
         return value;
     }
 
-    public void setValue(Object value) {
-        this.value = value;
-    }
-
+   
     public Pair<Integer, Integer> getVariableValidityRange() {
         return variableValidityRange;
     }
 
-    public void setVariableValidityRange(Pair<Integer, Integer> variableValidityRange) {
-        this.variableValidityRange = variableValidityRange;
+    /**
+     * @return a unique identifier for the object that this field points to
+     */
+    public Long getReferenceUniqueID() {
+        return referenceUniqueID;
     }
-    
-    public void setVariableValidityRange(Integer rangeStart, Integer rangeEnd) {
-        this.setVariableValidityRange(new Pair<Integer,Integer>(rangeStart, rangeEnd));
-    }
-
 }
 
