@@ -25,7 +25,12 @@ public class SidratDebugger {
     public static ThreadLocal<SidratDebugger> DEBUGGER_CONTEXT = new ThreadLocal<SidratDebugger>();
     
     public static SidratDebugger instance() {
-        return DEBUGGER_CONTEXT.get();
+        SidratDebugger debugger = DEBUGGER_CONTEXT.get();
+        if (debugger == null) {
+            debugger = new SidratDebugger();
+            DEBUGGER_CONTEXT.set(debugger);
+        }
+        return debugger;
     }
     
     public SidratDebugger includePackage(String pkg) {
