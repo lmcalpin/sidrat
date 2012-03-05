@@ -15,6 +15,7 @@ import com.sidrat.event.SidratLocalVariableEvent;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.util.Jdbc;
 import com.sidrat.util.JdbcConnectionProvider;
+import com.sidrat.util.Objects;
 
 // This implementation of EventStore uses HSQLDB to store events and run state information (changes to variables and fields).  It
 // is highly unlikely that this will work even remotely well for any "real world" project.  It is only intended to support debugging 
@@ -89,23 +90,36 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
 
     @Override
     public void store(SidratFieldChangedEvent event) {
-        String ownerClassName = event.getOwnerClass().getName();
-        Long ownerID = event.getObjectInstanceID();
-        String variableUuid = ownerClassName + ":" + ownerID;
-        if (!persistedObjects.keySet().contains(ownerID)) {
-            jdbcHelper.insert("INSERT INTO objects VALUES(?,?)", ownerID, ownerClassName);
-        }
+        String ownerClassName = event.getOwner().getClass().getName();
+        Long objectID = foundObject(event.getOwner());
+        String variableUuid = ownerClassName + ":" + objectID;
         if (!persistedFields.keySet().contains(variableUuid)) {
-            Long id = jdbcHelper.insert("INSERT INTO fields(object_id,field_name) VALUES(?,?)", ownerID, event.getVariableName());
+            Long id = jdbcHelper.insert("INSERT INTO fields(object_id,field_name) VALUES(?,?)", objectID, event.getVariableName());
             persistedFields.put(variableUuid, id);
         }
         Long fieldID = persistedFields.get(variableUuid);
         Long eventID = event.getTime();
         jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, fieldID, event.getValue(), 0);
     }
+    
+    private Long foundObject(Object obj) {
+        String ownerClassName = obj.getClass().getName();
+        Long objectID = Objects.getUniqueIdentifier(obj);
+        if (!persistedObjects.keySet().contains(objectID)) {
+            jdbcHelper.insert("INSERT INTO objects VALUES(?,?)", objectID, ownerClassName);
+        }
+        return objectID;
+    }
 
     @Override
     public void store(SidratExecutionEvent event) {
+        // store the object that owns the method in which we are executing
+        // TODO: currently this value is null if the method is static, but we probably want to capture the class anyway?
+        Long objectInstanceID = null;
+        Object executionContext = event.getExecutionContext();
+        if (executionContext != null) {
+            objectInstanceID = foundObject(executionContext);
+        }
         if (!persistedThreads.contains(event.getThreadID())) {
             jdbcHelper.update("INSERT INTO threads VALUES(?,?)", event.getThreadID(), event.getThreadName());
             persistedThreads.add(event.getThreadID());
@@ -122,7 +136,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
             methods.put(combinedMethodName, id);
         }
         Long methodID = methods.get(combinedMethodName);
-        jdbcHelper.insert("INSERT INTO executions VALUES(?, ?, ?, ?, ?, ?)", event.getTime(), event.getObjectInstanceID(), event.getThreadID(), methodID, event.isEntering(), event.getLineNumber());
+        jdbcHelper.insert("INSERT INTO executions VALUES(?, ?, ?, ?, ?, ?)", event.getTime(), objectInstanceID, event.getThreadID(), methodID, event.isEntering(), event.getLineNumber());
         event.print(System.out);
     }
 

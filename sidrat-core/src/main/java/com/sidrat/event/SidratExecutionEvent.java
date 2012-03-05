@@ -5,7 +5,7 @@ import java.io.PrintStream;
 import com.sidrat.event.tracking.StackFrame;
 
 public class SidratExecutionEvent extends SidratEvent {
-    private Long objectInstanceID;
+    private Object executionContext;
     private String className;
     private String methodName;
     private String threadName;
@@ -13,25 +13,25 @@ public class SidratExecutionEvent extends SidratEvent {
     private int lineNumber;
     private boolean entering;
 
-    public SidratExecutionEvent(Long objectInstanceID, int lineNumber, boolean entering) {
-        this(SidratClock.instance().next(), objectInstanceID, SidratCallback.currentFrame(), Thread.currentThread().getId(), Thread.currentThread().getName(), lineNumber, entering);
+    public SidratExecutionEvent(Object executionContext, int lineNumber, boolean entering) {
+        this(SidratClock.instance().next(), executionContext, SidratCallback.currentFrame(), Thread.currentThread().getId(), Thread.currentThread().getName(), lineNumber, entering);
     }
 
-    public SidratExecutionEvent(Long time, Long objectInstanceID, StackFrame stackFrame, Long threadID, String threadName, int lineNumber, boolean entering) {
+    public SidratExecutionEvent(Long time, Object executionContext, StackFrame stackFrame, Long threadID, String threadName, int lineNumber, boolean entering) {
         super(time);
         if (stackFrame != null) {
             this.className = stackFrame.getClassName();
             this.methodName = stackFrame.getMethodName();
         }
-        this.objectInstanceID = objectInstanceID;
+        this.executionContext = executionContext;
         this.threadName = threadName;
         this.threadID = threadID;
         this.lineNumber = lineNumber;
         this.entering = entering;
     }
 
-    public static SidratExecutionEvent exec(Long objectInstanceID, int lineNumber, boolean entering) {
-        SidratExecutionEvent event = new SidratExecutionEvent(objectInstanceID, lineNumber, entering);
+    public static SidratExecutionEvent exec(Object executionContext, int lineNumber, boolean entering) {
+        SidratExecutionEvent event = new SidratExecutionEvent(executionContext, lineNumber, entering);
         return event;
     }
 
@@ -39,8 +39,8 @@ public class SidratExecutionEvent extends SidratEvent {
         return entering;
     }
 
-    public Long getObjectInstanceID() {
-        return objectInstanceID;
+    public Object getExecutionContext() {
+        return executionContext;
     }
 
     public String getClassName() {

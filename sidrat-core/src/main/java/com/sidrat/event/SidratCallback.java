@@ -36,10 +36,8 @@ public class SidratCallback {
     
     public static void exec(int lineNumber) {
         StackFrame frame = currentFrame();
-        Long objectID = null;
-        if (frame != null)
-            objectID = frame.getObjectInstanceID();
-        SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(objectID, lineNumber, ENTERING_FRAME.get());
+        Object executionContext = frame.getObject();
+        SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(executionContext, lineNumber, ENTERING_FRAME.get());
         ENTERING_FRAME.set(Boolean.FALSE);
         SidratDebugger.instance().getEventStore().store(executionEvent);
         if (logger.isDebugEnabled())

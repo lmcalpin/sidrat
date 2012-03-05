@@ -17,8 +17,6 @@ public class SidratReplayTest {
     public static void setup() {
         SidratDebugger debugger = new SidratDebugger();
         debugger.store("sidrat-localvars-test").debug(ForLocalVariableTest.class.getName());
-        
-        debugger = new SidratDebugger();
         debugger.store("sidrat-fields-test").debug(ForFieldTrackingTest.class.getName());
     }
     

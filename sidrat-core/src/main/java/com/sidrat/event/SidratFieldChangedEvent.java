@@ -1,10 +1,8 @@
 package com.sidrat.event;
 
-import com.sidrat.util.Objects;
 
 public class SidratFieldChangedEvent extends SidratEvent {
-    private Class<?> ownerClass; // non-null if the event involves a change to a field
-    private Long objectInstanceID;
+    private Object owner;
     private String uniqueID;
     private String variableName;
     private Object value;
@@ -15,20 +13,15 @@ public class SidratFieldChangedEvent extends SidratEvent {
 
     public static SidratFieldChangedEvent fieldChanged(Object obj, Object val, String name) {
         SidratFieldChangedEvent event = new SidratFieldChangedEvent(SidratClock.instance().current());
-        event.ownerClass = obj.getClass();
-        event.objectInstanceID = Objects.getUniqueIdentifier(obj);
+        event.owner = obj;
         event.value = val;
         event.variableName = name;
-        event.uniqueID = event.ownerClass.getName() + "." + name;
+        event.uniqueID = event.getClass().getName() + "." + name;
         return event;
     }
 
-    public Class<?> getOwnerClass() {
-        return ownerClass;
-    }
-
-    public Long getObjectInstanceID() {
-        return objectInstanceID;
+    public Object getOwner() {
+        return owner;
     }
 
     public String getUniqueID() {

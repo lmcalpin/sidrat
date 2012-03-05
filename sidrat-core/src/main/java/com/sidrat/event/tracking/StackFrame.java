@@ -20,12 +20,6 @@ public class StackFrame {
         return object;
     }
     
-    public Long getObjectInstanceID() {
-        if (object == null)
-            return null;
-        return Objects.getUniqueIdentifier(object);
-    }
-
     public String getClassName() {
         return className;
     }
