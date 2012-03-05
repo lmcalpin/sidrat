@@ -71,11 +71,11 @@ public class MethodInstrumenter {
                             int constantPoolIndex = op.parameterValues[0];
                             String refClassName = codeAttr.getConstPool().getFieldrefClassName(constantPoolIndex);
                             String staticFieldRef = refClassName.replaceAll("\\$", ".") + "." + fieldName;
-                            String src = "com.sidrat.event.SidratCallback.fieldChanged(" + refClassName + ".class, " + staticFieldRef + ",\"" + fieldName + "\"," + lineNumber + ");";
+                            String src = "com.sidrat.event.SidratCallback.fieldChanged(" + refClassName + ".class, " + staticFieldRef + ",\"" + fieldName + "\");";
                             compile(iterator, iterator.lookAhead().index, src, true);
                         } else {
                             String localVariable = ((ValueFromLocalVariable)frame.stackBefore.stack.get(1)).localVariable.name;
-                            String src = "com.sidrat.event.SidratCallback.fieldChanged(" + localVariable + ", " + localVariable + "." + fieldName + ",\"" + fieldName + "\"," + lineNumber + ");";
+                            String src = "com.sidrat.event.SidratCallback.fieldChanged(" + localVariable + ", " + localVariable + "." + fieldName + ",\"" + fieldName + "\");";
                             compile(iterator, iterator.lookAhead().index, src, true);
                         }
                     }
@@ -85,8 +85,8 @@ public class MethodInstrumenter {
                     if (!op.load) {
                         if (op.localVariable != null) {
                             String localVariable = op.localVariable.name;
-                            String variableTag = SidratDebugger.instance().getLocalVariablesTracker().found(ctBehavior, op.localVariable);
-                            String src = "com.sidrat.event.SidratCallback.variableChanged(" + localVariable + ",\"" + variableTag + "\"," + lineNumber + ");";
+                            SidratDebugger.instance().getLocalVariablesTracker().found(ctBehavior, op.localVariable);
+                            String src = "com.sidrat.event.SidratCallback.variableChanged(" + localVariable + ",\"" + op.localVariable.name + "\");";
                             compile(iterator, iterator.lookAhead().index, src, true);
                         }
                     }

@@ -44,33 +44,85 @@ public class SidratCallback {
             logger.debug(frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
     }
     
-    public static void variableChanged(Object val, String variableTag, int lineNumber) {
-        TrackedVariable var = SidratDebugger.instance().getLocalVariablesTracker().lookup(variableTag);
-        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(val, var));
+    public static void variableChanged(Object val, String var) {
+        StackFrame frame = currentFrame();
+        TrackedVariable trackedVar = SidratDebugger.instance().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
+        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(val, trackedVar));
         if (logger.isDebugEnabled())
-            logger.debug("variableChanged " + variableTag + " set to " + val + " @ " + lineNumber);
+            logger.debug("variableChanged " + var + " set to " + val);
     }
     
-    public static void variableChanged(int val, String variableTag, int lineNumber) {
-        TrackedVariable var = SidratDebugger.instance().getLocalVariablesTracker().lookup(variableTag);
-        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(new Integer(val), var));
-        if (logger.isDebugEnabled())
-            logger.debug("variableChanged " + variableTag + " set to " + val + " @ " + lineNumber);
+    public static void variableChanged(byte val, String var) {
+        variableChanged(Byte.valueOf(val), var);
     }
     
-    public static void fieldChanged(Object obj, Object val, String name, int lineNumber) {
+    public static void variableChanged(int val, String var) {
+        variableChanged(Integer.valueOf(val), var);
+    }
+    
+    public static void variableChanged(short val, String var) {
+        variableChanged(Short.valueOf(val), var);
+    }
+    
+    public static void variableChanged(long val, String var) {
+        variableChanged(Long.valueOf(val), var);
+    }
+    
+    public static void variableChanged(boolean val, String var) {
+        variableChanged(Boolean.valueOf(val), var);
+    }
+    
+    public static void variableChanged(float val, String var) {
+        variableChanged(Float.valueOf(val), var);
+    }
+    
+    public static void variableChanged(double val, String var) {
+        variableChanged(Double.valueOf(val), var);
+    }
+    
+    public static void variableChanged(char val, String var) {
+        variableChanged(Character.valueOf(val), var);
+    }
+    
+    public static void fieldChanged(Object obj, Object val, String name) {
         SidratDebugger.instance().getEventStore().store(SidratFieldChangedEvent.fieldChanged(obj, val, name));
         if (logger.isDebugEnabled())
-            logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val + " @ " + lineNumber);
+            logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
     }
     
-    public static void fieldChanged(Object obj, int val, String name, int lineNumber) {
-        SidratDebugger.instance().getEventStore().store(SidratFieldChangedEvent.fieldChanged(obj, new Integer(val), name));
-        if (logger.isDebugEnabled())
-            logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val + " @ " + lineNumber);
+    public static void fieldChanged(Object obj, byte val, String name) {
+        fieldChanged(obj, Byte.valueOf(val), name);
     }
     
-    public static void pushFrame(Object obj, String className, String methodName) {
+    public static void fieldChanged(Object obj, int val, String name) {
+        fieldChanged(obj, Integer.valueOf(val), name);
+    }
+    
+    public static void fieldChanged(Object obj, short val, String name) {
+        fieldChanged(obj, Short.valueOf(val), name);
+    }
+    
+    public static void fieldChanged(Object obj, long val, String name) {
+        fieldChanged(obj, Long.valueOf(val), name);
+    }
+    
+    public static void fieldChanged(Object obj, boolean val, String name) {
+        fieldChanged(obj, Boolean.valueOf(val), name);
+    }
+    
+    public static void fieldChanged(Object obj, float val, String name) {
+        fieldChanged(obj, Float.valueOf(val), name);
+    }
+    
+    public static void fieldChanged(Object obj, double val, String name) {
+        fieldChanged(obj, Double.valueOf(val), name);
+    }
+    
+    public static void fieldChanged(Object obj, char val, String name) {
+        fieldChanged(obj, Character.valueOf(val), name);
+    }
+    
+    static void pushFrame(Object obj, String className, String methodName) {
         StackFrame frame = new StackFrame(obj, className, methodName);
         Stack<StackFrame> stackFrames = STACK_FRAMES.get();
         if (stackFrames == null) {
@@ -80,7 +132,7 @@ public class SidratCallback {
         stackFrames.push(frame);
     }
     
-    public static void popFrame() {
+    static void popFrame() {
         Stack<StackFrame> stackFrames = STACK_FRAMES.get();
         stackFrames.pop();
     }
