@@ -14,6 +14,7 @@ import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventReader;
 import com.sidrat.util.Logger;
+import com.sidrat.util.Tuple3;
 
 import org.apache.commons.io.FileUtils;
 
@@ -91,8 +92,9 @@ public class SidratReplay {
                                 }
                             } else {
                                 String breakpoint = parsedLine[1];
-                                if (eventReader.executions(breakpoint).size() > 0) {
-                                    breakpoints.add(parsedLine[1]);
+                                Tuple3<String, String, Integer> split = split(breakpoint);
+                                if (eventReader.executions(split.getValue1(), split.getValue2(), split.getValue3()).size() > 0) {
+                                    breakpoints.add(breakpoint);
                                 }
                             }
                         }
@@ -102,7 +104,8 @@ public class SidratReplay {
                             if (parsedLine.length != 2) {
                                 out.println("Breakpoint # is required.");
                             } else {
-                                int index = Integer.parseInt(parsedLine[1]);
+                                String breakpoint = parsedLine[1];
+                                int index = Integer.parseInt(breakpoint);
                                 breakpoints.remove(index);
                             }
                         }
@@ -129,7 +132,7 @@ public class SidratReplay {
                         break;
                     case "l": // locals
                         {
-                            Map<String,Object> localVariables = locals();
+                            Map<String, Object> localVariables = locals();
                             for (String key : localVariables.keySet()) {
                                 Object value = localVariables.get(key);
                                 out.println(key + ": " + value);
@@ -202,6 +205,15 @@ public class SidratReplay {
         String sourceCode = lookupSourceCode(event);
         if (sourceCode != null)
             out.println(sourceCode);
+    }
+
+    public Tuple3<String, String, Integer> split(String breakpoint) {
+        String[] split = breakpoint.split(":");
+        Integer lineNumber = Integer.parseInt(split[1]);
+        int lastDot = split[0].lastIndexOf('.');
+        String method = split[0].substring(lastDot + 1);
+        String className = split[0].substring(0, lastDot);
+        return new Tuple3<String, String, Integer>(className, method, lineNumber);
     }
 
     private String lastFile;

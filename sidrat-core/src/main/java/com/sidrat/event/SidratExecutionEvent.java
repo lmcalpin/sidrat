@@ -2,6 +2,7 @@ package com.sidrat.event;
 
 import java.io.PrintStream;
 
+import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.StackFrame;
 
 public class SidratExecutionEvent extends SidratEvent {
@@ -14,7 +15,7 @@ public class SidratExecutionEvent extends SidratEvent {
     private boolean entering;
 
     public SidratExecutionEvent(Object executionContext, int lineNumber, boolean entering) {
-        this(SidratClock.instance().next(), executionContext, SidratCallback.currentFrame(), Thread.currentThread().getId(), Thread.currentThread().getName(), lineNumber, entering);
+        this(SidratDebugger.instance().getClock().next(), executionContext, SidratCallback.currentFrame(), Thread.currentThread().getId(), Thread.currentThread().getName(), lineNumber, entering);
     }
 
     public SidratExecutionEvent(Long time, Object executionContext, StackFrame stackFrame, Long threadID, String threadName, int lineNumber, boolean entering) {

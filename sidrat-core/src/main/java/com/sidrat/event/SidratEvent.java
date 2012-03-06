@@ -1,7 +1,6 @@
 package com.sidrat.event;
 
-
-public abstract class SidratEvent {
+abstract class SidratEvent {
     private Long time;
     
     public SidratEvent(Long time) {

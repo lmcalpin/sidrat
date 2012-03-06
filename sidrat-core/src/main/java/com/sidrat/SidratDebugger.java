@@ -21,6 +21,7 @@ public class SidratDebugger {
     // data trackers
     private TrackedObjects objectsTracker = new TrackedObjects();
     private TrackedVariables localVariablesTracker = new TrackedVariables();
+    private SidratClock clock = new SidratClock();
     
     private EventStore eventStore;
     
@@ -57,9 +58,8 @@ public class SidratDebugger {
             store("sidrat");
         }
         DEBUGGER_CONTEXT.set(this);
-        SidratClock.instance().reset();
         
-        // include the target classe's package
+        // include the target class' package
         includePackage(packageFromClassName(className));
         
         classLoader = new InstrumentingClassLoader(allowedPackages);
@@ -72,6 +72,7 @@ public class SidratDebugger {
             throw new SidratProcessingException(e);
         } finally {
             this.eventStore.close();
+            this.classLoader = null;
         }
     }
     
@@ -89,6 +90,10 @@ public class SidratDebugger {
 
     public EventStore getEventStore() {
         return eventStore;
+    }
+    
+    public SidratClock getClock() {
+        return clock;
     }
     
     public boolean allow(Class<?> clazz) {

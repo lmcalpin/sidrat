@@ -9,10 +9,7 @@ import java.util.Map;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sidrat.SidratProcessingException;
-import com.sidrat.event.SidratEvent;
 import com.sidrat.event.SidratExecutionEvent;
-import com.sidrat.event.SidratFieldChangedEvent;
-import com.sidrat.event.SidratLocalVariableEvent;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.tracking.StackFrame;
 import com.sidrat.replay.SystemState;
@@ -94,10 +91,13 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         return locals;
     }
     
-    public List<SidratEvent> executions(String loc) {
-        // TODO: return a list of SidratEvents where we execute the line of code described by 'loc'
-        // loc should be in the form 'com.pkg.ClassName.method:##'
-        return Lists.newArrayList();
+    public List<SidratExecutionEvent> executions(String className, String method, int lineNumber) {
+        List<Map<String, Object>> rows = jdbcHelper.find(EVENTS_QUERY + "WHERE clazz=? AND method=? AND lineNumber=?", className, method, lineNumber);
+        List<SidratExecutionEvent> events = Lists.newArrayList();
+        for (Map<String,Object> row : rows) {
+            events.add(getEvent(row));
+        }
+        return events;
     }
         
     private String findThread(Long threadID) {

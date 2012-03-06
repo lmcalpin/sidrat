@@ -1,5 +1,6 @@
 package com.sidrat.event;
 
+import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.TrackedObject;
 
 
@@ -15,7 +16,7 @@ public class SidratFieldChangedEvent extends SidratEvent {
     }
 
     public static SidratFieldChangedEvent fieldChanged(Object obj, Object val, String name) {
-        SidratFieldChangedEvent event = new SidratFieldChangedEvent(SidratClock.instance().current());
+        SidratFieldChangedEvent event = new SidratFieldChangedEvent(SidratDebugger.instance().getClock().current());
         event.owner = obj;
         event.value = val;
         event.variableName = name;

@@ -15,21 +15,22 @@ public class InstrumentedClass {
     private final String className, packageName;
     private Class<?> original;
     private Class<?> replacement;
-    private static ClassPool pool = ClassPool.getDefault();
-
+    private ClassPool pool;
+    
     private static final Logger logger = new Logger();
 
     private CtClass ctClass;
 
-    public InstrumentedClass(Class<?> clazz) {
+    public InstrumentedClass(ClassPool pool, Class<?> clazz) {
+        this.pool = pool;
         this.original = clazz;
         this.className = clazz.getName();
         this.packageName = clazz.getPackage().getName();
         this.replacement = createReplacement(original);
     }
 
-    public static InstrumentedClass instrument(Class<?> javaClass) {
-        return new InstrumentedClass(javaClass);
+    public static InstrumentedClass instrument(ClassPool pool, Class<?> javaClass) {
+        return new InstrumentedClass(pool, javaClass);
     }
 
     private Class<?> createReplacement(Class<?> original) {
@@ -38,7 +39,23 @@ public class InstrumentedClass {
         } catch (NotFoundException e1) {
             throw new SidratProcessingException("Could not locate: " + className);
         }
+        
+        try {
+            for (CtClass intf : ctClass.getInterfaces()) {
+                if (intf.getName().equalsIgnoreCase(Instrumented.class.getName())) {
+                    throw new SidratProcessingException("Already instrumented: " + className);
+                }
+            }
+        } catch (NotFoundException e) {
+            throw new SidratProcessingException("Failed while examining: " + className);
+        }
 
+        try {
+            ctClass.addInterface(pool.get(Instrumented.class.getName()));
+        } catch (NotFoundException e1) {
+            throw new SidratProcessingException("Failed to add marker interface to " + className);
+        }
+        
         for (final CtBehavior ctBehavior : ctClass.getDeclaredBehaviors()) {
             MethodInstrumenter methodInstrumenter = new MethodInstrumenter(ctBehavior);
             methodInstrumenter.instrument();

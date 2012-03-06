@@ -3,6 +3,8 @@ package com.sidrat.instrument;
 import java.util.ArrayList;
 import java.util.List;
 
+import javassist.ClassPool;
+
 import com.sidrat.SidratProcessingException;
 import com.sidrat.util.Logger;
 
@@ -10,9 +12,11 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
     private static final Logger logger = new Logger();
 
     private List<String> whiteList = new ArrayList<String>();
+    private ClassPool pool = new ClassPool();
 
     public InstrumentingClassLoader(List<String> packages) {
         this.whiteList = packages;
+        this.pool.appendSystemPath();
     }
 
     protected Class<?> loadClass(String className, boolean resolve) throws java.lang.ClassNotFoundException {
@@ -41,7 +45,7 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
     }
 
     private Class<?> instrument(Class<?> originalClass) throws ClassNotFoundException {
-        InstrumentedClass instrumentedClass = InstrumentedClass.instrument(originalClass);
+        InstrumentedClass instrumentedClass = InstrumentedClass.instrument(pool, originalClass);
         Class<?> replacementClass = instrumentedClass.getReplacement();
         return replacementClass;
     }

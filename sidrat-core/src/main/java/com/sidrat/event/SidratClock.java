@@ -5,13 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SidratClock {
     private final AtomicLong time;
     
-    public static SidratClock CLOCK = new SidratClock();
-    
-    public static SidratClock instance() {
-        return CLOCK;
-    }
-    
-    private SidratClock() {
+    public SidratClock() {
         time = new AtomicLong(0);
     }
 
@@ -26,4 +20,5 @@ public class SidratClock {
     public void reset() {
         time.set(0L);
     }
+    
 }
