@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.sidrat.event.SidratExecutionEvent;
+import com.sidrat.event.tracking.TrackedObject;
 
 public interface EventReader {
     /**
@@ -27,9 +28,14 @@ public interface EventReader {
     public SidratExecutionEvent findPrev(SidratExecutionEvent lastEvent);
 
     /**
-     * @return a list of local variables in scope at the specified time
+     * @return a map of local variables in scope at the specified time, and their current values
      */
-    public Map<String,Object> locals(Long time);
+    public Map<String,TrackedObject> locals(Long time);
+    
+    /**
+     * @return a map of an object's fields and current values at a specified time for a specified object
+     */
+    public Map<String,TrackedObject> eval(Long time, Long objectID);
     
     /**
      * @return a list of SidratEvents where we execute the line of code described by 'loc'

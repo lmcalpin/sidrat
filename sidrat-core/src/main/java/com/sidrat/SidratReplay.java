@@ -13,6 +13,7 @@ import com.google.common.collect.Maps;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventReader;
+import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Tuple3;
 
@@ -82,6 +83,13 @@ public class SidratReplay {
                     case "p":
                         prevEvent();
                         break;
+                    case "g":
+                        {
+                            String eventIDStr = parsedLine[1];
+                            int eventID = Integer.parseInt(eventIDStr);
+                            gotoEvent(eventID);
+                        }
+                        break;
                     case "b": // set a breakpoint
                     case "break": // set a breakpoint
                         {
@@ -130,13 +138,15 @@ public class SidratReplay {
                             };
                         }
                         break;
-                    case "l": // locals
+                    case "v": // show variables
+                    case "var":
                         {
-                            Map<String, Object> localVariables = locals();
-                            for (String key : localVariables.keySet()) {
-                                Object value = localVariables.get(key);
-                                out.println(key + ": " + value);
-                            }
+                            out.println(" - instance variables: ");
+                            Map<String, TrackedObject> instanceVariables = eval(this.event.getExecutionContext());
+                            print(instanceVariables);
+                            out.println(" - local variables: ");
+                            Map<String, TrackedObject> localVariables = locals();
+                            print(localVariables);
                         }
                         break;
                     case "q":
@@ -152,6 +162,17 @@ public class SidratReplay {
             }
         }
         out.println("Done.");
+    }
+
+    private void print(Map<String, TrackedObject> vars) {
+        for (String key : vars.keySet()) {
+            TrackedObject value = vars.get(key);
+            if (value == null) {
+                out.println(key + " = null");
+            } else {
+                out.println(key + ":" + value.getClassName() + " = " + value.getValue());
+            }
+        }
     }
 
     public void readNext() {
@@ -172,11 +193,13 @@ public class SidratReplay {
 
     public SidratExecutionEvent gotoEvent(int id) {
         event = eventReader.find(new Long(id));
+        print(event);
         return event;
     }
 
     public SidratExecutionEvent gotoEvent(Long id) {
         event = eventReader.find(id);
+        print(event);
         return event;
     }
 
@@ -189,11 +212,18 @@ public class SidratReplay {
         print(event);
     }
 
-    public Map<String, Object> locals() {
+    public Map<String, TrackedObject> locals() {
         if (event == null) {
             return Maps.newHashMap();
         }
         return eventReader.locals(event.getTime());
+    }
+
+    public Map<String, TrackedObject> eval(TrackedObject obj) {
+        if (event == null || obj == null) {
+            return Maps.newHashMap();
+        }
+        return eventReader.eval(event.getTime(), obj.getUniqueID());
     }
 
     public void print() {

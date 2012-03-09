@@ -10,6 +10,7 @@ import bytecodeparser.analysis.stack.ValueFromLocalVariable;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;
+import javassist.CtConstructor;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
@@ -49,6 +50,7 @@ public class MethodInstrumenter {
             StackAnalyzer parser = new StackAnalyzer(ctBehavior);
             Frames frames = parser.analyze();
             FrameIterator iterator = frames.iterator();
+            int flags = ctBehavior.getMethodInfo().getAccessFlags();
             while (iterator.hasNext()) {
                 Frame frame = iterator.next();
                 if (!frame.isAccessible) {
@@ -57,8 +59,13 @@ public class MethodInstrumenter {
                 int thisLineNumber = methodInfo.getLineNumber(frame.index);
                 if (thisLineNumber != lineNumber && !iterator.isLast()) {
                     this.lineNumber = thisLineNumber;
-                    String src = "com.sidrat.event.SidratCallback.exec(" + lineNumber + ");";
-                    compile(iterator, frame.index, src, true);
+                    if ((flags & AccessFlag.STATIC)  != 0) {
+                        String src = "com.sidrat.event.SidratCallback.exec(" + lineNumber + ");";
+                        compile(iterator, frame.index, src, true);
+                    } else if (!ctBehavior.isEmpty()) {
+                        String src = "com.sidrat.event.SidratCallback.exec(this, " + lineNumber + ");";
+                        compile(iterator, frame.index, src, true);
+                    }
                 }
                 // track assignments to fields
                 if (frame.decodedOp instanceof DecodedFieldOp) {
@@ -94,13 +101,12 @@ public class MethodInstrumenter {
             }
             int firstLineNumber = ainfo.lineNumber(0);
             int lastLineNumber = ainfo.lineNumber(ainfo.tableLength()-1);
-            int flags = ctBehavior.getMethodInfo().getAccessFlags();
             if ((flags & AccessFlag.STATIC)  != 0 || ctBehavior.getMethodInfo().isConstructor()) {
                 ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(\"" + className + "\",\""
-                        + methodName + "\");");
+                        + methodName + "\", $args);");
             } else {
                 ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, \"" + className + "\",\""
-                        + methodName + "\");");
+                        + methodName + "\", $args);");
             }
             ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit();");
         } catch (CannotCompileException e) {

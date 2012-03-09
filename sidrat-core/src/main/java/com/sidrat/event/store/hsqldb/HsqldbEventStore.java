@@ -13,6 +13,7 @@ import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.SidratFieldChangedEvent;
 import com.sidrat.event.SidratLocalVariableEvent;
 import com.sidrat.event.store.EventStore;
+import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.util.Jdbc;
 import com.sidrat.util.JdbcConnectionProvider;
 import com.sidrat.util.Objects;
@@ -64,10 +65,10 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         jdbcHelper.update("CREATE TABLE methods(id BIGINT IDENTITY, class_id BIGINT, name VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE executions(id BIGINT, object_id BIGINT, thread_id BIGINT, method_id BIGINT, entering BIT, lineNumber INTEGER)");
         jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, variable_name VARCHAR(255), rangeStart INTEGER, rangeEnd INTEGER)");
-        jdbcHelper.update("CREATE TABLE variable_updates(event_id BIGINT, variable_id BIGINT, value LONGVARCHAR, ref BIT)");
+        jdbcHelper.update("CREATE TABLE variable_updates(event_id BIGINT, variable_id BIGINT, value LONGVARCHAR, ref BIGINT)");
         jdbcHelper.update("CREATE TABLE objects(id BIGINT, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE fields(id BIGINT IDENTITY, object_id BIGINT, field_name VARCHAR(255))");
-        jdbcHelper.update("CREATE TABLE field_updates(event_id BIGINT, field_id BIGINT, value LONGVARCHAR, ref BIT)");
+        jdbcHelper.update("CREATE TABLE field_updates(event_id BIGINT, field_id BIGINT, value LONGVARCHAR, ref BIGINT)");
     }
 
     private Map<String, Long> persistedObjects = new HashMap<String, Long>();
@@ -85,26 +86,28 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         }
         Long variableID = persistedVariables.get(event.getUniqueID());
         Long eventID = event.getTime();
-        jdbcHelper.insert("INSERT INTO variable_updates VALUES(?, ?, ?, ?)", eventID, variableID, String.valueOf(event.getValue()), event.getReferenceUniqueID());
+        Long objectID = foundObject(event.getTrackedValue());
+        jdbcHelper.insert("INSERT INTO variable_updates VALUES(?, ?, ?, ?)", eventID, variableID, event.getTrackedValue().getValue(), objectID);
     }
 
     @Override
     public void store(SidratFieldChangedEvent event) {
-        String ownerClassName = event.getOwner().getClass().getName();
-        Long objectID = foundObject(event.getOwner());
-        String variableUuid = ownerClassName + ":" + objectID;
+        String ownerClassName = event.getOwner().getClassName();
+        Long ownerID = foundObject(event.getOwner());
+        Long objectID = foundObject(event.getTrackedValue());
+        String variableUuid = ownerClassName + ":" + objectID + ":" + event.getVariableName();
         if (!persistedFields.keySet().contains(variableUuid)) {
-            Long id = jdbcHelper.insert("INSERT INTO fields(object_id,field_name) VALUES(?,?)", objectID, event.getVariableName());
+            Long id = jdbcHelper.insert("INSERT INTO fields(object_id,field_name) VALUES(?,?)", ownerID, event.getVariableName());
             persistedFields.put(variableUuid, id);
         }
         Long fieldID = persistedFields.get(variableUuid);
         Long eventID = event.getTime();
-        jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, fieldID, event.getValue(), event.getReferenceUniqueID());
+        jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, fieldID, event.getTrackedValue().getValue(), objectID);
     }
     
-    private Long foundObject(Object obj) {
-        String ownerClassName = obj.getClass().getName();
-        Long objectID = Objects.getUniqueIdentifier(obj);
+    private Long foundObject(TrackedObject obj) {
+        String ownerClassName = obj.getClassName();
+        Long objectID = obj.getUniqueID();
         if (!persistedObjects.keySet().contains(objectID)) {
             jdbcHelper.insert("INSERT INTO objects VALUES(?,?)", objectID, ownerClassName);
         }
@@ -116,7 +119,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         // store the object that owns the method in which we are executing
         // TODO: currently this value is null if the method is static, but we probably want to capture the class anyway?
         Long objectInstanceID = null;
-        Object executionContext = event.getExecutionContext();
+        TrackedObject executionContext = event.getExecutionContext();
         if (executionContext != null) {
             objectInstanceID = foundObject(executionContext);
         }

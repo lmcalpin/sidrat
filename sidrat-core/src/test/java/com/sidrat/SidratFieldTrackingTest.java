@@ -1,11 +1,10 @@
 package com.sidrat;
 
 import com.metatrope.testprogram.ForFieldTrackingTest;
-import com.metatrope.testprogram.ForLocalVariableTest;
 
 import java.util.Map;
 
-import com.sidrat.event.SidratExecutionEvent;
+import com.sidrat.event.tracking.TrackedObject;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -23,9 +22,17 @@ public class SidratFieldTrackingTest {
         SidratReplay replay = new SidratReplay("sidrat-fields-test");
         replay.withSource("src/test/java");
         replay.gotoEvent(3);
-        Map<String,Object> locals = replay.locals();
+        Map<String,TrackedObject> locals = replay.locals();
         Assert.assertEquals(1, locals.size());
         Assert.assertTrue(locals.keySet().contains("theClass"));
+
+        TrackedObject trackedObject = (TrackedObject) locals.get("theClass");
+        Map<String,TrackedObject> fieldValues = replay.eval(trackedObject);
+        System.out.println(fieldValues);
+        
+        replay.gotoEvent(6);
+        fieldValues = replay.eval(trackedObject);
+        System.out.println(fieldValues);
         
         // TODO: lookup fields in the 'theClass' object
         // TODO: map should hold pointer to object instance in our db, not the original toString

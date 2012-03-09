@@ -4,9 +4,10 @@ import java.io.PrintStream;
 
 import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.StackFrame;
+import com.sidrat.event.tracking.TrackedObject;
 
 public class SidratExecutionEvent extends SidratEvent {
-    private Object executionContext;
+    private TrackedObject executionContext;
     private String className;
     private String methodName;
     private String threadName;
@@ -14,11 +15,11 @@ public class SidratExecutionEvent extends SidratEvent {
     private int lineNumber;
     private boolean entering;
 
-    public SidratExecutionEvent(Object executionContext, int lineNumber, boolean entering) {
+    public SidratExecutionEvent(TrackedObject executionContext, int lineNumber, boolean entering) {
         this(SidratDebugger.instance().getClock().next(), executionContext, SidratCallback.currentFrame(), Thread.currentThread().getId(), Thread.currentThread().getName(), lineNumber, entering);
     }
 
-    public SidratExecutionEvent(Long time, Object executionContext, StackFrame stackFrame, Long threadID, String threadName, int lineNumber, boolean entering) {
+    public SidratExecutionEvent(Long time, TrackedObject executionContext, StackFrame stackFrame, Long threadID, String threadName, int lineNumber, boolean entering) {
         super(time);
         if (stackFrame != null) {
             this.className = stackFrame.getClassName();
@@ -31,7 +32,7 @@ public class SidratExecutionEvent extends SidratEvent {
         this.entering = entering;
     }
 
-    public static SidratExecutionEvent exec(Object executionContext, int lineNumber, boolean entering) {
+    public static SidratExecutionEvent exec(TrackedObject executionContext, int lineNumber, boolean entering) {
         SidratExecutionEvent event = new SidratExecutionEvent(executionContext, lineNumber, entering);
         return event;
     }
@@ -40,7 +41,7 @@ public class SidratExecutionEvent extends SidratEvent {
         return entering;
     }
 
-    public Object getExecutionContext() {
+    public TrackedObject getExecutionContext() {
         return executionContext;
     }
 

@@ -12,6 +12,7 @@ import com.sidrat.SidratProcessingException;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.tracking.StackFrame;
+import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.replay.SystemState;
 import com.sidrat.util.Jdbc;
 import com.sidrat.util.JdbcConnectionProvider;
@@ -20,7 +21,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     private String connString;
     private Jdbc jdbcHelper = new Jdbc(this);
 
-    private static final String EVENTS_QUERY = "SELECT e.id, e.thread_id, m.name AS method, m.class_id, c.name AS clazz, e.lineNumber, e.entering FROM executions e LEFT JOIN methods m ON e.method_id=m.id LEFT JOIN classes c ON m.class_id = c.id ";
+    private static final String EVENTS_QUERY = "SELECT e.id, e.thread_id, m.name AS method, m.class_id, c.name AS clazz, e.lineNumber, e.entering, e.object_id FROM executions e LEFT JOIN methods m ON e.method_id=m.id LEFT JOIN classes c ON m.class_id = c.id ";
 
     static {
         try {
@@ -69,26 +70,50 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     }
 
     @Override
-    public Map<String,Object> locals(Long time) {
+    public Map<String,TrackedObject> locals(Long time) {
         Long methodEntryTime = (Long) jdbcHelper.first("SELECT MAX(id) AS t FROM executions WHERE id <= ? AND entering=1", time).get("T");
         Map<String,Object> methodEntrypoint = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ? AND entering=1", methodEntryTime);
         Map<String,Object> currentLine = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", time);
         Integer lineNumberStart = (Integer) methodEntrypoint.get("LINENUMBER");
         Integer lineNumberCurrent = (Integer) currentLine.get("LINENUMBER");
         List<Map<String, Object>> variables = jdbcHelper.query("SELECT * FROM variables WHERE rangeStart <= ? AND rangeEnd >= ?", lineNumberCurrent, lineNumberCurrent);
-        Map<String,Object> locals = Maps.newHashMap();
+        Map<String,TrackedObject> locals = Maps.newHashMap();
         for (Map<String,Object> var : variables) {
             String name = (String)var.get("VARIABLE_NAME");
             Long id = (Long)var.get("ID");
             Long mostRecentUpdate = (Long)jdbcHelper.first("SELECT MAX(event_id) AS EVENT_ID FROM variable_updates WHERE variable_id = ? AND event_id <= ?", id, time).get("EVENT_ID");
             if (mostRecentUpdate == null) {
-                locals.put(name, "<null>");
+                locals.put(name, null);
             } else {
-                Object val = jdbcHelper.first("SELECT value FROM variable_updates WHERE event_id = ?", mostRecentUpdate).get("VALUE");
-                locals.put(name, val);
+                Map<String,Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ?", mostRecentUpdate);
+                String val = (String) update.get("VALUE");
+                Long ref = (Long) update.get("REF");
+                String className = (String) update.get("CLAZZ");
+                TrackedObject obj = new TrackedObject(className, val, ref);
+                locals.put(name, obj);
             }
         }
         return locals;
+    }
+    
+    @Override
+    public Map<String,TrackedObject> eval(Long time, Long objectID) {
+        //List<Map<String, Object>> objects = jdbcHelper.find("SELECT * FROM fields");
+        List<Map<String, Object>> fields = jdbcHelper.query("SELECT * FROM fields WHERE object_id = ?", objectID);
+        Map<String,TrackedObject> values = Maps.newHashMap();
+        for (Map<String,Object> var : fields) {
+            Long fieldID = (Long)var.get("ID");
+            String fieldName = (String)var.get("FIELD_NAME");
+            Map<String, Object> update = jdbcHelper.first("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? AND fu.event_id <= ? ORDER BY event_id DESC", fieldID, time);
+            if (update != null) {
+                String value = (String) update.get("VALUE");
+                Long ref = (Long) update.get("REF");
+                String className = (String) update.get("CLAZZ");
+                TrackedObject obj = new TrackedObject(className, value, ref);
+                values.put(fieldName, obj);
+            }
+        }
+        return values;
     }
     
     public List<SidratExecutionEvent> executions(String className, String method, int lineNumber) {
@@ -123,7 +148,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         String methodName = (String) row.get("METHOD");
         Boolean entering = (Boolean) row.get("ENTERING");
         StackFrame stackFrame = new StackFrame(className, methodName);
-        SidratExecutionEvent event = new SidratExecutionEvent(time, objectInstanceID, stackFrame, threadID, threadName, lineNumber, entering);
+        TrackedObject trackedObject = new TrackedObject(className, objectInstanceID);
+        SidratExecutionEvent event = new SidratExecutionEvent(time, trackedObject, stackFrame, threadID, threadName, lineNumber, entering);
         return event;
     }
 

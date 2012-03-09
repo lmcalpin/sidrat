@@ -75,7 +75,7 @@ public class SidratCallbackTest {
         EasyMock.verify(mockedEventStore);
         
         Assert.assertEquals("bar", captured.getValue().getVariableName());
-        Assert.assertEquals(10, captured.getValue().getValue());
+        Assert.assertEquals("10", captured.getValue().getTrackedValue().getValue());
     }
     
     @Test
@@ -92,9 +92,9 @@ public class SidratCallbackTest {
         
         EasyMock.verify(mockedEventStore);
         
-        Assert.assertEquals(obj, captured.getValue().getOwner());
+        Assert.assertEquals(obj.getClass().getName(), captured.getValue().getOwner().getClassName());
         Assert.assertEquals("foo", captured.getValue().getVariableName());
-        Assert.assertEquals(10, captured.getValue().getValue());
+        Assert.assertEquals("10", captured.getValue().getTrackedValue().getValue());
     }
     
 }

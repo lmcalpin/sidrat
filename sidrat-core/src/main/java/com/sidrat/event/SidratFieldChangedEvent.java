@@ -5,17 +5,16 @@ import com.sidrat.event.tracking.TrackedObject;
 
 
 public class SidratFieldChangedEvent extends SidratEvent {
-    private Object owner;
+    private TrackedObject owner;
     private String uniqueID;
     private String variableName;
-    private Object value;
-    private Long referenceUniqueID;
+    private TrackedObject value;
     
     public SidratFieldChangedEvent(Long time) {
         super(time);
     }
 
-    public static SidratFieldChangedEvent fieldChanged(Object obj, Object val, String name) {
+    public static SidratFieldChangedEvent fieldChanged(TrackedObject obj, TrackedObject val, String name) {
         SidratFieldChangedEvent event = new SidratFieldChangedEvent(SidratDebugger.instance().getClock().current());
         event.owner = obj;
         event.value = val;
@@ -23,14 +22,8 @@ public class SidratFieldChangedEvent extends SidratEvent {
         event.uniqueID = event.getClass().getName() + "." + name;
         return event;
     }
-    
-    public static SidratFieldChangedEvent fieldChanged(Object obj, TrackedObject val, String name) {
-        SidratFieldChangedEvent event = fieldChanged(obj,  val.getValue(), name);
-        event.referenceUniqueID = val.getUniqueID();
-        return event;
-    }
 
-    public Object getOwner() {
+    public TrackedObject getOwner() {
         return owner;
     }
 
@@ -42,7 +35,7 @@ public class SidratFieldChangedEvent extends SidratEvent {
         return variableName;
     }
 
-    public Object getValue() {
+    public TrackedObject getTrackedValue() {
         return value;
     }
 
@@ -50,6 +43,9 @@ public class SidratFieldChangedEvent extends SidratEvent {
      * @return a unique identifier for the object that this field points to
      */
     public Long getReferenceUniqueID() {
-        return referenceUniqueID;
+        if (owner != null) {
+            return owner.getUniqueID();
+        }
+        return null;
     }
 }

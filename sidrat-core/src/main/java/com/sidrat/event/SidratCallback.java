@@ -22,13 +22,17 @@ public class SidratCallback {
         ENTERING_FRAME.set(Boolean.FALSE);
     }
     
-    public static void enter(Object obj, String clazz, String method) {
+    public static void enter(Object obj, String clazz, String method, Object[] args) {
         pushFrame(obj, clazz, method);
         ENTERING_FRAME.set(Boolean.TRUE);
     }
     
+    public static void enter(String clazz, String method, Object[] args) {
+        enter(null, clazz, method, args);
+    }
+    
     public static void enter(String clazz, String method) {
-        enter(null, clazz, method);
+        enter(null, clazz, method, new Object[]{});
     }
     
     public static void exit() {
@@ -38,7 +42,13 @@ public class SidratCallback {
     public static void exec(int lineNumber) {
         StackFrame frame = currentFrame();
         Object executionContext = frame.getObject();
-        SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(executionContext, lineNumber, ENTERING_FRAME.get());
+        exec(executionContext, lineNumber);
+    }
+    
+    public static void exec(Object executionContext, int lineNumber) {
+        StackFrame frame = currentFrame();
+        TrackedObject trackedObj = SidratDebugger.instance().getObjectTracker().found(executionContext);
+        SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(trackedObj, lineNumber, ENTERING_FRAME.get());
         ENTERING_FRAME.set(Boolean.FALSE);
         SidratDebugger.instance().getEventStore().store(executionEvent);
         if (logger.isDebugEnabled())
@@ -49,7 +59,7 @@ public class SidratCallback {
         StackFrame frame = currentFrame();
         TrackedVariable trackedVar = SidratDebugger.instance().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
         TrackedObject trackedObj = SidratDebugger.instance().getObjectTracker().found(val);
-        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj != null ? trackedObj : val,
+        SidratDebugger.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj,
                 trackedVar));
         if (logger.isDebugEnabled())
             logger.debug("variableChanged " + var + " set to " + val);
@@ -88,7 +98,9 @@ public class SidratCallback {
     }
     
     public static void fieldChanged(Object obj, Object val, String name) {
-        SidratDebugger.instance().getEventStore().store(SidratFieldChangedEvent.fieldChanged(obj, val, name));
+        TrackedObject trackedObj = SidratDebugger.instance().getObjectTracker().found(obj);
+        TrackedObject trackedVal = SidratDebugger.instance().getObjectTracker().found(val);
+        SidratDebugger.instance().getEventStore().store(SidratFieldChangedEvent.fieldChanged(trackedObj, trackedVal, name));
         if (logger.isDebugEnabled())
             logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
     }
