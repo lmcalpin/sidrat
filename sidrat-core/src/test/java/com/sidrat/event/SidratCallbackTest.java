@@ -37,15 +37,33 @@ public class SidratCallbackTest {
         Assert.assertNull(SidratCallback.currentFrame());
         SidratCallback.enter("com.test", "foo");
         Assert.assertNotNull(SidratCallback.currentFrame());
-        SidratCallback.exit();
+        SidratCallback.exit(null);
         Assert.assertNull(SidratCallback.currentFrame());
     }
 
     @Test
+    public void testMethodEntry() {
+        // expectations
+        Capture<SidratMethodEntryEvent> capturedMethodEntry = new Capture<SidratMethodEntryEvent>();
+        mockedEventStore.store(capture(capturedMethodEntry));
+        
+        EasyMock.replay(mockedEventStore);
+        
+        SidratCallback.enter("com.Test", "foo");
+        
+        EasyMock.verify(mockedEventStore);
+        
+        Assert.assertEquals("com.Test", capturedMethodEntry.getValue().getClassName());
+        Assert.assertEquals("foo", capturedMethodEntry.getValue().getMethodName());
+    }
+    
+    @Test
     public void testExec() {
         // expectations
-        Capture<SidratExecutionEvent> captured = new Capture<SidratExecutionEvent>();
-        mockedEventStore.store(capture(captured));
+        Capture<SidratMethodEntryEvent> capturedMethodEntry = new Capture<SidratMethodEntryEvent>();
+        Capture<SidratExecutionEvent> capturedExec = new Capture<SidratExecutionEvent>();
+        mockedEventStore.store(capture(capturedMethodEntry));
+        mockedEventStore.store(capture(capturedExec));
         
         EasyMock.replay(mockedEventStore);
         
@@ -54,16 +72,18 @@ public class SidratCallbackTest {
         
         EasyMock.verify(mockedEventStore);
         
-        Assert.assertEquals("com.Test", captured.getValue().getClassName());
-        Assert.assertEquals("foo", captured.getValue().getMethodName());
-        Assert.assertEquals(10, captured.getValue().getLineNumber());
+        Assert.assertEquals("com.Test", capturedExec.getValue().getClassName());
+        Assert.assertEquals("foo", capturedExec.getValue().getMethodName());
+        Assert.assertEquals(10, capturedExec.getValue().getLineNumber());
     }
     
     @Test
     public void testVariableTracking() {
         // expectations
-        Capture<SidratLocalVariableEvent> captured = new Capture<SidratLocalVariableEvent>();
-        mockedEventStore.store(capture(captured));
+        Capture<SidratMethodEntryEvent> capturedMethodEntry = new Capture<SidratMethodEntryEvent>();
+        Capture<SidratLocalVariableEvent> capturedLocalVariable = new Capture<SidratLocalVariableEvent>();
+        mockedEventStore.store(capture(capturedMethodEntry));
+        mockedEventStore.store(capture(capturedLocalVariable));
         EasyMock.replay(mockedEventStore);
         
         // local variable should have been logged in the LocalVariablesTracker when instrumenting
@@ -74,15 +94,17 @@ public class SidratCallbackTest {
         
         EasyMock.verify(mockedEventStore);
         
-        Assert.assertEquals("bar", captured.getValue().getVariableName());
-        Assert.assertEquals("10", captured.getValue().getTrackedValue().getValue());
+        Assert.assertEquals("bar", capturedLocalVariable.getValue().getVariableName());
+        Assert.assertEquals("10", capturedLocalVariable.getValue().getTrackedValue().getValue());
     }
     
     @Test
     public void testFieldTracking() {
         // expectations
-        Capture<SidratFieldChangedEvent> captured = new Capture<SidratFieldChangedEvent>();
-        mockedEventStore.store(capture(captured));
+        Capture<SidratMethodEntryEvent> capturedMethodEntry = new Capture<SidratMethodEntryEvent>();
+        Capture<SidratFieldChangedEvent> capturedField = new Capture<SidratFieldChangedEvent>();
+        mockedEventStore.store(capture(capturedMethodEntry));
+        mockedEventStore.store(capture(capturedField));
         
         EasyMock.replay(mockedEventStore);
         
@@ -92,9 +114,9 @@ public class SidratCallbackTest {
         
         EasyMock.verify(mockedEventStore);
         
-        Assert.assertEquals(obj.getClass().getName(), captured.getValue().getOwner().getClassName());
-        Assert.assertEquals("foo", captured.getValue().getVariableName());
-        Assert.assertEquals("10", captured.getValue().getTrackedValue().getValue());
+        Assert.assertEquals(obj.getClass().getName(), capturedField.getValue().getOwner().getClassName());
+        Assert.assertEquals("foo", capturedField.getValue().getVariableName());
+        Assert.assertEquals("10", capturedField.getValue().getTrackedValue().getValue());
     }
     
 }

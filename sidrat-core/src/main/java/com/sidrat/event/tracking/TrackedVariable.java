@@ -7,7 +7,7 @@ import com.sidrat.util.Pair;
 
 public class TrackedVariable {
     private String id;
-    private StackFrame frame;
+    private ExecutionLocation frame;
     private String name;
     private int lineNumberStart;
     private int lineNumberEnd;
@@ -35,7 +35,7 @@ public class TrackedVariable {
         return id;
     }
 
-    public StackFrame getFrame() {
+    public ExecutionLocation getFrame() {
         return frame;
     }
 

@@ -142,7 +142,7 @@ public class SidratReplay {
                     case "var":
                         {
                             out.println(" - instance variables: ");
-                            Map<String, TrackedObject> instanceVariables = eval(this.event.getExecutionContext());
+                            Map<String, TrackedObject> instanceVariables = eval(this.event.getExecutionContext().getObject());
                             print(instanceVariables);
                             out.println(" - local variables: ");
                             Map<String, TrackedObject> localVariables = locals();
@@ -251,6 +251,8 @@ public class SidratReplay {
 
     @SuppressWarnings("unchecked")
     public String lookupSourceCode(SidratExecutionEvent event) {
+        if (sourceDir == null) 
+            return null;
         String rootPath = sourceDir.getAbsolutePath();
         if (rootPath.endsWith("/")) {
             rootPath = rootPath.substring(0, rootPath.length() - 1);

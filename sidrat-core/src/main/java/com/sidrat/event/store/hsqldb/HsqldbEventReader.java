@@ -10,8 +10,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.sidrat.SidratProcessingException;
 import com.sidrat.event.SidratExecutionEvent;
+import com.sidrat.event.SidratMethodEntryEvent;
 import com.sidrat.event.store.EventReader;
-import com.sidrat.event.tracking.StackFrame;
+import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.replay.SystemState;
 import com.sidrat.util.Jdbc;
@@ -21,7 +22,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     private String connString;
     private Jdbc jdbcHelper = new Jdbc(this);
 
-    private static final String EVENTS_QUERY = "SELECT e.id, e.thread_id, m.name AS method, m.class_id, c.name AS clazz, e.lineNumber, e.entering, e.object_id FROM executions e LEFT JOIN methods m ON e.method_id=m.id LEFT JOIN classes c ON m.class_id = c.id ";
+    private static final String EVENTS_QUERY = "SELECT e.id, me.thread_id, m.name AS method, m.class_id, c.name AS clazz, e.lineNumber, me.object_id FROM executions e LEFT JOIN method_entries me ON e.methodentry_id = me.id LEFT JOIN methods m ON me.method_id=m.id LEFT JOIN classes c ON m.class_id = c.id ";
 
     static {
         try {
@@ -71,8 +72,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
 
     @Override
     public Map<String,TrackedObject> locals(Long time) {
-        Long methodEntryTime = (Long) jdbcHelper.first("SELECT MAX(id) AS t FROM executions WHERE id <= ? AND entering=1", time).get("T");
-        Map<String,Object> methodEntrypoint = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ? AND entering=1", methodEntryTime);
+        Long methodEntryTime = (Long) jdbcHelper.first("SELECT MAX(id) AS t FROM method_entries WHERE id <= ?", time).get("T");
+        Map<String,Object> methodEntrypoint = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", methodEntryTime);
         Map<String,Object> currentLine = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", time);
         Integer lineNumberStart = (Integer) methodEntrypoint.get("LINENUMBER");
         Integer lineNumberCurrent = (Integer) currentLine.get("LINENUMBER");
@@ -141,15 +142,16 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
             return null;
         Integer lineNumber = (Integer) row.get("LINENUMBER");
         Long time = (Long) row.get("ID");
+        Long methodEntryTime = (Long) row.get("METHODENTRY_ID");
         Long objectInstanceID = (Long) row.get("OBJECT_ID");
         Long threadID = (Long) row.get("THREAD_ID");
         String threadName = findThread(threadID);
         String className = (String) row.get("CLAZZ");
         String methodName = (String) row.get("METHOD");
-        Boolean entering = (Boolean) row.get("ENTERING");
-        StackFrame stackFrame = new StackFrame(className, methodName);
         TrackedObject trackedObject = new TrackedObject(className, objectInstanceID);
-        SidratExecutionEvent event = new SidratExecutionEvent(time, trackedObject, stackFrame, threadID, threadName, lineNumber, entering);
+        ExecutionLocation executionLocation = new ExecutionLocation(trackedObject, className, methodName);
+        SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntryTime, executionLocation, threadID, threadName);
+        SidratExecutionEvent event = new SidratExecutionEvent(time, methodEntryEvent, lineNumber);
         return event;
     }
 

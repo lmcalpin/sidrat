@@ -59,13 +59,8 @@ public class MethodInstrumenter {
                 int thisLineNumber = methodInfo.getLineNumber(frame.index);
                 if (thisLineNumber != lineNumber && !iterator.isLast()) {
                     this.lineNumber = thisLineNumber;
-                    if ((flags & AccessFlag.STATIC)  != 0) {
-                        String src = "com.sidrat.event.SidratCallback.exec(" + lineNumber + ");";
-                        compile(iterator, frame.index, src, true);
-                    } else if (!ctBehavior.isEmpty()) {
-                        String src = "com.sidrat.event.SidratCallback.exec(this, " + lineNumber + ");";
-                        compile(iterator, frame.index, src, true);
-                    }
+                    String src = "com.sidrat.event.SidratCallback.exec(" + lineNumber + ");";
+                    compile(iterator, frame.index, src, true);
                 }
                 // track assignments to fields
                 if (frame.decodedOp instanceof DecodedFieldOp) {
@@ -108,7 +103,7 @@ public class MethodInstrumenter {
                 ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, \"" + className + "\",\""
                         + methodName + "\", $args);");
             }
-            ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit();");
+            ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit($_);");
         } catch (CannotCompileException e) {
             throw new SidratProcessingException("Error instrumenting: " + ctBehavior.getLongName(), e);
         } catch (BadBytecode e) {

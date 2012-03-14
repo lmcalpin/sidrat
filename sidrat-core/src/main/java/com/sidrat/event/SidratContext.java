@@ -1,14 +1,14 @@
 package com.sidrat.event;
 
-import com.sidrat.event.tracking.StackFrame;
+import com.sidrat.event.tracking.ExecutionLocation;
 
 
 public class SidratContext {
-    private final StackFrame stackFrame;
+    private final ExecutionLocation stackFrame;
     private final String threadName;
     private final long threadId;
     
-    public SidratContext(StackFrame stackFrame) {
+    public SidratContext(ExecutionLocation stackFrame) {
         this.stackFrame = stackFrame;
         this.threadName = Thread.currentThread().getName();
         this.threadId = Thread.currentThread().getId();

@@ -3,73 +3,54 @@ package com.sidrat.event;
 import java.io.PrintStream;
 
 import com.sidrat.SidratDebugger;
-import com.sidrat.event.tracking.StackFrame;
+import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
 
 public class SidratExecutionEvent extends SidratEvent {
-    private TrackedObject executionContext;
-    private String className;
-    private String methodName;
-    private String threadName;
-    private Long threadID;
+    private SidratMethodEntryEvent method;
     private int lineNumber;
-    private boolean entering;
 
-    public SidratExecutionEvent(TrackedObject executionContext, int lineNumber, boolean entering) {
-        this(SidratDebugger.instance().getClock().next(), executionContext, SidratCallback.currentFrame(), Thread.currentThread().getId(), Thread.currentThread().getName(), lineNumber, entering);
+    public SidratExecutionEvent(SidratMethodEntryEvent method, int lineNumber) {
+        this(SidratDebugger.instance().getClock().next(), method, lineNumber);
     }
 
-    public SidratExecutionEvent(Long time, TrackedObject executionContext, StackFrame stackFrame, Long threadID, String threadName, int lineNumber, boolean entering) {
+    public SidratExecutionEvent(Long time, SidratMethodEntryEvent method, int lineNumber) {
         super(time);
-        if (stackFrame != null) {
-            this.className = stackFrame.getClassName();
-            this.methodName = stackFrame.getMethodName();
-        }
-        this.executionContext = executionContext;
-        this.threadName = threadName;
-        this.threadID = threadID;
+        this.method = method;
         this.lineNumber = lineNumber;
-        this.entering = entering;
     }
 
-    public static SidratExecutionEvent exec(TrackedObject executionContext, int lineNumber, boolean entering) {
-        SidratExecutionEvent event = new SidratExecutionEvent(executionContext, lineNumber, entering);
+    public static SidratExecutionEvent exec(Long time, SidratMethodEntryEvent method, int lineNumber) {
+        SidratExecutionEvent event = new SidratExecutionEvent(time, method, lineNumber);
         return event;
     }
 
-    public boolean isEntering() {
-        return entering;
-    }
-
-    public TrackedObject getExecutionContext() {
-        return executionContext;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    public Long getThreadID() {
-        return threadID;
+    public ExecutionLocation getExecutionContext() {
+        return method.getExecutionContext();
     }
 
     public int getLineNumber() {
         return lineNumber;
     }
+    
+    public String getClassName() {
+        return method.getClassName();
+    }
+
+    public String getMethodName() {
+        return method.getMethodName();
+    }
+    
+    public Long getMethodEntryTime() {
+        return method.getTime();
+    }
 
     public void print(PrintStream stream) {
-        stream.println("[" + getTime() + "] " + getClassName() + "." + getMethodName() + ":" + getLineNumber());
+        stream.println("[" + getTime() + "] " + method.getClassName() + "." + method.getMethodName() + ":" + getLineNumber());
     }
 
     public String asBreakpointID() {
+        String className = method.getClassName();
         if (className == null)
             return null;
         return className + ":" + this.lineNumber;

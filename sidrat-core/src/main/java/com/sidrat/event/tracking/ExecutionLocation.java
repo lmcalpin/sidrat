@@ -1,25 +1,20 @@
 package com.sidrat.event.tracking;
 
-import com.sidrat.util.Objects;
 
-public class StackFrame {
-    private final Object object;
+public class ExecutionLocation {
+    private final TrackedObject object;
     private final String className, methodName;
-
-    public StackFrame(Object object, String className, String methodName) {
+    
+    public ExecutionLocation(TrackedObject object, String className, String methodName) {
         this.object = object;
         this.className = className;
         this.methodName = methodName;
     }
-
-    public StackFrame(String className, String methodName) {
-        this(null, className, methodName);
-    }
-
-    public Object getObject() {
+    
+    public TrackedObject getObject() {
         return object;
     }
-    
+
     public String getClassName() {
         return className;
     }
