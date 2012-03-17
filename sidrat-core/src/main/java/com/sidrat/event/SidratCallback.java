@@ -8,13 +8,14 @@ import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
+import com.sidrat.util.Collections;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Objects;
 
 public class SidratCallback {
     private static final Logger logger = new Logger();
     
-    public static ThreadLocal<Stack<ExecutionLocation>> STACK_FRAMES = new ThreadLocal<Stack<ExecutionLocation>>();
+    public static ThreadLocal<Stack<ExecutionLocation>> CALL_STACK = new ThreadLocal<Stack<ExecutionLocation>>();
     public static ThreadLocal<Boolean> ENTERED = new ThreadLocal<Boolean>();
     
     static {
@@ -25,21 +26,26 @@ public class SidratCallback {
     // the SidratMethodEntryEvent that preceded them on the current stack frame.
     public static Map<ExecutionLocation, SidratMethodEntryEvent> FRAME_EVENT_MAP = new HashMap<ExecutionLocation, SidratMethodEntryEvent>();
     
-    public static void enter(Object obj, String clazz, String method, Object[] args) {
+    public static void enter(Object obj, String clazz, String method, String[] names, Object[] args) {
+        Map<String,Object> argMap = Collections.zipAsMap(names, args);
         TrackedObject trackedObj = SidratDebugger.instance().getObjectTracker().found(obj);
         pushFrame(trackedObj, clazz, method);
-        SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame());
+        SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame(), argMap);
         SidratDebugger.instance().getEventStore().store(event);
         FRAME_EVENT_MAP.put(currentFrame(), event);
         ENTERED.set(Boolean.TRUE);
     }
     
-    public static void enter(String clazz, String method, Object[] args) {
-        enter(null, clazz, method, args);
+    public static void enter(String clazz, String method, String[] names, Object[] args) {
+        enter(null, clazz, method, names, args);
     }
     
+    /**
+     * Only used by tests as a convenience... TODO: should be eliminated
+     * @deprecated
+     */
     public static void enter(String clazz, String method) {
-        enter(null, clazz, method, new Object[]{});
+        enter(null, clazz, method, new String[]{}, new Object[]{});
     }
     
     public static void exit(byte val) {
@@ -182,21 +188,21 @@ public class SidratCallback {
     
     static void pushFrame(TrackedObject object, String className, String methodName) {
         ExecutionLocation frame = new ExecutionLocation(object, className, methodName);
-        Stack<ExecutionLocation> stackFrames = STACK_FRAMES.get();
+        Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
         if (stackFrames == null) {
             stackFrames = new Stack<ExecutionLocation>();
-            STACK_FRAMES.set(stackFrames);
+            CALL_STACK.set(stackFrames);
         }
         stackFrames.push(frame);
     }
     
     static void popFrame() {
-        Stack<ExecutionLocation> stackFrames = STACK_FRAMES.get();
+        Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
         stackFrames.pop();
     }
     
     public static ExecutionLocation currentFrame() {
-        Stack<ExecutionLocation> stack = STACK_FRAMES.get();
+        Stack<ExecutionLocation> stack = CALL_STACK.get();
         if (stack == null)
             return null;
         if (stack.isEmpty())

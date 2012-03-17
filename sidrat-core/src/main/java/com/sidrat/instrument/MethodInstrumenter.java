@@ -1,5 +1,6 @@
 package com.sidrat.instrument;
 
+import bytecodeparser.analysis.LocalVariable;
 import bytecodeparser.analysis.decoders.DecodedFieldOp;
 import bytecodeparser.analysis.decoders.DecodedLocalVariableOp;
 import bytecodeparser.analysis.stack.StackAnalyzer;
@@ -10,7 +11,6 @@ import bytecodeparser.analysis.stack.ValueFromLocalVariable;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;
-import javassist.CtConstructor;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
@@ -96,12 +96,13 @@ public class MethodInstrumenter {
             }
             int firstLineNumber = ainfo.lineNumber(0);
             int lastLineNumber = ainfo.lineNumber(ainfo.tableLength()-1);
+            String signatureNames = getLocalVariablesFromMethodSignature(parser);
             if ((flags & AccessFlag.STATIC)  != 0 || ctBehavior.getMethodInfo().isConstructor()) {
                 ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(\"" + className + "\",\""
-                        + methodName + "\", $args);");
+                        + methodName + "\", " + signatureNames + ", $args);");
             } else {
                 ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, \"" + className + "\",\""
-                        + methodName + "\", $args);");
+                        + methodName + "\", " + signatureNames + ", $args);");
             }
             ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit($_);");
         } catch (CannotCompileException e) {
@@ -144,5 +145,25 @@ public class MethodInstrumenter {
         } catch (CompileError e) {
             throw new CannotCompileException(e);
         }
+    }
+
+    private String getLocalVariablesFromMethodSignature(StackAnalyzer parser) throws NotFoundException {
+        int memberShift = Modifier.isStatic(ctBehavior.getModifiers()) ? 0 : 1;
+        CtClass[] signatureTypes = ctBehavior.getParameterTypes();
+        if (signatureTypes.length == 0)
+            return "null";
+        StringBuilder signatureNames = new StringBuilder("new java.lang.String[] {");
+        for (int i = memberShift; i < signatureTypes.length + memberShift; i++) {
+            if (i > memberShift) {
+                signatureNames.append(",");
+            }
+
+            LocalVariable lv = parser.context.localVariables.get(i);
+            SidratDebugger.instance().getLocalVariablesTracker().found(ctBehavior, lv);
+
+            signatureNames.append("\"").append(lv.name).append("\"");
+        }
+        signatureNames.append("}");
+        return signatureNames.toString();
     }
 }

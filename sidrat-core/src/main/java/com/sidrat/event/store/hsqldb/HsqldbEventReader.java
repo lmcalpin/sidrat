@@ -3,6 +3,7 @@ package com.sidrat.event.store.hsqldb;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -150,7 +151,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         String methodName = (String) row.get("METHOD");
         TrackedObject trackedObject = new TrackedObject(className, objectInstanceID);
         ExecutionLocation executionLocation = new ExecutionLocation(trackedObject, className, methodName);
-        SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntryTime, executionLocation, threadID, threadName);
+        Map<String,Object> arguments = Collections.emptyMap(); // TODO: fill this map!
+        SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntryTime, executionLocation, threadID, threadName, arguments);
         SidratExecutionEvent event = new SidratExecutionEvent(time, methodEntryEvent, lineNumber);
         return event;
     }

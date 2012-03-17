@@ -1,29 +1,30 @@
 package com.sidrat.event;
 
-import java.io.PrintStream;
+import java.util.Map;
 
 import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.ExecutionLocation;
-import com.sidrat.event.tracking.TrackedObject;
 
 public class SidratMethodEntryEvent extends SidratEvent {
     private ExecutionLocation executionContext;
     private Long threadID;
     private String threadName;
-
-    public SidratMethodEntryEvent(ExecutionLocation executionContext) {
-        this(SidratDebugger.instance().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName());
+    private Map<String,Object> arguments;
+    
+    public SidratMethodEntryEvent(ExecutionLocation executionContext, Map<String,Object> arguments) {
+        this(SidratDebugger.instance().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName(), arguments);
     }
 
-    public SidratMethodEntryEvent(Long time, ExecutionLocation executionContext, Long threadID, String threadName) {
+    public SidratMethodEntryEvent(Long time, ExecutionLocation executionContext, Long threadID, String threadName, Map<String,Object> arguments) {
         super(time);
         this.executionContext = executionContext;
         this.threadID = threadID;
         this.threadName = threadName;
+        this.arguments = arguments;
     }
 
-    public static SidratMethodEntryEvent entering(ExecutionLocation executionContext) {
-        SidratMethodEntryEvent event = new SidratMethodEntryEvent(executionContext);
+    public static SidratMethodEntryEvent entering(ExecutionLocation executionContext, Map<String,Object> arguments) {
+        SidratMethodEntryEvent event = new SidratMethodEntryEvent(executionContext, arguments);
         return event;
     }
 
