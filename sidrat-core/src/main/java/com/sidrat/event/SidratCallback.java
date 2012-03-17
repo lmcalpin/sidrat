@@ -1,5 +1,6 @@
 package com.sidrat.event;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -8,9 +9,9 @@ import com.sidrat.SidratDebugger;
 import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
-import com.sidrat.util.Collections;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Objects;
+import com.sidrat.util.ZipUtils;
 
 public class SidratCallback {
     private static final Logger logger = new Logger();
@@ -27,7 +28,10 @@ public class SidratCallback {
     public static Map<ExecutionLocation, SidratMethodEntryEvent> FRAME_EVENT_MAP = new HashMap<ExecutionLocation, SidratMethodEntryEvent>();
     
     public static void enter(Object obj, String clazz, String method, String[] names, Object[] args) {
-        Map<String,Object> argMap = Collections.zipAsMap(names, args);
+        Map<String,Object> argMap = Collections.emptyMap();
+        if (names != null) {
+            argMap = ZipUtils.zipAsMap(names, args);
+        }
         TrackedObject trackedObj = SidratDebugger.instance().getObjectTracker().found(obj);
         pushFrame(trackedObj, clazz, method);
         SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame(), argMap);
