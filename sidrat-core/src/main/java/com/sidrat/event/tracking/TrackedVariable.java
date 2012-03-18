@@ -1,8 +1,5 @@
 package com.sidrat.event.tracking;
 
-import bytecodeparser.analysis.LocalVariable;
-import javassist.CtBehavior;
-
 import com.sidrat.util.Pair;
 
 public class TrackedVariable {

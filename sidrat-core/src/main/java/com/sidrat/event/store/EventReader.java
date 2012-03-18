@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.tracking.TrackedObject;
+import com.sidrat.util.Pair;
 
 public interface EventReader {
     /**
@@ -41,4 +42,14 @@ public interface EventReader {
      * @return a list of SidratEvents where we execute the line of code described by 'loc'
      */
     public List<SidratExecutionEvent> executions(String className, String methodName, int lineNumber);
+
+    /**
+     * @return history of assignments to a specified field
+     */
+    public List<Pair<Long,TrackedObject>> fieldHistory(Long fieldID);
+    
+    /**
+     * @return history of assignments to a specified local variable
+     */
+    public List<Pair<Long,TrackedObject>> localVariableHistory(Long localVariableID);
 }

@@ -3,6 +3,7 @@ package com.sidrat.event.store.hsqldb;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.replay.SystemState;
 import com.sidrat.util.Jdbc;
 import com.sidrat.util.JdbcConnectionProvider;
+import com.sidrat.util.Pair;
 
 public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     private String connString;
@@ -116,6 +118,19 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
             }
         }
         return values;
+    }
+    
+    // TODO: unfinished!
+    @Override
+    public List<Pair<Long,TrackedObject>> fieldHistory(Long fieldID) {
+        List<Map<String, Object>> updates = jdbcHelper.find("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? ORDER BY event_id DESC", fieldID);
+        return new ArrayList();
+    }
+    
+    // TODO: unfinished!
+    @Override
+    public List<Pair<Long,TrackedObject>> localVariableHistory(Long localVariableID) {
+        return new ArrayList();
     }
     
     public List<SidratExecutionEvent> executions(String className, String method, int lineNumber) {
