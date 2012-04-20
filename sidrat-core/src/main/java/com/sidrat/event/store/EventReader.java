@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.sidrat.event.SidratExecutionEvent;
+import com.sidrat.event.tracking.CapturedFieldValue;
+import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.util.Pair;
 
@@ -31,12 +33,12 @@ public interface EventReader {
     /**
      * @return a map of local variables in scope at the specified time, and their current values
      */
-    public Map<String,TrackedObject> locals(Long time);
+    public Map<String,CapturedLocalVariableValue> locals(Long time);
     
     /**
      * @return a map of an object's fields and current values at a specified time for a specified object
      */
-    public Map<String,TrackedObject> eval(Long time, Long objectID);
+    public Map<String,CapturedFieldValue> eval(Long time, Long objectID);
     
     /**
      * @return a list of SidratEvents where we execute the line of code described by 'loc'
@@ -51,5 +53,5 @@ public interface EventReader {
     /**
      * @return history of assignments to a specified local variable
      */
-    public List<Pair<Long,TrackedObject>> localVariableHistory(Long localVariableID);
+    public List<Pair<Long,TrackedObject>> localVariableHistory(String localVariableID);
 }

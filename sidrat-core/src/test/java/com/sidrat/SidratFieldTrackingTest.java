@@ -4,6 +4,8 @@ import com.metatrope.testprogram.ForFieldTrackingTest;
 
 import java.util.Map;
 
+import com.sidrat.event.tracking.CapturedFieldValue;
+import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.TrackedObject;
 
 import org.junit.Assert;
@@ -22,12 +24,12 @@ public class SidratFieldTrackingTest {
         SidratReplay replay = new SidratReplay("sidrat-fields-test");
         replay.withSource("src/test/java");
         replay.gotoEvent(3);
-        Map<String,TrackedObject> locals = replay.locals();
+        Map<String,CapturedLocalVariableValue> locals = replay.locals();
         Assert.assertEquals(1, locals.size());
         Assert.assertTrue(locals.keySet().contains("theClass"));
 
-        TrackedObject trackedObject = (TrackedObject) locals.get("theClass");
-        Map<String,TrackedObject> fieldValues = replay.eval(trackedObject);
+        TrackedObject trackedObject = (TrackedObject) locals.get("theClass").getCurrentValue();
+        Map<String,CapturedFieldValue> fieldValues = replay.eval(trackedObject);
         System.out.println(fieldValues);
         
         replay.gotoEvent(6);

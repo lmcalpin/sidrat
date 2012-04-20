@@ -9,10 +9,10 @@ import javassist.CtBehavior;
 
 import com.sidrat.util.Pair;
 
-public class TrackedVariables {
+public class LocalVariables {
     private Map<String, TrackedVariable> trackedVariables;
     
-    public TrackedVariables() {
+    public LocalVariables() {
         this.trackedVariables = new HashMap<String, TrackedVariable>();
     }
     

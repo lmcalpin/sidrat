@@ -29,7 +29,7 @@ public class TrackedObject implements Serializable {
         return uniqueID;
     }
     
-    public String getValue() {
+    public String getValueAsString() {
         return value;
     }
 

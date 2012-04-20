@@ -4,7 +4,6 @@ import com.sidrat.util.Pair;
 
 public class TrackedVariable {
     private String id;
-    private ExecutionLocation frame;
     private String name;
     private int lineNumberStart;
     private int lineNumberEnd;
@@ -30,10 +29,6 @@ public class TrackedVariable {
 
     public String getId() {
         return id;
-    }
-
-    public ExecutionLocation getFrame() {
-        return frame;
     }
 
     public static String getIdentity(String className, String methodName, String variableName) {

@@ -8,7 +8,7 @@ import com.sidrat.event.SidratClock;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 import com.sidrat.event.tracking.TrackedObjects;
-import com.sidrat.event.tracking.TrackedVariables;
+import com.sidrat.event.tracking.LocalVariables;
 import com.sidrat.instrument.InstrumentingClassLoader;
 import com.sidrat.util.Logger;
 
@@ -20,7 +20,7 @@ public class SidratDebugger {
 
     // data trackers
     private TrackedObjects objectsTracker = new TrackedObjects();
-    private TrackedVariables localVariablesTracker = new TrackedVariables();
+    private LocalVariables localVariablesTracker = new LocalVariables();
     private SidratClock clock = new SidratClock();
     
     private EventStore eventStore;
@@ -80,7 +80,7 @@ public class SidratDebugger {
         return className.substring(0, className.lastIndexOf('.'));
     }
 
-    public TrackedVariables getLocalVariablesTracker() {
+    public LocalVariables getLocalVariablesTracker() {
         return localVariablesTracker;
     }
 
