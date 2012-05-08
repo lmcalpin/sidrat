@@ -161,49 +161,13 @@ public class SidratReplay {
                     case "h":
                     case "history":
                         {
-                            if (parsedLine.length != 2) {
-                                out.println("Variable is required.");
-                            } else {
-                                String variable = parsedLine[1];
-                                Map<String, CapturedFieldValue> instanceVariables = eval(this.event.getExecutionContext().getObject());
-                                Map<String, CapturedLocalVariableValue> localVariables = locals();
-                                boolean found = false;
-                                if (instanceVariables.get(variable) != null) {
-                                    CapturedFieldValue cfv = instanceVariables.get(variable);
-                                    if (cfv != null) {
-                                        found = true;
-                                        print(eventReader.fieldHistory(cfv.getOwnerID()));
-                                    }
-                                } else if (localVariables != null) {
-                                    CapturedLocalVariableValue clvv = localVariables.get(variable);
-                                    if (clvv != null) {
-                                        found = true;
-                                        print(eventReader.localVariableHistory(clvv.getVariable().getId()));
-                                    }
-                                } 
-                                if (!found) {
-                                    out.println("Variable " + variable + " not found");
-                                }
-                            }
+                            showHistory(parsedLine);
                         }
                         break;
                     case "w": // watch
                     case "watch":
                         {
-                            if (parsedLine.length != 2) {
-                                out.println("Variable is required.");
-                            } else {
-                                String variable = parsedLine[1];
-                                Map<String, CapturedFieldValue> instanceVariables = eval(this.event.getExecutionContext().getObject());
-                                Map<String, CapturedLocalVariableValue> localVariables = locals();
-                                if (instanceVariables.get(variable) != null) {
-                                    fieldWatches.put(this.event.getExecutionContext().getClassName(), variable);
-                                } else if (localVariables != null) {
-                                    variableWatches.put(this.event.getExecutionContext(), variable);
-                                } else {
-                                    out.println("Variable " + variable + " not found");
-                                }
-                            }
+                            watchVariable(parsedLine);
                         }
                         break;
                     case "q":
@@ -219,6 +183,50 @@ public class SidratReplay {
             }
         }
         out.println("Done.");
+    }
+
+    private void watchVariable(String[] parsedLine) {
+        if (parsedLine.length != 2) {
+            out.println("Variable is required.");
+        } else {
+            String variable = parsedLine[1];
+            Map<String, CapturedFieldValue> instanceVariables = eval(this.event.getExecutionContext().getObject());
+            Map<String, CapturedLocalVariableValue> localVariables = locals();
+            if (instanceVariables.get(variable) != null) {
+                fieldWatches.put(this.event.getExecutionContext().getClassName(), variable);
+            } else if (localVariables != null) {
+                variableWatches.put(this.event.getExecutionContext(), variable);
+            } else {
+                out.println("Variable " + variable + " not found");
+            }
+        }
+    }
+
+    private void showHistory(String[] parsedLine) {
+        if (parsedLine.length != 2) {
+            out.println("Variable is required.");
+        } else {
+            String variable = parsedLine[1];
+            Map<String, CapturedFieldValue> instanceVariables = eval(this.event.getExecutionContext().getObject());
+            Map<String, CapturedLocalVariableValue> localVariables = locals();
+            boolean found = false;
+            if (instanceVariables.get(variable) != null) {
+                CapturedFieldValue cfv = instanceVariables.get(variable);
+                if (cfv != null) {
+                    found = true;
+                    print(eventReader.fieldHistory(cfv.getOwnerID()));
+                }
+            } else if (localVariables != null) {
+                CapturedLocalVariableValue clvv = localVariables.get(variable);
+                if (clvv != null) {
+                    found = true;
+                    print(eventReader.localVariableHistory(clvv.getVariable().getId()));
+                }
+            } 
+            if (!found) {
+                out.println("Variable " + variable + " not found");
+            }
+        }
     }
 
     private void printFields(Map<String, CapturedFieldValue> vals) {

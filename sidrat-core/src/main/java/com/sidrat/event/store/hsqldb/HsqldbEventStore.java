@@ -79,7 +79,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         jdbcHelper.update("CREATE TABLE field_updates(event_id BIGINT, field_id BIGINT, value LONGVARCHAR, ref BIGINT)");
     }
 
-    private Map<String, Long> persistedObjects = new HashMap<String, Long>();
+    private Map<Long, String> persistedObjects = new HashMap<Long, String>();
     private Map<String, Long> persistedFields = new HashMap<String, Long>();
     private Map<String, Long> persistedVariables = new HashMap<String, Long>();
     private List<Long> persistedThreads = new ArrayList<Long>();
@@ -101,17 +101,21 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
 
     @Override
     public void store(SidratFieldChangedEvent event) {
+        if (event.getTime() == 31L) {
+            System.out.println("breakpoint");
+        }
         String ownerClassName = event.getOwner() != null ? event.getOwner().getClassName() : null;
         Long ownerID = foundObject(event.getOwner());
         Long objectID = foundObject(event.getTrackedValue());
-        String variableUuid = ownerClassName + ":" + objectID + ":" + event.getVariableName();
+        //String variableUuid = ownerClassName + ":" + ownerID + ":" + event.getVariableName();
+        String variableUuid = String.valueOf(ownerID);
         if (!persistedFields.keySet().contains(variableUuid)) {
             Long id = jdbcHelper.insert("INSERT INTO fields(object_id,field_name) VALUES(?,?)", ownerID, event.getVariableName());
             persistedFields.put(variableUuid, id);
         }
-        Long fieldID = persistedFields.get(variableUuid);
+        //Long fieldID = persistedFields.get(variableUuid);
         Long eventID = event.getTime();
-        jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, fieldID, event.getTrackedValue().getValueAsString(), objectID);
+        jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, ownerID, event.getTrackedValue().getValueAsString(), objectID);
     }
     
     private Long foundObject(TrackedObject obj) {
@@ -121,6 +125,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         Long objectID = obj.getUniqueID();
         if (!persistedObjects.keySet().contains(objectID)) {
             jdbcHelper.insert("INSERT INTO objects VALUES(?,?)", objectID, ownerClassName);
+            persistedObjects.put(objectID, ownerClassName);
         }
         return objectID;
     }

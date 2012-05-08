@@ -114,9 +114,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         List<Map<String, Object>> fields = jdbcHelper.query("SELECT * FROM fields WHERE object_id = ?", objectID);
         Map<String,CapturedFieldValue> values = Maps.newHashMap();
         for (Map<String,Object> var : fields) {
-            Long fieldID = (Long)var.get("ID");
             String fieldName = (String)var.get("FIELD_NAME");
-            Map<String, Object> update = jdbcHelper.first("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? AND fu.event_id <= ? ORDER BY event_id DESC", fieldID, time);
+            Map<String, Object> update = jdbcHelper.first("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? AND fu.event_id <= ? ORDER BY event_id DESC", objectID, time);
             if (update != null) {
                 String value = (String) update.get("VALUE");
                 Long ref = (Long) update.get("REF");
@@ -132,7 +131,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     // TODO: unfinished!
     @Override
     public List<Pair<Long,TrackedObject>> fieldHistory(Long fieldID) {
-        List<Map<String, Object>> updates = jdbcHelper.find("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? ORDER BY event_id DESC", fieldID);
+        List<Map<String, Object>> updates = jdbcHelper.find("SELECT fu.*, o.clazz FROM field_updates fu LEFT OUTER JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? ORDER BY event_id DESC", fieldID);
         List<Pair<Long, TrackedObject>> changes = Lists.newArrayList();
         for (Map<String,Object> update : updates) {
             Long time = (Long) update.get("EVENT_ID");
