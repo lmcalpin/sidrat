@@ -1,6 +1,6 @@
 package com.sidrat.event.tracking;
 
-public class CapturedLocalVariableValue {
+public class CapturedLocalVariableValue implements ValueTracker {
     private Long time;
     private TrackedVariable variable;
     private TrackedObject currentValue;

@@ -20,6 +20,7 @@ import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
+import com.sidrat.event.tracking.ValueTracker;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Pair;
 import com.sidrat.util.Tuple3;
@@ -120,10 +121,14 @@ public class SidratReplay {
                         {
                             if (parsedLine.length != 2) {
                                 out.println("Breakpoint # is required.");
-                            } else {
+                            } else if (parsedLine[1].indexOf(':') >= 0) {
+                                // breakpoint?
                                 String breakpoint = parsedLine[1];
                                 int index = Integer.parseInt(breakpoint);
                                 breakpoints.remove(index);
+                            } else {
+                                // must be a watch
+                                removeWatch(parsedLine);
                             }
                         }
                         break;
@@ -202,6 +207,23 @@ public class SidratReplay {
         }
     }
 
+    private void removeWatch(String[] parsedLine) {
+        if (parsedLine.length != 2) {
+            out.println("Variable is required.");
+        } else {
+            String variable = parsedLine[1];
+            Map<String, CapturedFieldValue> instanceVariables = eval(this.event.getExecutionContext().getObject());
+            Map<String, CapturedLocalVariableValue> localVariables = locals();
+            if (instanceVariables.get(variable) != null) {
+                fieldWatches.remove(this.event.getExecutionContext().getClassName(), variable);
+            } else if (localVariables != null) {
+                variableWatches.remove(this.event.getExecutionContext(), variable);
+            } else {
+                out.println("Variable " + variable + " not found");
+            }
+        }
+    }
+
     private void showHistory(String[] parsedLine) {
         if (parsedLine.length != 2) {
             out.println("Variable is required.");
@@ -231,15 +253,21 @@ public class SidratReplay {
 
     private void printFields(Map<String, CapturedFieldValue> vals) {
         for (String key : vals.keySet()) {
-            TrackedObject value = vals.get(key).getCurrentValue();
-            print(key, value);
+            print(key, vals.get(key));
         }
     }
     
     private void printLocalVariables(Map<String, CapturedLocalVariableValue> vals) {
         for (String key : vals.keySet()) {
-            TrackedObject value = vals.get(key).getCurrentValue();
-            print(key, value);
+            print(key, vals.get(key));
+        }
+    }
+    
+    private void print(String key, ValueTracker value) {
+        if (value == null) {
+            out.println(key + " is undefined");
+        } else {
+            print(key, value.getCurrentValue());
         }
     }
     
@@ -319,14 +347,14 @@ public class SidratReplay {
             Collection<String> variables = fieldWatches.get(this.event.getExecutionContext().getClassName());
             Map<String, CapturedFieldValue> instanceVariables = eval(this.event.getExecutionContext().getObject());
             for (String variable : variables) {
-                print(variable, instanceVariables.get(variable).getCurrentValue());
+                print(variable, instanceVariables.get(variable));
             }
         }
         if (variableWatches.size() > 0) {
             Collection<String> variables = variableWatches.get(this.event.getExecutionContext());
             Map<String, CapturedLocalVariableValue> localVariables = locals();
             for (String variable : variables) {
-                print(variable, localVariables.get(variable).getCurrentValue());
+                print(variable, localVariables.get(variable));
             }
         }
     }

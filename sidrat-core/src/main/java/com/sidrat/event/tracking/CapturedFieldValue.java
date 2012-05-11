@@ -1,6 +1,6 @@
 package com.sidrat.event.tracking;
 
-public class CapturedFieldValue {
+public class CapturedFieldValue implements ValueTracker {
     private Long time;
     private Long ownerID;
     private TrackedObject currentValue;

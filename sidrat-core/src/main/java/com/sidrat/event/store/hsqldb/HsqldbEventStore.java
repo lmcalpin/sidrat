@@ -72,7 +72,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         jdbcHelper.update("CREATE TABLE method_args(id BIGINT, arg_name LONGVARCHAR, arg_value LONGVARCHAR)");
         jdbcHelper.update("CREATE TABLE method_exits(id BIGINT, methodentry_id BIGINT, ref BIGINT, value LONGVARCHAR)");
         jdbcHelper.update("CREATE TABLE executions(id BIGINT, methodentry_id BIGINT, lineNumber INTEGER)");
-        jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, uuid VARCHAR(255), variable_name VARCHAR(255), rangeStart INTEGER, rangeEnd INTEGER)");
+        jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, uuid VARCHAR(255), variable_name VARCHAR(255), rangeStart INTEGER, rangeEnd INTEGER, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE variable_updates(event_id BIGINT, variable_id BIGINT, value LONGVARCHAR, ref BIGINT)");
         jdbcHelper.update("CREATE TABLE objects(id BIGINT, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE fields(id BIGINT IDENTITY, object_id BIGINT, field_name VARCHAR(255))");
@@ -89,7 +89,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
     @Override
     public void store(SidratLocalVariableEvent event) {
         if (!persistedVariables.keySet().contains(event.getUniqueID())) {
-            Long id = jdbcHelper.insert("INSERT INTO variables(uuid, variable_name,rangeStart,rangeEnd) VALUES(?,?,?,?)", event.getUniqueID(), event.getVariableName(), event.getVariableValidityRange().getValue1(), event.getVariableValidityRange().getValue2());
+            Long id = jdbcHelper.insert("INSERT INTO variables(uuid, variable_name,rangeStart,rangeEnd,clazz) VALUES(?,?,?,?,?)", event.getUniqueID(), event.getVariableName(), event.getVariableValidityRange().getValue1(), event.getVariableValidityRange().getValue2(), event.getTrackedValue().getClassName());
             persistedVariables.put(event.getUniqueID(), id);
         }
         Long variableID = persistedVariables.get(event.getUniqueID());
@@ -101,10 +101,6 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
 
     @Override
     public void store(SidratFieldChangedEvent event) {
-        if (event.getTime() == 31L) {
-            System.out.println("breakpoint");
-        }
-        String ownerClassName = event.getOwner() != null ? event.getOwner().getClassName() : null;
         Long ownerID = foundObject(event.getOwner());
         Long objectID = foundObject(event.getTrackedValue());
         //String variableUuid = ownerClassName + ":" + ownerID + ":" + event.getVariableName();

@@ -96,7 +96,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
             if (mostRecentUpdate == null) {
                 locals.put(name, null);
             } else {
-                Map<String,Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ?", mostRecentUpdate);
+                //List all = jdbcHelper.find("SELECT * FROM variable_updates WHERE event_id=35");
+                Map<String,Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ? AND vu.variable_id=?", mostRecentUpdate, id);
                 String val = (String) update.get("VALUE");
                 Long ref = (Long) update.get("REF");
                 String className = (String) update.get("CLAZZ");
@@ -128,7 +129,6 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         return values;
     }
     
-    // TODO: unfinished!
     @Override
     public List<Pair<Long,TrackedObject>> fieldHistory(Long fieldID) {
         List<Map<String, Object>> updates = jdbcHelper.find("SELECT fu.*, o.clazz FROM field_updates fu LEFT OUTER JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? ORDER BY event_id DESC", fieldID);
@@ -145,10 +145,20 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         return changes;
     }
     
-    // TODO: unfinished!
     @Override
     public List<Pair<Long,TrackedObject>> localVariableHistory(String localVariableID) {
-        return new ArrayList();
+        List<Map<String, Object>> updates = jdbcHelper.find("SELECT vu.*, v.clazz FROM variable_updates vu LEFT OUTER JOIN variables v ON vu.variable_id = v.id WHERE v.uuid = ? ORDER BY event_id DESC", localVariableID);
+        List<Pair<Long, TrackedObject>> changes = Lists.newArrayList();
+        for (Map<String,Object> update : updates) {
+            Long time = (Long) update.get("EVENT_ID");
+            String value = (String) update.get("VALUE");
+            Long ref = (Long) update.get("REF");
+            String className = (String) update.get("CLAZZ");
+            TrackedObject obj = new TrackedObject(className, value, ref);
+            Pair<Long,TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);
+            changes.add(timeAndValue);
+        }
+        return changes;
     }
     
     public List<SidratExecutionEvent> executions(String className, String method, int lineNumber) {

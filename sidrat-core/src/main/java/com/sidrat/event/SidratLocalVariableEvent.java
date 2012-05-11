@@ -18,7 +18,7 @@ public class SidratLocalVariableEvent extends SidratEvent {
     public static SidratLocalVariableEvent variableChanged(TrackedObject val, TrackedVariable var) {
         SidratLocalVariableEvent event = new SidratLocalVariableEvent(SidratDebugger.instance().getClock().current());
         event.value = val;
-        event.variableValidityRange = new Pair<Integer,Integer>(var.getLineNumberStart(), var.getLineNumberEnd());
+        event.variableValidityRange = new Pair<Integer,Integer>(var.getLineNumberStart() + 1, var.getLineNumberEnd());
         event.variableName = var.getName();
         event.uniqueID = var.getId();
         return event;
