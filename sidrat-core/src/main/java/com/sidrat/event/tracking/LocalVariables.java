@@ -36,7 +36,21 @@ public class LocalVariables {
         int rangeStart = lv.getValidityRange()[0];
         int rangeEnd = lv.getValidityRange()[1];
         int lineNumberStart = ctBehavior.getMethodInfo().getLineNumber(rangeStart) - 1;
-        int lineNumberEnd = ctBehavior.getMethodInfo().getLineNumber(rangeEnd);
+        int lineNumberEnd = lastLineNumber(ctBehavior, rangeStart, rangeEnd, lineNumberStart);
         return new Pair<Integer,Integer>(lineNumberStart, lineNumberEnd);
+    }
+    
+    private static int lastLineNumber(CtBehavior ctBehavior, int rangeStart, int rangeEnd, int lineNumberStart) {
+        int lineNumberEnd = ctBehavior.getMethodInfo().getLineNumber(rangeEnd);
+        if (rangeStart == rangeEnd) {
+            return lineNumberStart;
+        }
+        // when inside a loop, the last bytecode may correspond to a line number *before* the point where the 
+        // variable was declared; in this case, we recursively attempt to determine the last line number *after* the
+        // variable was declared where the variable is still in scope
+        if (lineNumberEnd < lineNumberStart) {
+            return lastLineNumber(ctBehavior, rangeStart, rangeEnd - 1, lineNumberStart);
+        }
+        return lineNumberEnd;
     }
 }

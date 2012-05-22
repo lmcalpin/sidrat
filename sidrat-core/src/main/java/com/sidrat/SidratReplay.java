@@ -306,7 +306,7 @@ public class SidratReplay {
         print(event);
         return event;
     }
-
+    
     public void prevEvent() {
         SidratExecutionEvent prevEvent = eventReader.findPrev(event);
         if (prevEvent != null)

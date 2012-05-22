@@ -1,7 +1,6 @@
 package com.sidrat.event;
 
 import static org.easymock.EasyMock.capture;
-import bytecodeparser.analysis.LocalVariable;
 
 import com.sidrat.SidratDebugger;
 import com.sidrat.event.store.EventStore;
@@ -117,6 +116,23 @@ public class SidratCallbackTest {
         Assert.assertEquals(obj.getClass().getName(), capturedField.getValue().getOwner().getClassName());
         Assert.assertEquals("foo", capturedField.getValue().getVariableName());
         Assert.assertEquals("10", capturedField.getValue().getTrackedValue().getValueAsString());
+    }
+    
+    @Test
+    public void testIgnoreDuplicateExecs() {
+        // expectations
+        Capture<SidratMethodEntryEvent> capturedMethodEntry = new Capture<SidratMethodEntryEvent>();
+        Capture<SidratExecutionEvent> capturedExec = new Capture<SidratExecutionEvent>();
+        mockedEventStore.store(capture(capturedMethodEntry));
+        mockedEventStore.store(capture(capturedExec));
+        
+        EasyMock.replay(mockedEventStore);
+        
+        SidratCallback.enter("com.Test", "foo");
+        SidratCallback.exec(6);
+        SidratCallback.exec(6);
+        
+        EasyMock.verify(mockedEventStore);
     }
     
 }

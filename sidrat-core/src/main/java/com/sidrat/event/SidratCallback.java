@@ -11,11 +11,13 @@ import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Objects;
+import com.sidrat.util.Pair;
 import com.sidrat.util.ZipUtils;
 
 public class SidratCallback {
     private static final Logger logger = new Logger();
     
+    public static ThreadLocal<Pair<ExecutionLocation,Integer>> LAST_LINE = new ThreadLocal<Pair<ExecutionLocation,Integer>>();
     public static ThreadLocal<Stack<ExecutionLocation>> CALL_STACK = new ThreadLocal<Stack<ExecutionLocation>>();
     public static ThreadLocal<Boolean> ENTERED = new ThreadLocal<Boolean>();
     
@@ -91,10 +93,21 @@ public class SidratCallback {
         SidratDebugger.instance().getEventStore().store(event);
         FRAME_EVENT_MAP.remove(currentFrame());
         popFrame();
+        LAST_LINE.set(null);
     }
     
     public static void exec(int lineNumber) {
+        // a single line of code might be invoked if there are multiple statements on the same line (or a for statement), but
+        // we only want to log each line of code once
+        Pair<ExecutionLocation,Integer> lastLoc = LAST_LINE.get();
+        if (lastLoc != null && lastLoc.getValue1().equals(currentFrame()) && lastLoc.getValue2() == lineNumber) {
+            // don't do anything if we already processed this line
+            return;
+        }
+        
+        // log this event to the event store
         SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
+        LAST_LINE.set(new Pair<ExecutionLocation,Integer>(currentFrame(), lineNumber));
         ExecutionLocation frame = methodEntry.getExecutionContext();
         Long time = methodEntry.getTime();
         if (ENTERED.get().booleanValue()) {
