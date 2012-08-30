@@ -118,6 +118,7 @@ public class SidratReplay {
                         }
                         break;
                     case "del": // delete a breakpoint
+                    case "rem":
                         {
                             if (parsedLine.length != 2) {
                                 out.println("Breakpoint # is required.");
