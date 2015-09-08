@@ -19,6 +19,7 @@ public class CapturedLocalVariableValue implements ValueTracker {
         return variable;
     }
 
+    @Override
     public TrackedObject getCurrentValue() {
         return currentValue;
     }

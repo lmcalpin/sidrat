@@ -40,6 +40,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         init();
     }
 
+    @Override
     public Connection getConnection() {
         Connection c;
         try {

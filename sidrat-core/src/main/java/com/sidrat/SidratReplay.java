@@ -137,6 +137,7 @@ public class SidratReplay {
                     case "cont": // continue
                         {
                             automaticExecution = new Condition() {
+                                @Override
                                 public boolean execute() {
                                     readNext();
                                     if (SidratReplay.this.event == null)

@@ -42,6 +42,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         this.connString = "jdbc:hsqldb:file:" + filename + "/sidrat";
     }
 
+    @Override
     public Connection getConnection() {
         Connection c;
         try {
@@ -161,6 +162,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         return changes;
     }
     
+    @Override
     public List<SidratExecutionEvent> executions(String className, String method, int lineNumber) {
         List<Map<String, Object>> rows = jdbcHelper.find(EVENTS_QUERY + "WHERE clazz=? AND method=? AND lineNumber=?", className, method, lineNumber);
         List<SidratExecutionEvent> events = Lists.newArrayList();

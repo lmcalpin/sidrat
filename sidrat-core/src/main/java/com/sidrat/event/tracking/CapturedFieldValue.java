@@ -19,6 +19,7 @@ public class CapturedFieldValue implements ValueTracker {
         return ownerID;
     }
 
+    @Override
     public TrackedObject getCurrentValue() {
         return currentValue;
     }

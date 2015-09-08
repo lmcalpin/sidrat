@@ -19,6 +19,7 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
         this.pool.appendSystemPath();
     }
 
+    @Override
     protected Class<?> loadClass(String className, boolean resolve) throws java.lang.ClassNotFoundException {
         Class<?> clazz = findLoadedClass(className);
         if (clazz != null)
