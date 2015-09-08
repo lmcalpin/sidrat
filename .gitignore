@@ -1,7 +1,9 @@
 sidrat-core/sidrat
 sidrat-core/sidrat-*-test
+sidrat-rb/
 */target
 .classpath
 .project
 .settings
 */bin
+bin/
