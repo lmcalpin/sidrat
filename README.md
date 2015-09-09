@@ -14,7 +14,7 @@ It supports some basic debugging, with next and back commands, as well as a "got
 There are several ways to use Sidrat:
 
  - the easiest way is to use a TestRunner as follows:
- ~~~
+~~~
 @RunWith(SidratTestRunner.class)
 public class SampleTest {
     @Test
@@ -22,7 +22,7 @@ public class SampleTest {
       ...
     }
 }
- ~~~
+~~~
  - you can use it as a java agent to record other program executions
  - you can use SidratRecorder.record method and pass in a Runnable that you want recorded
  - the Sidrat class will launch other main methods from the command line and record the program execution
