@@ -12,7 +12,7 @@ import org.junit.Test;
 public class SidratReplayTest {
     @BeforeClass
     public static void setup() {
-        SidratRecorder recorder = new SidratRecorder();
+        SidratRecorder recorder = SidratRegistry.instance().newRecorder();
         recorder.store("sidrat-replay-test").record(ForLocalVariableTest.class.getName());
     }
 

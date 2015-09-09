@@ -2,16 +2,15 @@ package com.sidrat.event;
 
 import java.io.PrintStream;
 
-import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.ExecutionLocation;
-import com.sidrat.event.tracking.TrackedObject;
 
 public class SidratExecutionEvent extends SidratEvent {
     private SidratMethodEntryEvent method;
     private int lineNumber;
 
     public SidratExecutionEvent(SidratMethodEntryEvent method, int lineNumber) {
-        this(SidratRecorder.instance().getClock().next(), method, lineNumber);
+        this(SidratRegistry.instance().getRecorder().getClock().next(), method, lineNumber);
     }
 
     public SidratExecutionEvent(Long time, SidratMethodEntryEvent method, int lineNumber) {

@@ -2,7 +2,7 @@ package com.sidrat.event;
 
 import static org.easymock.EasyMock.capture;
 
-import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.util.Pair;
 
@@ -18,7 +18,7 @@ public class SidratCallbackTest {
     @Before
     public void init() {
         mockedEventStore = EasyMock.createMock(EventStore.class);
-        SidratRecorder.instance().store(mockedEventStore);
+        SidratRegistry.instance().getRecorder().store(mockedEventStore);
         while (SidratCallback.currentFrame() != null) {
             SidratCallback.popFrame();
         }
@@ -86,7 +86,7 @@ public class SidratCallbackTest {
         EasyMock.replay(mockedEventStore);
         
         // local variable should have been logged in the LocalVariablesTracker when instrumenting
-        SidratRecorder.instance().getLocalVariablesTracker().found("com.Test", "foo", "bar", new Pair<Integer,Integer>(10,11));        
+        SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found("com.Test", "foo", "bar", new Pair<Integer,Integer>(10,11));        
         
         SidratCallback.enter("com.Test", "foo");
         SidratCallback.variableChanged(10, "bar");

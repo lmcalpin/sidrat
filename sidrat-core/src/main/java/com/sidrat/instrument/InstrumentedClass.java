@@ -2,14 +2,14 @@ package com.sidrat.instrument;
 
 import java.io.IOException;
 
+import com.sidrat.SidratProcessingException;
+import com.sidrat.util.Logger;
+
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.NotFoundException;
-
-import com.sidrat.SidratProcessingException;
-import com.sidrat.util.Logger;
 
 /**
  * A class that has been instrumented by Sidrat to invoke callbacks whenever we begin or end execution of a method, or

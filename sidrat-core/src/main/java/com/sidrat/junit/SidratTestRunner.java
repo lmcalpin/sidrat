@@ -1,6 +1,7 @@
 package com.sidrat.junit;
 
 import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
@@ -21,14 +22,14 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
     }
     
     private static Class<?> instrument(Class<?> klass) {
-        return SidratRecorder.instance().instrument(klass);
+        return SidratRegistry.instance().getRecorder().instrument(klass);
     }
 
     @Override
     public void run(RunNotifier notifier) {
         String recordingDirectory = "sidrat-junit-" + super.getTestClass().getName() + "-test";
         HsqldbEventStore store = new HsqldbEventStore(recordingDirectory);
-        SidratRecorder recorder = SidratRecorder.instance();
+        SidratRecorder recorder = SidratRegistry.instance().getRecorder();
         recorder.store(store);
         EventReader eventReader = new HsqldbEventReader(recordingDirectory);
         recorder.record(() -> {

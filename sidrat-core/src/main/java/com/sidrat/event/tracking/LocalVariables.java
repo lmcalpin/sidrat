@@ -1,13 +1,12 @@
 package com.sidrat.event.tracking;
 
-import bytecodeparser.analysis.LocalVariable;
-
 import java.util.HashMap;
 import java.util.Map;
 
-import javassist.CtBehavior;
-
 import com.sidrat.util.Pair;
+
+import bytecodeparser.analysis.LocalVariable;
+import javassist.CtBehavior;
 
 public class LocalVariables {
     private Map<String, TrackedVariable> trackedVariables;

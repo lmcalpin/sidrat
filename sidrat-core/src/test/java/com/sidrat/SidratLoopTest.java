@@ -11,7 +11,7 @@ import org.junit.Test;
 public class SidratLoopTest {
     @BeforeClass
     public static void setup() {
-        SidratRecorder recorder = new SidratRecorder();
+        SidratRecorder recorder = SidratRegistry.instance().newRecorder();
         recorder.store("sidrat-loop-test").record(ForLoopTest.class.getName());
     }
     

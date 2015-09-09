@@ -2,7 +2,7 @@ package com.sidrat.event;
 
 import java.util.Map;
 
-import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.ExecutionLocation;
 
 /**
@@ -17,7 +17,7 @@ public class SidratMethodEntryEvent extends SidratEvent {
     private Map<String,Object> arguments;
     
     public SidratMethodEntryEvent(ExecutionLocation executionContext, Map<String,Object> arguments) {
-        this(SidratRecorder.instance().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName(), arguments);
+        this(SidratRegistry.instance().getRecorder().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName(), arguments);
     }
 
     public SidratMethodEntryEvent(Long time, ExecutionLocation executionContext, Long threadID, String threadName, Map<String,Object> arguments) {

@@ -15,7 +15,7 @@ import org.junit.Test;
 public class SidratFieldTrackingTest {
     @BeforeClass
     public static void setup() {
-        SidratRecorder recorder = new SidratRecorder();
+        SidratRecorder recorder = SidratRegistry.instance().newRecorder();
         recorder.store("sidrat-fields-test").record(ForFieldTrackingTest.class.getName());
     }
     
@@ -28,7 +28,7 @@ public class SidratFieldTrackingTest {
         Assert.assertEquals(1, locals.size());
         Assert.assertTrue(locals.keySet().contains("theClass"));
 
-        TrackedObject trackedObject = (TrackedObject) locals.get("theClass").getCurrentValue();
+        TrackedObject trackedObject = locals.get("theClass").getCurrentValue();
         Map<String,CapturedFieldValue> fieldValues = replay.eval(trackedObject);
         System.out.println(fieldValues);
         

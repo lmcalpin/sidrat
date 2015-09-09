@@ -18,7 +18,6 @@ import com.sidrat.event.store.EventStore;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.util.Jdbc;
 import com.sidrat.util.JdbcConnectionProvider;
-import com.sidrat.util.Objects;
 
 /**
  * This implementation of EventStore uses HSQLDB to store events and run state information (changes to variables and fields).

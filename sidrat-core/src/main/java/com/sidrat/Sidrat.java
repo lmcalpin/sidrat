@@ -14,7 +14,7 @@ public class Sidrat {
 
         if (action.equalsIgnoreCase("-debug")) {
             String[] rest = Arrays.copyOfRange(args, 2, args.length);
-            SidratRecorder recorder = SidratRecorder.instance();
+            SidratRecorder recorder = SidratRegistry.instance().getRecorder();
             recorder.store("sidrat").record(target, rest);
         } else if (action.equalsIgnoreCase("-replay")) {
             String source = null;

@@ -3,10 +3,10 @@ package com.sidrat.instrument;
 import java.util.ArrayList;
 import java.util.List;
 
-import javassist.ClassPool;
-
 import com.sidrat.SidratProcessingException;
 import com.sidrat.util.Logger;
+
+import javassist.ClassPool;
 
 /**
  * A classloader that instruments the classes it loads so that we can record program execution.
@@ -21,9 +21,12 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
     
     private ClassPool pool = new ClassPool();
 
-    public InstrumentingClassLoader(List<String> packages) {
-        this.whiteList = packages;
+    public InstrumentingClassLoader() {
         this.pool.appendSystemPath();
+    }
+    
+    public void addToWhiteList(String packageName) {
+        whiteList.add(packageName);
     }
     
     public void setUseWhiteList(boolean useWhiteList) {

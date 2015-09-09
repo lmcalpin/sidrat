@@ -401,7 +401,7 @@ public class SidratReplay {
         if (!fullPath.equalsIgnoreCase(lastFile)) {
             lastFile = fullPath;
             try {
-                lines = (List<String>) FileUtils.readLines(new File(fullPath));
+                lines = FileUtils.readLines(new File(fullPath));
             } catch (IOException e) {
                 if (invalidSourceFiles.contains(filePath))
                     return null;

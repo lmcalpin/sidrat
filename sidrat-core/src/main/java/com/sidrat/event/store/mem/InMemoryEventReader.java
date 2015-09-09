@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
-import com.sidrat.event.store.EventStore;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.TrackedObject;

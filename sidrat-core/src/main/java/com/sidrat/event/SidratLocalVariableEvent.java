@@ -1,6 +1,6 @@
 package com.sidrat.event;
 
-import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Pair;
@@ -21,7 +21,7 @@ public class SidratLocalVariableEvent extends SidratEvent {
     }
 
     public static SidratLocalVariableEvent variableChanged(TrackedObject val, TrackedVariable var) {
-        SidratLocalVariableEvent event = new SidratLocalVariableEvent(SidratRecorder.instance().getClock().current());
+        SidratLocalVariableEvent event = new SidratLocalVariableEvent(SidratRegistry.instance().getRecorder().getClock().current());
         event.value = val;
         event.variableValidityRange = new Pair<Integer,Integer>(var.getLineNumberStart(), var.getLineNumberEnd());
         event.variableName = var.getName();

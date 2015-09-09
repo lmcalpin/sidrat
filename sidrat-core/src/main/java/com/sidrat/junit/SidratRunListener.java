@@ -5,12 +5,8 @@ import java.util.Collection;
 import com.google.common.base.Strings;
 import com.sidrat.SidratRecorder;
 import com.sidrat.event.store.EventReader;
-import com.sidrat.event.store.hsqldb.HsqldbEventReader;
-import com.sidrat.event.store.hsqldb.HsqldbEventStore;
-import com.sidrat.event.store.mem.InMemoryEventReader;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 
-import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 

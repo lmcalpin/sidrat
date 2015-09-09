@@ -19,13 +19,8 @@ import com.sidrat.util.Logger;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratRecorder {
-    private static final Logger logger = new Logger();
-    
     private InstrumentingClassLoader classLoader;
     
-    // packages that we allow tracking in 
-    private List<String> allowedPackages = new ArrayList<String>();
-
     // data trackers
     private TrackedObjects objectsTracker = new TrackedObjects();
     private LocalVariables localVariablesTracker = new LocalVariables();
@@ -33,19 +28,12 @@ public class SidratRecorder {
     
     private EventStore eventStore;
     
-    public static ThreadLocal<SidratRecorder> RECORDER_CONTEXT = new ThreadLocal<SidratRecorder>();
-    
-    public static SidratRecorder instance() {
-        SidratRecorder recorder = RECORDER_CONTEXT.get();
-        if (recorder == null) {
-            recorder = new SidratRecorder();
-        }
-        return recorder;
-    }
-    
     protected SidratRecorder() {
-        this.classLoader = new InstrumentingClassLoader(allowedPackages);
-        RECORDER_CONTEXT.set(this);
+        createClassLoader();
+    }
+
+    private void createClassLoader() {
+        this.classLoader = new InstrumentingClassLoader();
         Thread.currentThread().setContextClassLoader(classLoader);
     }
     
@@ -57,7 +45,7 @@ public class SidratRecorder {
     public SidratRecorder includePackage(String pkg) {
         if (pkg.startsWith("com.sidrat"))
             throw new SidratProcessingException("You can not record Sidrat classes with Sidrat");
-        allowedPackages.add(pkg);
+        classLoader.addToWhiteList(pkg);
         return this;
     }
     
@@ -73,8 +61,12 @@ public class SidratRecorder {
 
     private void startRecording() {
         Preconditions.checkNotNull(eventStore);
+        createClassLoader();
     }
     
+    /**
+     * Start recording while executing a Runnable, stopping after the Runnable returns.
+     */
     public void record(Runnable r) {
         try {
             startRecording();
@@ -82,19 +74,13 @@ public class SidratRecorder {
         } catch (Exception e) {
             throw new SidratProcessingException(e);
         } finally {
-            this.eventStore.close();
-            this.classLoader = null;
+            stop();
         }
     }
     
-    public Class<?> instrument(Class<?> clazz) {
-        try {
-            return classLoader.instrument(clazz);
-        } catch (ClassNotFoundException e) {
-            throw new SidratProcessingException("Failed to instrument " + clazz.getName(), e);
-        }
-    }
-    
+    /**
+     * Start recording
+     */
     public void record(String className, String... args) {
         record(() -> {
             try {
@@ -106,6 +92,25 @@ public class SidratRecorder {
                 throw new SidratProcessingException("Failed to execute main method on " + className, e);
             }
         });
+    }
+    
+    /**
+     * Stop recording
+     */
+    public void stop() {
+        if (this.eventStore != null)
+            this.eventStore.close();
+        this.objectsTracker = new TrackedObjects();
+        this.localVariablesTracker = new LocalVariables();
+        this.clock = new SidratClock();
+    }
+    
+    public Class<?> instrument(Class<?> clazz) {
+        try {
+            return classLoader.instrument(clazz);
+        } catch (ClassNotFoundException e) {
+            throw new SidratProcessingException("Failed to instrument " + clazz.getName(), e);
+        }
     }
     
     private String packageFromClassName(String className) {

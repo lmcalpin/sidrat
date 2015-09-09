@@ -1,6 +1,6 @@
 package com.sidrat.event;
 
-import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.TrackedObject;
 
 /**
@@ -13,7 +13,7 @@ public class SidratMethodExitEvent extends SidratEvent {
     private TrackedObject returns;
 
     public SidratMethodExitEvent(SidratMethodEntryEvent method, TrackedObject returns) {
-        this(SidratRecorder.instance().getClock().current(), method, returns);
+        this(SidratRegistry.instance().getRecorder().getClock().current(), method, returns);
     }
 
     public SidratMethodExitEvent(Long time, SidratMethodEntryEvent method, TrackedObject returns) {

@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
@@ -34,10 +34,10 @@ public class SidratCallback {
         if (names != null) {
             argMap = ZipUtils.zipAsMap(names, args);
         }
-        TrackedObject trackedObj = SidratRecorder.instance().getObjectTracker().found(obj);
+        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
         pushFrame(trackedObj, clazz, method);
         SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame(), argMap);
-        SidratRecorder.instance().getEventStore().store(event);
+        SidratRegistry.instance().getRecorder().getEventStore().store(event);
         FRAME_EVENT_MAP.put(currentFrame(), event);
         ENTERED.set(Boolean.TRUE);
     }
@@ -50,6 +50,7 @@ public class SidratCallback {
      * Only used by tests as a convenience... TODO: should be eliminated
      * @deprecated
      */
+    @Deprecated
     public static void enter(String clazz, String method) {
         enter(null, clazz, method, new String[]{}, new Object[]{});
     }
@@ -87,10 +88,10 @@ public class SidratCallback {
     }
     
     public static void exit(Object returns) {
-        TrackedObject trackedObj = SidratRecorder.instance().getObjectTracker().found(returns);
+        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(returns);
         SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
         SidratMethodExitEvent event = SidratMethodExitEvent.exiting(methodEntry, trackedObj);
-        SidratRecorder.instance().getEventStore().store(event);
+        SidratRegistry.instance().getRecorder().getEventStore().store(event);
         FRAME_EVENT_MAP.remove(currentFrame());
         popFrame();
         LAST_LINE.set(null);
@@ -113,19 +114,19 @@ public class SidratCallback {
         if (ENTERED.get().booleanValue()) {
             ENTERED.set(Boolean.FALSE);
         } else {
-            time = SidratRecorder.instance().getClock().next();
+            time = SidratRegistry.instance().getRecorder().getClock().next();
         }
         SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(time, methodEntry, lineNumber);
-        SidratRecorder.instance().getEventStore().store(executionEvent);
+        SidratRegistry.instance().getRecorder().getEventStore().store(executionEvent);
         if (logger.isDebugEnabled())
             logger.debug(frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
     }
     
     public static void variableChanged(Object val, String var) {
         ExecutionLocation frame = currentFrame();
-        TrackedVariable trackedVar = SidratRecorder.instance().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
-        TrackedObject trackedObj = SidratRecorder.instance().getObjectTracker().found(val);
-        SidratRecorder.instance().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj,
+        TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
+        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+        SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj,
                 trackedVar));
         if (logger.isDebugEnabled())
             logger.debug("variableChanged " + var + " set to " + val);
@@ -164,9 +165,9 @@ public class SidratCallback {
     }
     
     public static void fieldChanged(Object obj, Object val, String name) {
-        TrackedObject trackedObj = SidratRecorder.instance().getObjectTracker().found(obj);
-        TrackedObject trackedVal = SidratRecorder.instance().getObjectTracker().found(val);
-        SidratRecorder.instance().getEventStore().store(SidratFieldChangedEvent.fieldChanged(trackedObj, trackedVal, name));
+        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
+        TrackedObject trackedVal = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+        SidratRegistry.instance().getRecorder().getEventStore().store(SidratFieldChangedEvent.fieldChanged(trackedObj, trackedVal, name));
         if (logger.isDebugEnabled())
             logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
     }

@@ -1,5 +1,8 @@
 package com.sidrat.instrument;
 
+import com.sidrat.SidratProcessingException;
+import com.sidrat.SidratRegistry;
+
 import bytecodeparser.analysis.LocalVariable;
 import bytecodeparser.analysis.decoders.DecodedFieldOp;
 import bytecodeparser.analysis.decoders.DecodedLocalVariableOp;
@@ -22,9 +25,6 @@ import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
 import javassist.compiler.CompileError;
 import javassist.compiler.Javac;
-
-import com.sidrat.SidratRecorder;
-import com.sidrat.SidratProcessingException;
 
 public class MethodInstrumenter {
     private final CtBehavior ctBehavior;
@@ -87,7 +87,7 @@ public class MethodInstrumenter {
                     if (!op.load) {
                         if (op.localVariable != null) {
                             String localVariable = op.localVariable.name;
-                            SidratRecorder.instance().getLocalVariablesTracker().found(ctBehavior, op.localVariable);
+                            SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(ctBehavior, op.localVariable);
                             String src = "com.sidrat.event.SidratCallback.variableChanged(" + localVariable + ",\"" + op.localVariable.name + "\");";
                             compile(iterator, iterator.lookAhead().index, src, true);
                         }
@@ -159,7 +159,7 @@ public class MethodInstrumenter {
             }
 
             LocalVariable lv = parser.context.localVariables.get(i);
-            SidratRecorder.instance().getLocalVariablesTracker().found(ctBehavior, lv);
+            SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(ctBehavior, lv);
 
             signatureNames.append("\"").append(lv.name).append("\"");
         }
