@@ -15,8 +15,8 @@ import org.junit.Test;
 public class SidratFieldTrackingTest {
     @BeforeClass
     public static void setup() {
-        SidratDebugger debugger = new SidratDebugger();
-        debugger.store("sidrat-fields-test").debug(ForFieldTrackingTest.class.getName());
+        SidratRecorder recorder = new SidratRecorder();
+        recorder.store("sidrat-fields-test").record(ForFieldTrackingTest.class.getName());
     }
     
     @Test

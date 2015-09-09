@@ -12,8 +12,8 @@ import org.junit.Test;
 public class SidratReplayTest {
     @BeforeClass
     public static void setup() {
-        SidratDebugger debugger = new SidratDebugger();
-        debugger.store("sidrat-replay-test").debug(ForLocalVariableTest.class.getName());
+        SidratRecorder recorder = new SidratRecorder();
+        recorder.store("sidrat-replay-test").record(ForLocalVariableTest.class.getName());
     }
 
     @Test

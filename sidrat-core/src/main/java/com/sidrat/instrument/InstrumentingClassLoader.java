@@ -8,15 +8,26 @@ import javassist.ClassPool;
 import com.sidrat.SidratProcessingException;
 import com.sidrat.util.Logger;
 
+/**
+ * A classloader that instruments the classes it loads so that we can record program execution.
+ * 
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class InstrumentingClassLoader extends java.lang.ClassLoader {
     private static final Logger logger = new Logger();
 
     private List<String> whiteList = new ArrayList<String>();
+    private boolean useWhiteList = true;
+    
     private ClassPool pool = new ClassPool();
 
     public InstrumentingClassLoader(List<String> packages) {
         this.whiteList = packages;
         this.pool.appendSystemPath();
+    }
+    
+    public void setUseWhiteList(boolean useWhiteList) {
+        this.useWhiteList = useWhiteList;
     }
 
     @Override
@@ -45,14 +56,14 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
         return clazz;
     }
 
-    private Class<?> instrument(Class<?> originalClass) throws ClassNotFoundException {
+    public Class<?> instrument(Class<?> originalClass) throws ClassNotFoundException {
         InstrumentedClass instrumentedClass = InstrumentedClass.instrument(pool, originalClass);
         Class<?> replacementClass = instrumentedClass.getReplacement();
         return replacementClass;
     }
 
     private boolean isAllowed(String className) {
-        if (whiteList.size() == 0)
+        if (!useWhiteList)
             return true;
         for (String pkg : whiteList) {
             if (className.startsWith(pkg))

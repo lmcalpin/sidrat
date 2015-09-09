@@ -1,14 +1,19 @@
 package com.sidrat.event;
 
-import com.sidrat.SidratDebugger;
+import com.sidrat.SidratRecorder;
 import com.sidrat.event.tracking.TrackedObject;
 
+/**
+ * Triggered when we complete execution of a method.
+ *  
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class SidratMethodExitEvent extends SidratEvent {
     private SidratMethodEntryEvent method;
     private TrackedObject returns;
 
     public SidratMethodExitEvent(SidratMethodEntryEvent method, TrackedObject returns) {
-        this(SidratDebugger.instance().getClock().current(), method, returns);
+        this(SidratRecorder.instance().getClock().current(), method, returns);
     }
 
     public SidratMethodExitEvent(Long time, SidratMethodEntryEvent method, TrackedObject returns) {

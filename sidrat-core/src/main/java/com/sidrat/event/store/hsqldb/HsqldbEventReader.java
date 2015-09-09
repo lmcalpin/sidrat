@@ -3,7 +3,6 @@ package com.sidrat.event.store.hsqldb;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +13,9 @@ import com.sidrat.SidratProcessingException;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.SidratMethodEntryEvent;
 import com.sidrat.event.store.EventReader;
-import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
+import com.sidrat.event.tracking.ExecutionLocation;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.replay.SystemState;
@@ -24,6 +23,11 @@ import com.sidrat.util.Jdbc;
 import com.sidrat.util.JdbcConnectionProvider;
 import com.sidrat.util.Pair;
 
+/**
+ * Reads an HSQLDB database Sidrat recording of a program execution.
+ *  
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     private String connString;
     private Jdbc jdbcHelper = new Jdbc(this);
@@ -82,6 +86,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         Long methodEntryTime = (Long) jdbcHelper.first("SELECT MAX(id) AS t FROM method_entries WHERE id <= ?", time).get("T");
         Map<String,Object> methodEntrypoint = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", methodEntryTime);
         Map<String,Object> currentLine = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", time);
+        if (currentLine == null)
+            return Collections.emptyMap();
         Integer lineNumberStart = (Integer) methodEntrypoint.get("LINENUMBER");
         Integer lineNumberCurrent = (Integer) currentLine.get("LINENUMBER");
         List<Map<String, Object>> variables = jdbcHelper.query("SELECT * FROM variables WHERE rangeStart <= ? AND rangeEnd >= ?", lineNumberCurrent, lineNumberCurrent);
@@ -97,7 +103,6 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
             if (mostRecentUpdate == null) {
                 locals.put(name, null);
             } else {
-                //List all = jdbcHelper.find("SELECT * FROM variable_updates WHERE event_id=35");
                 Map<String,Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ? AND vu.variable_id=?", mostRecentUpdate, id);
                 String val = (String) update.get("VALUE");
                 Long ref = (Long) update.get("REF");
@@ -112,7 +117,6 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     
     @Override
     public Map<String,CapturedFieldValue> eval(Long time, Long objectID) {
-        //List<Map<String, Object>> objects = jdbcHelper.find("SELECT * FROM fields");
         List<Map<String, Object>> fields = jdbcHelper.query("SELECT * FROM fields WHERE object_id = ?", objectID);
         Map<String,CapturedFieldValue> values = Maps.newHashMap();
         for (Map<String,Object> var : fields) {

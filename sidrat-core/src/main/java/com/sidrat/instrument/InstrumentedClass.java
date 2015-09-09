@@ -11,6 +11,12 @@ import javassist.NotFoundException;
 import com.sidrat.SidratProcessingException;
 import com.sidrat.util.Logger;
 
+/**
+ * A class that has been instrumented by Sidrat to invoke callbacks whenever we begin or end execution of a method, or
+ * alter the state of a field or local variable.
+ * 
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class InstrumentedClass {
     private final String className, packageName;
     private Class<?> original;

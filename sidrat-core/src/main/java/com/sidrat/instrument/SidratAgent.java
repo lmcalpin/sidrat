@@ -1,9 +1,13 @@
-package com.sidrat;
+package com.sidrat.instrument;
 
 import java.lang.instrument.Instrumentation;
 
-import com.sidrat.instrument.SidratAgentTransformer;
-
+/**
+ * A Java premain agent that initializes the ClassFileTransformer that instruments classes so that Sidrat can
+ * record program execution.
+ * 
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class SidratAgent {
     public static void premain(String agentArguments, Instrumentation instrumentation) {
         instrumentation.addTransformer(new SidratAgentTransformer());

@@ -2,6 +2,11 @@ package com.sidrat;
 
 import java.util.Arrays;
 
+/**
+ * Starts Sidrat from the command line.
+ *  
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class Sidrat {
     public static final void main(String[] args) {
         String action = args[0];
@@ -9,8 +14,8 @@ public class Sidrat {
 
         if (action.equalsIgnoreCase("-debug")) {
             String[] rest = Arrays.copyOfRange(args, 2, args.length);
-            SidratDebugger debugger = new SidratDebugger();
-            debugger.debug(target, rest);
+            SidratRecorder recorder = SidratRecorder.instance();
+            recorder.store("sidrat").record(target, rest);
         } else if (action.equalsIgnoreCase("-replay")) {
             String source = null;
             if (args.length >= 3)

@@ -11,8 +11,8 @@ import org.junit.Test;
 public class SidratLoopTest {
     @BeforeClass
     public static void setup() {
-        SidratDebugger debugger = new SidratDebugger();
-        debugger.store("sidrat-loop-test").debug(ForLoopTest.class.getName());
+        SidratRecorder recorder = new SidratRecorder();
+        recorder.store("sidrat-loop-test").record(ForLoopTest.class.getName());
     }
     
     // verify we do not have a regression where the beginning of the for loop generates two events

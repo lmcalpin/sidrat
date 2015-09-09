@@ -1,9 +1,13 @@
 package com.sidrat.event;
 
-import com.sidrat.SidratDebugger;
+import com.sidrat.SidratRecorder;
 import com.sidrat.event.tracking.TrackedObject;
 
-
+/**
+ * Triggered when a field value changes.
+ *  
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class SidratFieldChangedEvent extends SidratEvent {
     private TrackedObject owner;
     private String uniqueID;
@@ -15,7 +19,7 @@ public class SidratFieldChangedEvent extends SidratEvent {
     }
 
     public static SidratFieldChangedEvent fieldChanged(TrackedObject obj, TrackedObject val, String name) {
-        SidratFieldChangedEvent event = new SidratFieldChangedEvent(SidratDebugger.instance().getClock().current());
+        SidratFieldChangedEvent event = new SidratFieldChangedEvent(SidratRecorder.instance().getClock().current());
         event.owner = obj;
         event.value = val;
         event.variableName = name;

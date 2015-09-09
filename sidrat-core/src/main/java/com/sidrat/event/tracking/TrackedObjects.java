@@ -4,7 +4,7 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sidrat.SidratDebugger;
+import com.sidrat.SidratRecorder;
 import com.sidrat.util.Objects;
 
 public class TrackedObjects {

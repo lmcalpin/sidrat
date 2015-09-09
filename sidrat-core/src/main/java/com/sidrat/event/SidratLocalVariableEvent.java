@@ -1,10 +1,15 @@
 package com.sidrat.event;
 
-import com.sidrat.SidratDebugger;
+import com.sidrat.SidratRecorder;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Pair;
 
+/**
+ * Triggered when a local variable's value changes.
+ *  
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class SidratLocalVariableEvent extends SidratEvent {
     private String uniqueID;
     private String variableName;
@@ -16,7 +21,7 @@ public class SidratLocalVariableEvent extends SidratEvent {
     }
 
     public static SidratLocalVariableEvent variableChanged(TrackedObject val, TrackedVariable var) {
-        SidratLocalVariableEvent event = new SidratLocalVariableEvent(SidratDebugger.instance().getClock().current());
+        SidratLocalVariableEvent event = new SidratLocalVariableEvent(SidratRecorder.instance().getClock().current());
         event.value = val;
         event.variableValidityRange = new Pair<Integer,Integer>(var.getLineNumberStart(), var.getLineNumberEnd());
         event.variableName = var.getName();

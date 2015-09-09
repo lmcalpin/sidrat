@@ -27,6 +27,11 @@ import com.sidrat.util.Tuple3;
 
 import org.apache.commons.io.FileUtils;
 
+/**
+ * Debugger for replaying Sidrat recordings.
+ * 
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class SidratReplay {
     private static final Logger logger = new Logger();
 

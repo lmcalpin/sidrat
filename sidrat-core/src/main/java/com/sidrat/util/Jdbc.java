@@ -32,92 +32,74 @@ public class Jdbc {
     }
     
     public List<Map<String, Object>> query(String sql, Object... params) {
-        Connection conn = provider.getConnection();
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            int parameterIndex = 1;
-            for (Object param : params) {
-                ps.setObject(parameterIndex++, param);
-            }
-            ResultSet rs = ps.executeQuery();
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int colCount = rsmd.getColumnCount();
-            List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
-            Map<Integer, String> columnNames = new HashMap<Integer, String>();
-            Map<Integer, SqlDataType> columnTypes = new HashMap<Integer, SqlDataType>();
-            for (int i = 1; i <= colCount; i++) {
-                String colName = rsmd.getColumnLabel(i);
-                columnNames.put(i, colName);
-                int colType = rsmd.getColumnType(i);
-                SqlDataType sdt = SqlDataType.fromColumnType(colType);
-                columnTypes.put(i, sdt);
-            }
-            while (rs.next()) {
-                Map<String, Object> row = new HashMap<String, Object>();
-                for (int i = 1; i <= colCount; i++) {
-                    String columnName = columnNames.get(i);
-                    Object columnValue = rs.getObject(i);
-                    row.put(columnName, columnValue);
+        try (Connection conn = provider.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int parameterIndex = 1;
+                for (Object param : params) {
+                    ps.setObject(parameterIndex++, param);
                 }
-                response.add(row);
+                ResultSet rs = ps.executeQuery();
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int colCount = rsmd.getColumnCount();
+                List<Map<String, Object>> response = new ArrayList<Map<String, Object>>();
+                Map<Integer, String> columnNames = new HashMap<Integer, String>();
+                Map<Integer, SqlDataType> columnTypes = new HashMap<Integer, SqlDataType>();
+                for (int i = 1; i <= colCount; i++) {
+                    String colName = rsmd.getColumnLabel(i);
+                    columnNames.put(i, colName);
+                    int colType = rsmd.getColumnType(i);
+                    SqlDataType sdt = SqlDataType.fromColumnType(colType);
+                    columnTypes.put(i, sdt);
+                }
+                while (rs.next()) {
+                    Map<String, Object> row = new HashMap<String, Object>();
+                    for (int i = 1; i <= colCount; i++) {
+                        String columnName = columnNames.get(i);
+                        Object columnValue = rs.getObject(i);
+                        row.put(columnName, columnValue);
+                    }
+                    response.add(row);
+                }
+                return response;
             }
-            return response;
         } catch (SQLException e) {
             throw new SidratProcessingException("Error executing query", e);
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                throw new SidratProcessingException("Error closing connection", e);
-            }
         }
     }
 
     public Long insert(String sql, Object... params) {
-        Connection conn = provider.getConnection();
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            int parameterIndex = 1;
-            for (Object param : params) {
-                ps.setObject(parameterIndex++, param);
-            }
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0)
+        try (Connection conn = provider.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                int parameterIndex = 1;
+                for (Object param : params) {
+                    ps.setObject(parameterIndex++, param);
+                }
+                int rowsAffected = ps.executeUpdate();
+                if (rowsAffected == 0)
+                    return null;
+                ResultSet rs = ps.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
                 return null;
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                return rs.getLong(1);
             }
-            return null;
         } catch (SQLException e) {
             throw new SidratProcessingException("Error executing update", e);
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                throw new SidratProcessingException("Error closing connection", e);
-            }
         }
     }
 
     public int update(String sql, Object... params) {
-        Connection conn = provider.getConnection();
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            int parameterIndex = 1;
-            for (Object param : params) {
-                ps.setObject(parameterIndex++, param);
+        try (Connection conn = provider.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                int parameterIndex = 1;
+                for (Object param : params) {
+                    ps.setObject(parameterIndex++, param);
+                }
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected;
             }
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected;
         } catch (SQLException e) {
             throw new SidratProcessingException("Error executing update", e);
-        } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                throw new SidratProcessingException("Error closing connection", e);
-            }
         }
     }
 }

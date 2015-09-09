@@ -2,9 +2,14 @@ package com.sidrat.event;
 
 import java.util.Map;
 
-import com.sidrat.SidratDebugger;
+import com.sidrat.SidratRecorder;
 import com.sidrat.event.tracking.ExecutionLocation;
 
+/**
+ * Triggered when we start execution of a new method.
+ *  
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class SidratMethodEntryEvent extends SidratEvent {
     private ExecutionLocation executionContext;
     private Long threadID;
@@ -12,7 +17,7 @@ public class SidratMethodEntryEvent extends SidratEvent {
     private Map<String,Object> arguments;
     
     public SidratMethodEntryEvent(ExecutionLocation executionContext, Map<String,Object> arguments) {
-        this(SidratDebugger.instance().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName(), arguments);
+        this(SidratRecorder.instance().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName(), arguments);
     }
 
     public SidratMethodEntryEvent(Long time, ExecutionLocation executionContext, Long threadID, String threadName, Map<String,Object> arguments) {

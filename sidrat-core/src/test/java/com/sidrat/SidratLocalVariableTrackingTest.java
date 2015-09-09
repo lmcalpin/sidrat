@@ -13,8 +13,8 @@ import org.junit.Test;
 public class SidratLocalVariableTrackingTest {
     @BeforeClass
     public static void setup() {
-        SidratDebugger debugger = new SidratDebugger();
-        debugger.store("sidrat-localvars-test").debug(ForLocalVariableTest.class.getName());
+        SidratRecorder recorder = new SidratRecorder();
+        recorder.store("sidrat-localvars-test").record(ForLocalVariableTest.class.getName());
     }
     
     @Test
