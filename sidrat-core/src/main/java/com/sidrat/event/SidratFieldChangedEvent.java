@@ -46,7 +46,7 @@ public class SidratFieldChangedEvent extends SidratEvent {
     /**
      * @return a unique identifier for the object that this field points to
      */
-    public Long getReferenceUniqueID() {
+    public Long getOwnerUniqueID() {
         if (owner != null) {
             return owner.getUniqueID();
         }

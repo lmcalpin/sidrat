@@ -1,17 +1,14 @@
 package com.sidrat;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.sidrat.event.SidratClock;
 import com.sidrat.event.store.EventStore;
-import com.sidrat.event.store.hsqldb.HsqldbEventStore;
+import com.sidrat.event.store.mem.InMemoryEventStore;
 import com.sidrat.event.tracking.LocalVariables;
 import com.sidrat.event.tracking.TrackedObjects;
 import com.sidrat.instrument.InstrumentingClassLoader;
-import com.sidrat.util.Logger;
 
 /**
  * Records a program execution for future replay.
@@ -50,7 +47,7 @@ public class SidratRecorder {
     }
     
     public SidratRecorder store(String filename) {
-        this.eventStore = new HsqldbEventStore(filename);
+        this.eventStore = new InMemoryEventStore(true, filename);
         return this;
     }
     

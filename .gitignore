@@ -3,9 +3,8 @@ sidrat-core/sidrat-*-test
 sidrat-test/
 sidrat-rb/
 sidrat-eclipse-plugin/
-*/target
 .classpath
 .project
 .settings
-*/bin
 bin/
+target/

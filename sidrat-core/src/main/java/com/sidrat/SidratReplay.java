@@ -15,7 +15,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
-import com.sidrat.event.store.hsqldb.HsqldbEventReader;
+import com.sidrat.event.store.mem.InMemoryEventReader;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.ExecutionLocation;
@@ -53,7 +53,7 @@ public class SidratReplay {
     }
 
     public SidratReplay(String fileName) {
-        this.eventReader = new HsqldbEventReader(fileName);
+        this.eventReader = new InMemoryEventReader(fileName);
     }
 
     public SidratReplay withSource(String source) {

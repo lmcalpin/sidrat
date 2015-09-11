@@ -34,10 +34,7 @@ public class SidratFieldTrackingTest {
         
         replay.gotoEvent(6);
         fieldValues = replay.eval(trackedObject);
-        System.out.println(fieldValues);
-        
-        // TODO: lookup fields in the 'theClass' object
-        // TODO: map should hold pointer to object instance in our db, not the original toString
+        Assert.assertEquals(2, fieldValues.size());
     }
 
 }
