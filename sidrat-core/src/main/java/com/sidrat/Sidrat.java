@@ -2,6 +2,9 @@ package com.sidrat;
 
 import java.util.Arrays;
 
+import com.sidrat.event.store.hsqldb.HsqldbEventReader;
+import com.sidrat.event.store.hsqldb.HsqldbEventStore;
+
 /**
  * Starts Sidrat from the command line.
  *  
@@ -15,12 +18,14 @@ public class Sidrat {
         if (action.equalsIgnoreCase("-debug")) {
             String[] rest = Arrays.copyOfRange(args, 2, args.length);
             SidratRecorder recorder = SidratRegistry.instance().getRecorder();
-            recorder.store("sidrat").record(target, rest);
+            // target is the class name that has the main method that we will record
+            recorder.store(new HsqldbEventStore("sidrat")).record(target, rest);
         } else if (action.equalsIgnoreCase("-replay")) {
             String source = null;
             if (args.length >= 3)
                 source = args[2];
-            SidratReplay replayer = new SidratReplay(target);
+            // target is the name of the Sidrat recording
+            SidratReplay replayer = new SidratReplay(new HsqldbEventReader(target));
             if (source != null)
                 replayer.withSource(source);
             replayer.replay();

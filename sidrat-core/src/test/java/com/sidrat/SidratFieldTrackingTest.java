@@ -4,24 +4,22 @@ import com.metatrope.testprogram.ForFieldTrackingTest;
 
 import java.util.Map;
 
+import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.TrackedObject;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class SidratFieldTrackingTest {
-    @BeforeClass
-    public static void setup() {
-        SidratRecorder recorder = SidratRegistry.instance().newRecorder();
-        recorder.store("sidrat-fields-test").record(ForFieldTrackingTest.class.getName());
+public class SidratFieldTrackingTest extends BaseRecorderTest {
+    public SidratFieldTrackingTest(EventRepositoryFactory factory) {
+        super(factory);
     }
-    
+
     @Test
     public void testFieldTracking() {
-        SidratReplay replay = new SidratReplay("sidrat-fields-test");
+        recorder.record(ForFieldTrackingTest.class.getName());
         replay.withSource("src/test/java");
         replay.gotoEvent(3);
         Map<String,CapturedLocalVariableValue> locals = replay.locals();

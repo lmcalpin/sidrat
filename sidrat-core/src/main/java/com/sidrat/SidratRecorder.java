@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import com.google.common.base.Preconditions;
 import com.sidrat.event.SidratClock;
 import com.sidrat.event.store.EventStore;
-import com.sidrat.event.store.mem.InMemoryEventStore;
+import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 import com.sidrat.event.tracking.LocalVariables;
 import com.sidrat.event.tracking.TrackedObjects;
 import com.sidrat.instrument.InstrumentingClassLoader;
@@ -47,7 +47,7 @@ public class SidratRecorder {
     }
     
     public SidratRecorder store(String filename) {
-        this.eventStore = new InMemoryEventStore(true, filename);
+        this.eventStore = new HsqldbEventStore(filename);
         return this;
     }
     

@@ -23,8 +23,8 @@ import com.sidrat.util.Pair;
 public class InMemoryEventReader implements EventReader {
     private InMemoryEventStore store;
 
-    public InMemoryEventReader(String partition) {
-        this.store = new InMemoryEventStore(false, partition);
+    public InMemoryEventReader(InMemoryEventStore store) {
+        this.store = store;
     }
 
     @Override
