@@ -59,6 +59,9 @@ public class SidratRecorder {
     private void startRecording() {
         Preconditions.checkNotNull(eventStore);
         createClassLoader();
+        this.objectsTracker = new TrackedObjects();
+        this.localVariablesTracker = new LocalVariables();
+        this.clock = new SidratClock();
     }
     
     /**
@@ -97,9 +100,6 @@ public class SidratRecorder {
     public void stop() {
         if (this.eventStore != null)
             this.eventStore.close();
-        this.objectsTracker = new TrackedObjects();
-        this.localVariablesTracker = new LocalVariables();
-        this.clock = new SidratClock();
     }
     
     public Class<?> instrument(Class<?> clazz) {

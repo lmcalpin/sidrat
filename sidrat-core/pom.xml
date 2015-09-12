@@ -11,9 +11,9 @@
 	<description>Java event recorder</description>
 	<dependencies>
 		<dependency>
-			<groupId>javassist</groupId>
+			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
-			<version>3.9.0.GA</version>
+			<version>3.20.0-GA</version>
 		</dependency>
 		<dependency>
 			<groupId>third-party</groupId>
@@ -50,7 +50,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
-            <scope>test</scope>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>

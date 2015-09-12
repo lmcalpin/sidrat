@@ -3,12 +3,9 @@ package com.sidrat.junit;
 import com.sidrat.SidratRecorder;
 import com.sidrat.SidratRegistry;
 import com.sidrat.event.store.EventReader;
-import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.EventRepositoryFactory;
-import com.sidrat.event.store.hsqldb.HsqldbEventReader;
-import com.sidrat.event.store.hsqldb.HsqldbEventStore;
-import com.sidrat.event.store.mem.InMemoryEventReader;
-import com.sidrat.event.store.mem.InMemoryEventStore;
+import com.sidrat.event.store.EventStore;
+import com.sidrat.event.store.mem.InMemoryEventRepository;
 
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -48,9 +45,9 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
         }
         // default values
         if (store == null) {
-            InMemoryEventStore memstore = new InMemoryEventStore();
+            InMemoryEventRepository memstore = new InMemoryEventRepository();
             store = memstore;
-            reader = new InMemoryEventReader(memstore);
+            reader = memstore;
         }
         recorder.store(store);
         final EventReader eventReader = reader; 

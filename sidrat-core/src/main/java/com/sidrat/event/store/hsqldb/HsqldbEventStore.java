@@ -108,8 +108,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
     public void store(SidratFieldChangedEvent event) {
         Long ownerID = foundObject(event.getOwner());
         Long objectID = foundObject(event.getTrackedValue());
-        // String variableUuid = ownerClassName + ":" + ownerID + ":" + event.getVariableName();
-        String variableUuid = String.valueOf(ownerID);
+        String variableUuid = String.valueOf(objectID);
         if (!persistedFields.keySet().contains(variableUuid)) {
             Long id = jdbcHelper.insert("INSERT INTO fields(object_id,field_name) VALUES(?,?)", ownerID, event.getVariableName());
             persistedFields.put(variableUuid, id);

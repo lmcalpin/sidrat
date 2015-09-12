@@ -153,15 +153,20 @@ public class MethodInstrumenter {
         if (signatureTypes.length == 0)
             return "null";
         StringBuilder signatureNames = new StringBuilder("new java.lang.String[] {");
+        boolean foundVariable = false;
         for (int i = memberShift; i < signatureTypes.length + memberShift; i++) {
-            if (i > memberShift) {
+            if (foundVariable) {
                 signatureNames.append(",");
             }
 
             LocalVariable lv = parser.context.localVariables.get(i);
-            SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(ctBehavior, lv);
-
-            signatureNames.append("\"").append(lv.name).append("\"");
+            if (lv != null) {
+                SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(ctBehavior, lv);
+                signatureNames.append("\"").append(lv.name).append("\"");
+                foundVariable = true;
+            } else {
+                foundVariable = false;
+            }
         }
         signatureNames.append("}");
         return signatureNames.toString();
