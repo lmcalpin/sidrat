@@ -1,6 +1,7 @@
 package com.sidrat.event.tracking;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.sidrat.SidratProcessingException;
 
@@ -46,38 +47,11 @@ public class TrackedObject implements Serializable {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((className == null) ? 0 : className.hashCode());
-        result = prime * result + ((uniqueID == null) ? 0 : uniqueID.hashCode());
-        result = prime * result + ((value == null) ? 0 : value.hashCode());
-        return result;
+        return Objects.hash(uniqueID, className, value);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        TrackedObject other = (TrackedObject) obj;
-        if (className == null) {
-            if (other.className != null)
-                return false;
-        } else if (!className.equals(other.className))
-            return false;
-        if (uniqueID == null) {
-            if (other.uniqueID != null)
-                return false;
-        } else if (!uniqueID.equals(other.uniqueID))
-            return false;
-        if (value == null) {
-            if (other.value != null)
-                return false;
-        } else if (!value.equals(other.value))
-            return false;
-        return true;
+        return Objects.equals(this,  obj);
     }
 }

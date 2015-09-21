@@ -346,6 +346,8 @@ public class SidratReplay {
     }
 
     public void print(SidratExecutionEvent event) {
+        if (event == null)
+            return;
         event.print(System.out);
         String sourceCode = lookupSourceCode(event);
         if (sourceCode != null)
