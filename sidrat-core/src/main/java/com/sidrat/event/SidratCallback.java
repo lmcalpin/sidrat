@@ -29,30 +29,19 @@ public class SidratCallback {
     // the SidratMethodEntryEvent that preceded them on the current stack frame.
     public static Map<ExecutionLocation, SidratMethodEntryEvent> FRAME_EVENT_MAP = new HashMap<ExecutionLocation, SidratMethodEntryEvent>();
     
-    public static void enter(Object obj, String clazz, String method, String[] names, Object[] args) {
-        Map<String,Object> argMap = Collections.emptyMap();
-        if (names != null) {
-            argMap = ZipUtils.zipAsMap(names, args);
-        }
+    // TODO: capture arguments
+    public static void enter(Object obj, String clazz, String method) {
         TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
         pushFrame(trackedObj, clazz, method);
-        SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame(), argMap);
+        SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame());
         SidratRegistry.instance().getRecorder().getEventStore().store(event);
         FRAME_EVENT_MAP.put(currentFrame(), event);
         ENTERED.set(Boolean.TRUE);
     }
     
-    public static void enter(String clazz, String method, String[] names, Object[] args) {
-        enter(null, clazz, method, names, args);
-    }
-    
-    /**
-     * Only used by tests as a convenience... TODO: should be eliminated
-     * @deprecated
-     */
-    @Deprecated
+    // TODO: capture arguments
     public static void enter(String clazz, String method) {
-        enter(null, clazz, method, new String[]{}, new Object[]{});
+        enter(null, clazz, method);
     }
     
     public static void exit(byte val) {

@@ -6,7 +6,12 @@ import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.mem.InMemoryEventRepository;
+import com.sidrat.instrument.ClassInstrumentationException;
+import com.sidrat.instrument.Instrumented;
+import com.sidrat.instrument.InstrumentingClassLoader;
+import com.sidrat.instrument.SidratAgentTransformer;
 
+import org.junit.Assert;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
@@ -23,7 +28,31 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
     }
     
     private static Class<?> instrument(Class<?> klass) {
-        return SidratRegistry.instance().getRecorder().instrument(klass);
+        try {
+            // don't instrument if the agent is running
+            if (SidratAgentTransformer.isActive()) {
+                Assert.assertTrue("TestRunner expected a Sidrat instrumented test class", instrumented(klass));
+                return klass;
+            }
+            InstrumentingClassLoader classLoader = new InstrumentingClassLoader();
+            classLoader.blacklist("org.junit");
+            classLoader.blacklist("com.sidrat");
+            Thread.currentThread().setContextClassLoader(classLoader);
+            return classLoader.instrument(klass);
+        } catch (ClassInstrumentationException e) {
+            return klass;
+        } catch (ClassNotFoundException e) {
+            return klass;
+        }
+    }
+    
+    private static boolean instrumented(Class<?> klass) {
+        for (Class<?> intf : klass.getInterfaces()) {
+            if (intf.isAssignableFrom(Instrumented.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -33,14 +62,14 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
         SidratRecorder recorder = SidratRegistry.instance().getRecorder();
         SidratEventStore ann = super.getTestClass().getJavaClass().getAnnotation(SidratEventStore.class);
         if (ann != null) {
-            String factoryClass = ann.factory();
+            Class<?> factoryClass = ann.factory();
             String name = ann.name();
             try {
-                EventRepositoryFactory eventStoreFactory = (EventRepositoryFactory) Class.forName(factoryClass).newInstance();
+                EventRepositoryFactory eventStoreFactory = (EventRepositoryFactory) factoryClass.newInstance();
                 store = eventStoreFactory.store(name);
                 reader = eventStoreFactory.reader(name);
             } catch (Exception e) {
-                throw new IllegalStateException("A Sidrat Event Store could not be initialized");
+                throw new IllegalStateException("A Sidrat Event Store could not be initialized", e);
             }
         }
         // default values
@@ -51,9 +80,7 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
         }
         recorder.store(store);
         final EventReader eventReader = reader; 
-        recorder.record(() -> {
-            notifier.addListener(new SidratRunListener(recorder, eventReader));
-            super.run(notifier);
-        });
+        notifier.addListener(new SidratRunListener(recorder, eventReader));
+        super.run(notifier);
     }
 }

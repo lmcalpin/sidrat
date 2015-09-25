@@ -14,22 +14,20 @@ public class SidratMethodEntryEvent extends SidratEvent {
     private ExecutionLocation executionContext;
     private Long threadID;
     private String threadName;
-    private Map<String,Object> arguments;
     
-    public SidratMethodEntryEvent(ExecutionLocation executionContext, Map<String,Object> arguments) {
-        this(SidratRegistry.instance().getRecorder().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName(), arguments);
+    public SidratMethodEntryEvent(ExecutionLocation executionContext) {
+        this(SidratRegistry.instance().getRecorder().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName());
     }
 
-    public SidratMethodEntryEvent(Long time, ExecutionLocation executionContext, Long threadID, String threadName, Map<String,Object> arguments) {
+    public SidratMethodEntryEvent(Long time, ExecutionLocation executionContext, Long threadID, String threadName) {
         super(time);
         this.executionContext = executionContext;
         this.threadID = threadID;
         this.threadName = threadName;
-        this.arguments = arguments;
     }
 
-    public static SidratMethodEntryEvent entering(ExecutionLocation executionContext, Map<String,Object> arguments) {
-        SidratMethodEntryEvent event = new SidratMethodEntryEvent(executionContext, arguments);
+    public static SidratMethodEntryEvent entering(ExecutionLocation executionContext) {
+        SidratMethodEntryEvent event = new SidratMethodEntryEvent(executionContext);
         return event;
     }
 

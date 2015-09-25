@@ -9,7 +9,6 @@ import java.util.List;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventRepositoryFactory;
-import com.sidrat.event.store.mem.InMemoryEventRepositoryFactory;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -26,7 +25,7 @@ public abstract class BaseRecorderTest {
     public static Collection<Object[]> configs() {
         List<Object[]> factories = new ArrayList<>();
         factories.add(new Object[] { new HsqldbEventRepositoryFactory() });
-        factories.add(new Object[] { new InMemoryEventRepositoryFactory() });
+        //factories.add(new Object[] { new InMemoryEventRepositoryFactory() });
         return factories;
     }
 
@@ -47,7 +46,7 @@ public abstract class BaseRecorderTest {
 
     @Before
     public void setup() {
-        repositoryName = "sidrat-test-" + System.currentTimeMillis();
+        repositoryName = "sidrat-test-" + (Math.random() * 100) + System.currentTimeMillis();
         store = factory.store(repositoryName);
         recorder = SidratRegistry.instance().newRecorder();
         recorder.store(store);

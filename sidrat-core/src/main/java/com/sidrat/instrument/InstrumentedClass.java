@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.sidrat.SidratProcessingException;
 import com.sidrat.util.Logger;
 
+import javassist.ByteArrayClassPath;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtBehavior;
@@ -17,29 +18,23 @@ import javassist.NotFoundException;
  * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
-public class InstrumentedClass {
-    private final String className, packageName;
-    private Class<?> original;
-    private Class<?> replacement;
-    private ClassPool pool;
-    
+class InstrumentedClass<T> {
     private static final Logger logger = new Logger();
 
     private CtClass ctClass;
 
-    public InstrumentedClass(ClassPool pool, Class<?> clazz) {
-        this.pool = pool;
-        this.original = clazz;
-        this.className = clazz.getName();
-        this.packageName = clazz.getPackage().getName();
-        this.replacement = createReplacement(original);
+    public InstrumentedClass(ClassPool pool, Class<T> clazz) {
+        createReplacement(pool, clazz);
     }
 
-    public static InstrumentedClass instrument(ClassPool pool, Class<?> javaClass) {
-        return new InstrumentedClass(pool, javaClass);
+    public InstrumentedClass(ClassPool pool, String className, byte[] bytes) {
+        pool.insertClassPath(new ByteArrayClassPath(className, bytes));
+        createReplacement(pool, className, bytes);
     }
 
-    private Class<?> createReplacement(Class<?> original) {
+    private void createReplacement(ClassPool pool, Class<T> original) {
+        String className = original.getName();
+        
         try {
             ctClass = pool.get(className);
         } catch (NotFoundException e1) {
@@ -49,13 +44,37 @@ public class InstrumentedClass {
         try {
             for (CtClass intf : ctClass.getInterfaces()) {
                 if (intf.getName().equalsIgnoreCase(Instrumented.class.getName())) {
-                    throw new SidratProcessingException("Already instrumented: " + className);
+                    return;
                 }
             }
         } catch (NotFoundException e) {
             throw new SidratProcessingException("Failed while examining: " + className);
         }
+        
+        instrument(pool, className, ctClass);
+    }
 
+    private byte[] createReplacement(ClassPool pool, String className, byte[] bytes) {
+        try {
+            ctClass = pool.get(className);
+            instrument(pool, className, ctClass);
+            return getReplacementBytebuffer();
+        } catch (Exception e) {
+            throw new SidratProcessingException("Failed while processing: " + className, e);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    public Class<T> toClass() {
+        try {
+            Class<T> replacement = ctClass.toClass();
+            return replacement;
+        } catch (CannotCompileException e) {
+            throw new SidratProcessingException("Error enhancing: " + ctClass.getName(), e);
+        }
+    }
+
+    private void instrument(ClassPool pool, String className, CtClass ctClass) {
         try {
             ctClass.addInterface(pool.get(Instrumented.class.getName()));
         } catch (NotFoundException e1) {
@@ -66,40 +85,13 @@ public class InstrumentedClass {
             MethodInstrumenter methodInstrumenter = new MethodInstrumenter(ctBehavior);
             methodInstrumenter.instrument();
         }
-        
-        Class<?> replacement;
-        try {
-            replacement = ctClass.toClass();
-        } catch (CannotCompileException e) {
-            throw new SidratProcessingException("Error enhancing: " + className, e);
-        }
-        ctClass.defrost();
-        return replacement;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getPackageName() {
-        return packageName;
-    }
-
-    public Class<?> getOriginal() {
-        return original;
-    }
-
-    public Class<?> getReplacement() {
-        return replacement;
     }
 
     public byte[] getReplacementBytebuffer() {
         try {
             return ctClass.toBytecode();
-        } catch (IOException e) {
-            throw new SidratProcessingException("Error enhancing: " + className, e);
-        } catch (CannotCompileException e) {
-            throw new SidratProcessingException("Error enhancing: " + className, e);
+        } catch (IOException | CannotCompileException e) {
+            throw new SidratProcessingException("Error creating bytecode: " + ctClass.getName(), e);
         }
     }
 }

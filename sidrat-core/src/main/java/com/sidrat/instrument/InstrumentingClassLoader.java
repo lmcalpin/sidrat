@@ -1,12 +1,7 @@
 package com.sidrat.instrument;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.sidrat.SidratProcessingException;
 import com.sidrat.util.Logger;
-
-import javassist.ClassPool;
 
 /**
  * A classloader that instruments the classes it loads so that we can record program execution.
@@ -16,23 +11,26 @@ import javassist.ClassPool;
 public class InstrumentingClassLoader extends java.lang.ClassLoader {
     private static final Logger logger = new Logger();
 
-    private List<String> whiteList = new ArrayList<String>();
-    private boolean useWhiteList = true;
-    
-    private ClassPool pool = new ClassPool();
+    private ClassInstrumenter instrumenter = new ClassInstrumenter().allowAll();
 
     public InstrumentingClassLoader() {
-        this.pool.appendSystemPath();
     }
     
-    public void addToWhiteList(String packageName) {
-        whiteList.add(packageName);
+    public InstrumentingClassLoader whitelistClass(String className) {
+        this.instrumenter.whitelistClass(className);
+        return this;
     }
     
-    public void setUseWhiteList(boolean useWhiteList) {
-        this.useWhiteList = useWhiteList;
+    public InstrumentingClassLoader whitelist(String packageRoot) {
+        this.instrumenter.whitelistPackage(packageRoot);
+        return this;
     }
-
+    
+    public InstrumentingClassLoader blacklist(String packageRoot) {
+        this.instrumenter.blacklistPackage(packageRoot);
+        return this;
+    }
+    
     @Override
     protected Class<?> loadClass(String className, boolean resolve) throws java.lang.ClassNotFoundException {
         Class<?> clazz = findLoadedClass(className);
@@ -40,11 +38,10 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
             return clazz;
 
         Class<?> originalClass = getParent().loadClass(className);
-        if (!isAllowed(className)) {
+        if (!instrumenter.isAllowed(className)) {
             return originalClass;
         }
         try {
-            logger.info("Instrumenting: " + className);
             clazz = instrument(originalClass);
         } catch (ClassNotFoundException e) {
             throw new SidratProcessingException("Error instrumenting " + className, e);
@@ -60,18 +57,14 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
     }
 
     public Class<?> instrument(Class<?> originalClass) throws ClassNotFoundException {
-        InstrumentedClass instrumentedClass = InstrumentedClass.instrument(pool, originalClass);
-        Class<?> replacementClass = instrumentedClass.getReplacement();
-        return replacementClass;
-    }
-
-    private boolean isAllowed(String className) {
-        if (!useWhiteList)
-            return true;
-        for (String pkg : whiteList) {
-            if (className.startsWith(pkg))
-                return true;
+        try {
+            InstrumentedClass<?> instrumentedClass = instrumenter.instrument(originalClass);
+            if (instrumentedClass == null)
+                return originalClass;
+            Class<?> replacementClass = instrumentedClass.toClass();
+            return replacementClass;
+        } catch (ClassInstrumentationException e) {
+            return originalClass;
         }
-        return false;
     }
 }

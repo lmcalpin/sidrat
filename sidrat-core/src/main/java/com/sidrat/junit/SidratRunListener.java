@@ -4,9 +4,13 @@ import java.util.Collection;
 
 import com.google.common.base.Strings;
 import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
+import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventReader;
+import com.sidrat.event.store.mem.InMemoryEventRepository;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 
+import org.junit.Assert;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
@@ -18,6 +22,11 @@ import org.junit.runner.notification.RunListener;
 public class SidratRunListener extends RunListener {
     private final SidratRecorder recorder;
     private final EventReader eventReader;
+    
+    public SidratRunListener() {
+        this.recorder = SidratRegistry.instance().getRecorder();
+        this.eventReader = new InMemoryEventRepository();
+    }
     
     public SidratRunListener(SidratRecorder recorder, EventReader eventReader) {
         this.recorder = recorder;
@@ -34,6 +43,12 @@ public class SidratRunListener extends RunListener {
         System.out.println(failure.getTestHeader() + " FAILED!!!!!!!");
 
         long lastEventCounter = recorder.getClock().current();
+        if (lastEventCounter == 0) {
+            Assert.fail("A Sidrat instrumented test was not executed");
+        }
+        System.out.println(lastEventCounter);
+        SidratExecutionEvent exec = eventReader.find(lastEventCounter);
+        System.out.println("Finished in: " + exec.getClassName() + "#" + exec.getMethodName() + "@" + exec.getLineNumber());
         Collection<CapturedLocalVariableValue> locals = eventReader.locals(lastEventCounter).values();
         
         StringBuilder sb = new StringBuilder();

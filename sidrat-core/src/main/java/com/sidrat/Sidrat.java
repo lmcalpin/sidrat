@@ -2,6 +2,7 @@ package com.sidrat;
 
 import java.util.Arrays;
 
+import com.sidrat.cli.SidratReplayCli;
 import com.sidrat.event.store.hsqldb.HsqldbEventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 
@@ -25,7 +26,7 @@ public class Sidrat {
             if (args.length >= 3)
                 source = args[2];
             // target is the name of the Sidrat recording
-            SidratReplay replayer = new SidratReplay(new HsqldbEventReader(target));
+            SidratReplayCli replayer = new SidratReplayCli(new HsqldbEventReader(target));
             if (source != null)
                 replayer.withSource(source);
             replayer.replay();

@@ -8,7 +8,6 @@ import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class SidratLocalVariableTrackingTest extends BaseRecorderTest {
@@ -19,7 +18,6 @@ public class SidratLocalVariableTrackingTest extends BaseRecorderTest {
     @Test
     public void testLocalVariableTracking() {
         recorder.record(ForLocalVariableTest.class.getName());
-        replay.withSource("src/test/java");
         replay.gotoEvent(1);
         Map<String,CapturedLocalVariableValue> locals = replay.locals();
         Assert.assertEquals(1, locals.size());

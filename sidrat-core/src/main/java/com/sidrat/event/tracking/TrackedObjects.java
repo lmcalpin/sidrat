@@ -1,18 +1,15 @@
 package com.sidrat.event.tracking;
 
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.sidrat.util.Objects;
 
+/**
+ * Assign a unique identifier to objects that we see.
+ *
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class TrackedObjects {
-    private Map<Long, WeakReference<TrackedObject>> trackedObjects = new HashMap<Long, WeakReference<TrackedObject>>();
-    
     private Long getUniqueIDFor(Object obj) {
         Long id = Objects.getUniqueIdentifier(obj);
-        if (!trackedObjects.containsKey(id))
-            trackedObjects.put(id, new WeakReference<TrackedObject>(new TrackedObject(obj, id)));
         return id;
     }
     
@@ -20,16 +17,6 @@ public class TrackedObjects {
         if (obj == null)
             return null;
         Long id = getUniqueIDFor(obj);
-        WeakReference<TrackedObject> found = trackedObjects.get(id);
-        if (found != null) {
-            return found.get();
-        }
-        return null;
+        return new TrackedObject(obj, id);
     }
-    
-    public Object lookup(Long id) {
-        WeakReference<TrackedObject> ref = trackedObjects.get(id);
-        return ref.get();
-    }
-
 }

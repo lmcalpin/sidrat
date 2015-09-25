@@ -1,10 +1,25 @@
 package com.sidrat.util;
 
+import java.io.InputStream;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
 public class Logger {
     private java.util.logging.Logger logger;
+
+    static {
+        try {
+            if (System.getProperty("java.util.logging.config.file") == null) {
+                InputStream is = Logger.class.getResourceAsStream("/logging.properties");
+                if (is != null) {
+                    LogManager.getLogManager().readConfiguration(is);
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
     public Logger() {
         logger = java.util.logging.Logger.getAnonymousLogger();

@@ -10,6 +10,10 @@ import java.lang.instrument.Instrumentation;
  */
 public class SidratAgent {
     public static void premain(String agentArguments, Instrumentation instrumentation) {
-        instrumentation.addTransformer(new SidratAgentTransformer());
+        try {
+            instrumentation.addTransformer(new SidratAgentTransformer());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
