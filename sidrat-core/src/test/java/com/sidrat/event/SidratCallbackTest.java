@@ -27,7 +27,7 @@ public class SidratCallbackTest {
     
     @Test
     public void testEnterPushesCurrentFrameToStack() {
-        SidratCallback.enter("com.test", "foo");
+        SidratCallback.enter("main", "com.test", "foo");
         Assert.assertEquals("com.test", SidratCallback.currentFrame().getClassName());
         Assert.assertEquals("foo", SidratCallback.currentFrame().getMethodName());
     }
@@ -35,7 +35,7 @@ public class SidratCallbackTest {
     @Test
     public void testExitPopsCurrentFrameToStack() {
         Assert.assertNull(SidratCallback.currentFrame());
-        SidratCallback.enter("com.test", "foo");
+        SidratCallback.enter("main", "com.test", "foo");
         Assert.assertNotNull(SidratCallback.currentFrame());
         SidratCallback.exit(null);
         Assert.assertNull(SidratCallback.currentFrame());
@@ -49,7 +49,7 @@ public class SidratCallbackTest {
         
         EasyMock.replay(mockedEventStore);
         
-        SidratCallback.enter("com.Test", "foo");
+        SidratCallback.enter("main", "com.Test", "foo");
         
         EasyMock.verify(mockedEventStore);
         
@@ -67,7 +67,7 @@ public class SidratCallbackTest {
         
         EasyMock.replay(mockedEventStore);
         
-        SidratCallback.enter("com.Test", "foo");
+        SidratCallback.enter("main", "com.Test", "foo");
         SidratCallback.exec(10);
         
         EasyMock.verify(mockedEventStore);
@@ -87,7 +87,7 @@ public class SidratCallbackTest {
         EasyMock.replay(mockedEventStore);
         
         // local variable should have been logged in the LocalVariablesTracker when instrumenting
-        SidratCallback.enter("com.Test", "foo");
+        SidratCallback.enter("main", "com.Test", "foo");
         SidratCallback.variableChanged("com.Test", "foo", 10, "bar", 10, 100);
         
         EasyMock.verify(mockedEventStore);
@@ -106,7 +106,7 @@ public class SidratCallbackTest {
         
         EasyMock.replay(mockedEventStore);
         
-        SidratCallback.enter("com.Test", "foo");
+        SidratCallback.enter("main", "com.Test", "foo");
         Object obj = new Object();
         SidratCallback.fieldChanged(obj, 10, "foo");
         
@@ -127,7 +127,7 @@ public class SidratCallbackTest {
         
         EasyMock.replay(mockedEventStore);
         
-        SidratCallback.enter("com.Test", "foo");
+        SidratCallback.enter("main", "com.Test", "foo");
         SidratCallback.exec(6);
         SidratCallback.exec(6);
         

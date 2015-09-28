@@ -54,7 +54,7 @@ public class MethodInstrumenter implements Opcode {
         int lineNumber;
         int op;
         int next;
-        int prev;
+        StackFrame prev;
         int param;
     }
 
@@ -62,10 +62,7 @@ public class MethodInstrumenter implements Opcode {
         try {
             LineNumberAttribute ainfo = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
             int flags = ctBehavior.getMethodInfo().getAccessFlags();
-            CodeIterator ci = ca.iterator();
             Map<Integer, LocalVariable> variables = getLocalVariables(ctBehavior);
-            // TODO: temp hack...
-            Stack<LocalVariable> variable = new Stack<>();
             Stack<StackFrame> stackFrames = analyze(ca.iterator());
             int currentLineNumber = -1;
             for (StackFrame sf : stackFrames) {
@@ -80,7 +77,6 @@ public class MethodInstrumenter implements Opcode {
                     compile(stackFrames, sf, src);
                 }
                 logger.finest(thisLineNumber + ": [pos#" + sf.pos + ", original#" + sf.original_pos + "] " + mnemonic);
-                ci.move(sf.pos);
                 // track assignments to fields
                 if (isFieldStore(op)) {
                     int methodRefIdx = sf.param;
@@ -92,27 +88,27 @@ public class MethodInstrumenter implements Opcode {
                         String src = "com.sidrat.event.SidratCallback.fieldChanged(" + refClassName + ".class, " + staticFieldRef + ",\"" + fieldName + "\");";
                         compile(stackFrames, sf, src);
                     } else {
-                        LocalVariable localVariable = variable.pop();
-                        if (!variable.isEmpty())
-                            localVariable = variable.peek();
-                        String src = "com.sidrat.event.SidratCallback.fieldChanged(" + localVariable.getName() + ", " + localVariable.getName() + "." + fieldName + ",\"" + fieldName + "\");";
-                        compile(stackFrames, sf, src);
+                        int prevPos = sf.prev.prev.pos;
+                        int prevOp = sf.prev.prev.op;
+                        int slot = getLocalVariableSlot(prevPos, prevOp);
+                        LocalVariable localVariable = variables.get(slot);
+                        if (localVariable.getName().equals("this") && methodName.equals("<init>")) {
+                            // TODO: track this after call to super completes
+                            logger.severe("Failed to locate variable loaded using op [" + op + " / " + mnemonic + "] at line number " + thisLineNumber);
+                        } else {
+                            String src = "com.sidrat.event.SidratCallback.fieldChanged(" + localVariable.getName() + ", " + localVariable.getName() + "." + fieldName + ",\"" + fieldName + "\");";
+                            compile(stackFrames, sf, src);
+                        }
                     }
-                    variable.clear();
-                } else if (isLocalVariableLoad(op)) {
-                    // track assignments to local variables
-                    int slot = getLocalVariableSlot(ci, sf.original_pos, op);
-                    LocalVariable localVariable = variables.get(slot);
-                    logger.finest("push: " + localVariable);
-                    variable.push(localVariable);
                 } else if (isLocalVariableUpdate(op)) {
                     // track assignments to local variables
-                    int slot = getLocalVariableSlot(ci, sf.original_pos, op);
+                    int slot = getLocalVariableSlot(sf.pos, op);
                     LocalVariable localVariable = variables.get(slot);
                     if (localVariable != null) {
                         String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", " + localVariable.getEnd() + ");";
                         compile(stackFrames, sf, src);
                     } else {
+                        // TODO: effectively final parameters passed in to a lambda are not being handled properly and end up here
                         logger.severe("Failed to locate variable loaded using op [" + op + " / " + mnemonic + "] at line number " + thisLineNumber);
                     }
                 }
@@ -124,12 +120,12 @@ public class MethodInstrumenter implements Opcode {
             if ((flags & AccessFlag.STATIC)  != 0 || ctBehavior.getMethodInfo().isConstructor()) {
 //                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(\"" + className + "\",\""
 //                        + methodName + "\", " + signatureNames + ", $args);");
-              ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(\"" + className + "\",\""
+              ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(Thread.currentThread().getName(), \"" + className + "\",\""
               + methodName + "\");");
             } else {
 //                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, \"" + className + "\",\""
 //                        + methodName + "\", " + signatureNames + ", $args);");
-                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, \"" + className + "\",\""
+                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, Thread.currentThread().getName(), \"" + className + "\",\""
                         + methodName + "\");");
             }
             ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit($_);");
@@ -146,7 +142,7 @@ public class MethodInstrumenter implements Opcode {
     
     private Stack<StackFrame> analyze(CodeIterator ci) throws BadBytecode {
         Stack<StackFrame> stackFrames = new Stack<StackFrame>();
-        int last = -1;
+        StackFrame last = null;
         while (ci.hasNext()) {
             int pos = ci.next();
             int op = ci.byteAt(pos);
@@ -155,7 +151,7 @@ public class MethodInstrumenter implements Opcode {
             sf.original_pos = pos;
             sf.op = op;
             sf.prev = last;
-            last = sf.pos;
+            last = sf;
             sf.next = ci.lookAhead();
             if (isFieldStore(op))
                 sf.param = ci.u16bitAt(pos + 1);
@@ -167,7 +163,9 @@ public class MethodInstrumenter implements Opcode {
         return stackFrames;
     }
 
-    private int getLocalVariableSlot(CodeIterator ci, int pos, int op) {
+    private int getLocalVariableSlot(int pos, int op) {
+        CodeIterator ci = ca.iterator();
+        ci.move(pos);
         String mnemonic = Mnemonic.OPCODE[op];
         String[] opCodeSlotRef = mnemonic.toUpperCase().split("_");
         int slot = opCodeSlotRef.length == 2 ? Integer.parseInt(opCodeSlotRef[1]) : ci.byteAt(pos + 1);
@@ -220,14 +218,11 @@ public class MethodInstrumenter implements Opcode {
             byte[] code = compileImpl(sf, src);
             ci.insert(code);
             int offset = code.length;
-            int last = -1;
             for (StackFrame frame : stackFrames) {
                 if (frame.pos > sf.pos) {
                     frame.pos += offset;
-                    frame.prev = last;
                     frame.next += offset;
                 }
-                last = frame.pos;
             }
         } catch (CannotCompileException e) {
             logger.severe("Failed to compile [" + src + "] at line number [" + sf.lineNumber + "]");

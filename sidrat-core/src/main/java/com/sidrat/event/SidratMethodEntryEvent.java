@@ -49,4 +49,8 @@ public class SidratMethodEntryEvent extends SidratEvent {
         return executionContext.getMethodName();
     }
 
+    @Override
+    public String toString() {
+        return getThreadName() + ":" + getClassName() + "." + getMethodName();
+    }
 }

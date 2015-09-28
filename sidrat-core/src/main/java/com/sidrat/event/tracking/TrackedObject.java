@@ -1,6 +1,7 @@
 package com.sidrat.event.tracking;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.sidrat.SidratProcessingException;
@@ -13,7 +14,7 @@ public class TrackedObject implements Serializable {
     private Long uniqueID;
     
     public TrackedObject(Object value, Long uniqueID) {
-        this(value.getClass().getName(), String.valueOf(value), uniqueID);
+        this(value.getClass().getName(), stringify(value), uniqueID);
     }
     
     public TrackedObject(String className, String value, Long uniqueID) {
@@ -32,6 +33,27 @@ public class TrackedObject implements Serializable {
     
     public String getValueAsString() {
         return value;
+    }
+    
+    private static String stringify(Object obj) {
+        if (obj != null && obj instanceof Object[]) {
+            return Arrays.deepToString((Object[])obj);
+        } else if (obj != null && obj instanceof int[]) {
+            return Arrays.toString((int[])obj);
+        } else if (obj != null && obj instanceof short[]) {
+            return Arrays.toString((short[])obj);
+        } else if (obj != null && obj instanceof byte[]) {
+            return Arrays.toString((byte[])obj);
+        } else if (obj != null && obj instanceof boolean[]) {
+            return Arrays.toString((boolean[])obj);
+        } else if (obj != null && obj instanceof long[]) {
+            return Arrays.toString((long[])obj);
+        } else if (obj != null && obj instanceof float[]) {
+            return Arrays.toString((float[])obj);
+        } else if (obj != null && obj instanceof double[]) {
+            return Arrays.toString((double[])obj);
+        }
+        return String.valueOf(obj);
     }
 
     @Override

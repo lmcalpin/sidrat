@@ -39,11 +39,11 @@ public class SidratCallback {
     }
 
     // TODO: capture arguments
-    public static void enter(Object obj, String clazz, String method) {
+    public static void enter(Object obj, String threadName, String clazz, String method) {
         if (!isRecording)
             return;
         TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
-        pushFrame(trackedObj, clazz, method);
+        pushFrame(trackedObj, threadName, clazz, method);
         SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame());
         SidratRegistry.instance().getRecorder().getEventStore().store(event);
         FRAME_EVENT_MAP.put(currentFrame(), event);
@@ -51,8 +51,8 @@ public class SidratCallback {
     }
 
     // TODO: capture arguments
-    public static void enter(String clazz, String method) {
-        enter(null, clazz, method);
+    public static void enter(String threadName, String clazz, String method) {
+        enter(null, threadName, clazz, method);
     }
 
     public static void exit(byte val) {
@@ -212,8 +212,8 @@ public class SidratCallback {
         fieldChanged(obj, Character.valueOf(val), name);
     }
 
-    static void pushFrame(TrackedObject object, String className, String methodName) {
-        ExecutionLocation frame = new ExecutionLocation(object, className, methodName);
+    static void pushFrame(TrackedObject object, String threadName, String className, String methodName) {
+        ExecutionLocation frame = new ExecutionLocation(object, threadName, className, methodName);
         Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
         if (stackFrames == null) {
             stackFrames = new Stack<ExecutionLocation>();
