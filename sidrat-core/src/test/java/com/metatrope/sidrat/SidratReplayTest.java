@@ -1,6 +1,6 @@
-package com.sidrat;
+package com.metatrope.sidrat;
 
-import com.metatrope.testprogram.ForLocalVariableTest;
+import com.metatrope.sidrat.testprogram.ForLocalVariableTest;
 
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
@@ -18,9 +18,15 @@ public class SidratReplayTest extends BaseRecorderTest {
     public void testLookupSourceCode() {
         recorder.record(ForLocalVariableTest.class.getName());
         replay.withSource("src/test/java");
-        SidratExecutionEvent event = replay.gotoEvent(2);
+        SidratExecutionEvent event = replay.gotoEvent(1);
         String sourceCode = replay.lookupSourceCode(event);
+        Assert.assertEquals("        int firstVariable = 1;", sourceCode);
+        event = replay.gotoEvent(2);
+        sourceCode = replay.lookupSourceCode(event);
         Assert.assertEquals("        int secondVariable = 2;", sourceCode);
+        event = replay.gotoEvent(3);
+        sourceCode = replay.lookupSourceCode(event);
+        Assert.assertEquals("        int thirdVariable = 3;", sourceCode);
     }
 
     @Test

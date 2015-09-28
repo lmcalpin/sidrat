@@ -1,6 +1,6 @@
-package com.sidrat;
+package com.metatrope.sidrat;
 
-import com.metatrope.testprogram.ForLocalVariableTest;
+import com.metatrope.sidrat.testprogram.ForLocalVariableTest;
 
 import java.util.Map;
 

@@ -1,4 +1,4 @@
-package com.sidrat;
+package com.metatrope.sidrat;
 
 import java.util.function.IntSupplier;
 import java.util.stream.IntStream;

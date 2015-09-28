@@ -83,12 +83,9 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
 
     @Override
     public Map<String,CapturedLocalVariableValue> locals(Long time) {
-        Long methodEntryTime = (Long) jdbcHelper.first("SELECT MAX(id) AS t FROM method_entries WHERE id <= ?", time).get("T");
-        Map<String,Object> methodEntrypoint = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", methodEntryTime);
         Map<String,Object> currentLine = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", time);
         if (currentLine == null)
             return Collections.emptyMap();
-        Integer lineNumberStart = (Integer) methodEntrypoint.get("LINENUMBER");
         Integer lineNumberCurrent = (Integer) currentLine.get("LINENUMBER");
         List<Map<String, Object>> variables = jdbcHelper.query("SELECT * FROM variables WHERE rangeStart <= ? AND rangeEnd >= ?", lineNumberCurrent, lineNumberCurrent);
         Map<String,CapturedLocalVariableValue> locals = Maps.newHashMap();

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -82,7 +83,15 @@ public class InMemoryEventRepository implements EventRepository {
 
     @Override
     public SidratExecutionEvent findNext(SidratExecutionEvent lastEvent) {
-        return events.higherEntry(lastEvent.getTime()).getValue();
+        try {
+            Entry<Long, SidratExecutionEvent> nextEntry = events.higherEntry(lastEvent.getTime());
+            if (nextEntry == null)
+                return null;
+            return nextEntry.getValue();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Override
@@ -92,15 +101,14 @@ public class InMemoryEventRepository implements EventRepository {
 
     @Override
     public Map<String, CapturedLocalVariableValue> locals(Long now) {
-        SidratMethodEntryEvent methodEntry = entries.floorEntry(now).getValue();
-        Long t = locals.ceilingKey(methodEntry.getTime());
         Map<String, CapturedLocalVariableValue> ret = new HashMap<>();
-        while (t != null && t <= now) {
-            SidratLocalVariableEvent var = locals.get(t);
-            t = locals.higherKey(t);
-            TrackedVariable variable = new TrackedVariable(var.getUniqueID(), var.getVariableName(), var.getVariableValidityRange());
-            CapturedLocalVariableValue value = new CapturedLocalVariableValue(t, variable, var.getTrackedValue());
-            ret.put(var.getVariableName(), value);
+        int currentLineNumber = find(now).getLineNumber();
+        for (SidratLocalVariableEvent var : locals.headMap(now, true).values()) {
+            if (var.getScopeStart() <= currentLineNumber && var.getScopeEnd() >= currentLineNumber) {
+                TrackedVariable variable = new TrackedVariable(var.getUniqueID(), var.getVariableName(), var.getVariableValidityRange());
+                CapturedLocalVariableValue value = new CapturedLocalVariableValue(var.getTime(), variable, var.getTrackedValue());
+                ret.put(var.getVariableName(), value);
+            }
         }
         return ret;
     }

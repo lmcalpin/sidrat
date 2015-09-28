@@ -35,8 +35,6 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
                 return klass;
             }
             InstrumentingClassLoader classLoader = new InstrumentingClassLoader();
-            classLoader.blacklist("org.junit");
-            classLoader.blacklist("com.sidrat");
             Thread.currentThread().setContextClassLoader(classLoader);
             return classLoader.instrument(klass);
         } catch (ClassInstrumentationException e) {

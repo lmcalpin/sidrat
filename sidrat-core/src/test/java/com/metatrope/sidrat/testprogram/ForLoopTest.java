@@ -1,4 +1,4 @@
-package com.metatrope.testprogram;
+package com.metatrope.sidrat.testprogram;
 
 public class ForLoopTest {
     public static void main(String[] args) {

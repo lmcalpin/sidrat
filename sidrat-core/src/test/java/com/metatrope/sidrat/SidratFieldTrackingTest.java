@@ -1,6 +1,6 @@
-package com.sidrat;
+package com.metatrope.sidrat;
 
-import com.metatrope.testprogram.ForFieldTrackingTest;
+import com.metatrope.sidrat.testprogram.ForFieldTrackingTest;
 
 import java.util.Map;
 

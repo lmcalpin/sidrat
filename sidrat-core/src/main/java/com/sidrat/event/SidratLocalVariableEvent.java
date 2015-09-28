@@ -47,6 +47,14 @@ public class SidratLocalVariableEvent extends SidratEvent {
         return variableValidityRange;
     }
 
+    public Integer getScopeStart() {
+        return variableValidityRange.getValue1();
+    }
+
+    public Integer getScopeEnd() {
+        return variableValidityRange.getValue2();
+    }
+
     /**
      * @return a unique identifier for the object that this field points to
      */

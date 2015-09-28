@@ -8,6 +8,7 @@ import com.sidrat.SidratProcessingException;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class ClassInstrumentationException extends SidratProcessingException {
+    private static final long serialVersionUID = 6312828793021164153L;
 
     public ClassInstrumentationException() {
         super();

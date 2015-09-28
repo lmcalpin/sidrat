@@ -6,6 +6,7 @@ import java.util.Stack;
 
 import com.sidrat.SidratProcessingException;
 import com.sidrat.SidratRegistry;
+import com.sidrat.event.tracking.LocalVariable;
 import com.sidrat.util.Logger;
 
 import javassist.CannotCompileException;
@@ -53,6 +54,7 @@ public class MethodInstrumenter implements Opcode {
         int lineNumber;
         int op;
         int next;
+        int prev;
         int param;
     }
 
@@ -93,7 +95,7 @@ public class MethodInstrumenter implements Opcode {
                         LocalVariable localVariable = variable.pop();
                         if (!variable.isEmpty())
                             localVariable = variable.peek();
-                        String src = "com.sidrat.event.SidratCallback.fieldChanged(" + localVariable.name + ", " + localVariable.name + "." + fieldName + ",\"" + fieldName + "\");";
+                        String src = "com.sidrat.event.SidratCallback.fieldChanged(" + localVariable.getName() + ", " + localVariable.getName() + "." + fieldName + ",\"" + fieldName + "\");";
                         compile(stackFrames, sf, src);
                     }
                     variable.clear();
@@ -108,8 +110,7 @@ public class MethodInstrumenter implements Opcode {
                     int slot = getLocalVariableSlot(ci, sf.original_pos, op);
                     LocalVariable localVariable = variables.get(slot);
                     if (localVariable != null) {
-                        SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(ctBehavior, localVariable);
-                        String src = "com.sidrat.event.SidratCallback.variableChanged(" + localVariable.name + ",\"" + localVariable.name + "\");";
+                        String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", " + localVariable.getEnd() + ");";
                         compile(stackFrames, sf, src);
                     } else {
                         logger.severe("Failed to locate variable loaded using op [" + op + " / " + mnemonic + "] at line number " + thisLineNumber);
@@ -145,6 +146,7 @@ public class MethodInstrumenter implements Opcode {
     
     private Stack<StackFrame> analyze(CodeIterator ci) throws BadBytecode {
         Stack<StackFrame> stackFrames = new Stack<StackFrame>();
+        int last = -1;
         while (ci.hasNext()) {
             int pos = ci.next();
             int op = ci.byteAt(pos);
@@ -152,6 +154,8 @@ public class MethodInstrumenter implements Opcode {
             sf.pos = pos;
             sf.original_pos = pos;
             sf.op = op;
+            sf.prev = last;
+            last = sf.pos;
             sf.next = ci.lookAhead();
             if (isFieldStore(op))
                 sf.param = ci.u16bitAt(pos + 1);
@@ -216,11 +220,14 @@ public class MethodInstrumenter implements Opcode {
             byte[] code = compileImpl(sf, src);
             ci.insert(code);
             int offset = code.length;
+            int last = -1;
             for (StackFrame frame : stackFrames) {
                 if (frame.pos > sf.pos) {
                     frame.pos += offset;
+                    frame.prev = last;
                     frame.next += offset;
                 }
+                last = frame.pos;
             }
         } catch (CannotCompileException e) {
             logger.severe("Failed to compile [" + src + "] at line number [" + sf.lineNumber + "]");

@@ -1,7 +1,5 @@
 package com.sidrat.event;
 
-import java.util.Map;
-
 import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.ExecutionLocation;
 

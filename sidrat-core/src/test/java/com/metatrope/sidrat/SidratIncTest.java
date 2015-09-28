@@ -1,4 +1,4 @@
-package com.sidrat;
+package com.metatrope.sidrat;
 
 import java.util.Map;
 
@@ -6,6 +6,7 @@ import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 
+import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -27,15 +28,18 @@ public class SidratIncTest extends BaseRecorderTest {
             }
             System.out.println(s);
         });
-        replay.gotoEvent(1);
-        SidratExecutionEvent event = replay.event;
+        Long time = 0L;
+        SidratExecutionEvent event = replay.gotoEvent(1);
         int i = 0;
         while (event != null) {
             i++;
             System.out.println(i + ": " + event.getLineNumber());
+            time = event.getTime();
             event = replay.readNext();
         }
+
         Map<String, CapturedLocalVariableValue> locals = replay.locals();
         System.out.println(locals);
+        Assert.assertEquals(new Long(5L), time);
     }
 }

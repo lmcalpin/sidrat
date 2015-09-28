@@ -5,12 +5,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 import com.google.common.base.Preconditions;
+import com.sidrat.event.SidratCallback;
 import com.sidrat.event.SidratClock;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 import com.sidrat.event.tracking.LocalVariables;
 import com.sidrat.event.tracking.TrackedObjects;
-import com.sidrat.instrument.InstrumentingClassLoader;
+import com.sidrat.instrument.SidratAgent;
 
 /**
  * Records a program execution for future replay.
@@ -50,12 +51,11 @@ public class SidratRecorder {
      */
     public void record(String className, String... args) {
         reset();
-        InstrumentingClassLoader classLoader = new InstrumentingClassLoader();
-        classLoader.whitelistClass(className);
-        Thread.currentThread().setContextClassLoader(classLoader);
+        SidratCallback.startRecording();
         Class<?> clazz;
         try {
-            clazz = classLoader.loadClass(className);
+            clazz = Class.forName(className);
+            SidratRegistry.instance().getPermissions().whitelistPackage(className);
             Method method = clazz.getDeclaredMethod("main", new Class[] { String[].class });
             if (Modifier.isStatic(method.getModifiers())) {
                 method.invoke(null, (Object) args);
@@ -63,15 +63,20 @@ public class SidratRecorder {
                 throw new SidratProcessingException("Missing main method on: " + className);
             }
         } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new SidratProcessingException("Failed to execute main method on: " + className);
+            throw new SidratProcessingException("Failed to execute main method on: " + className, e);
+        } finally {
+            SidratCallback.stopRecording();
         }
     }
 
     public void record(Runnable r) {
         reset();
-        ClassLoader classLoader = new InstrumentingClassLoader();
-        Thread.currentThread().setContextClassLoader(classLoader);
-        r.run();
+        SidratCallback.startRecording();
+        try {
+            r.run();
+        } finally {
+            SidratCallback.stopRecording();
+        }
     }
 
     /**

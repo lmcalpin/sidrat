@@ -1,6 +1,6 @@
-package com.sidrat;
+package com.metatrope.sidrat;
 
-import com.metatrope.testprogram.ForThreadTest;
+import com.metatrope.sidrat.testprogram.ForThreadTest;
 
 import com.sidrat.event.store.EventRepositoryFactory;
 

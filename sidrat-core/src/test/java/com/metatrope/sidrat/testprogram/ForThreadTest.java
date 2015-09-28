@@ -1,4 +1,4 @@
-package com.metatrope.testprogram;
+package com.metatrope.sidrat.testprogram;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;

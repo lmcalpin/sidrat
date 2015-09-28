@@ -1,6 +1,8 @@
 package com.sidrat.instrument;
 
+import com.sidrat.SidratPermissions;
 import com.sidrat.SidratProcessingException;
+import com.sidrat.SidratRegistry;
 import com.sidrat.util.Logger;
 
 /**
@@ -11,24 +13,16 @@ import com.sidrat.util.Logger;
 public class InstrumentingClassLoader extends java.lang.ClassLoader {
     private static final Logger logger = new Logger();
 
-    private ClassInstrumenter instrumenter = new ClassInstrumenter().allowAll();
-
+    private final ClassInstrumenter instrumenter;
+    private final SidratPermissions permissions;
+    
     public InstrumentingClassLoader() {
+        this(SidratRegistry.instance().getPermissions());
     }
     
-    public InstrumentingClassLoader whitelistClass(String className) {
-        this.instrumenter.whitelistClass(className);
-        return this;
-    }
-    
-    public InstrumentingClassLoader whitelist(String packageRoot) {
-        this.instrumenter.whitelistPackage(packageRoot);
-        return this;
-    }
-    
-    public InstrumentingClassLoader blacklist(String packageRoot) {
-        this.instrumenter.blacklistPackage(packageRoot);
-        return this;
+    public InstrumentingClassLoader(SidratPermissions permissions) {
+        this.permissions = permissions;
+        this.instrumenter = new ClassInstrumenter(permissions);
     }
     
     @Override
@@ -38,7 +32,7 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
             return clazz;
 
         Class<?> originalClass = getParent().loadClass(className);
-        if (!instrumenter.isAllowed(className)) {
+        if (!permissions.isAllowed(className)) {
             return originalClass;
         }
         try {
