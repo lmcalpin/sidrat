@@ -8,6 +8,7 @@ import com.sidrat.event.store.EventRepositoryFactory;
 import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("TODO")
 public class SidratThreadTest extends BaseRecorderTest {
     public SidratThreadTest(EventRepositoryFactory factory) {
         super(factory);
