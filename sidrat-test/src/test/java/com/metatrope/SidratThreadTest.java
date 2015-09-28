@@ -1,7 +1,8 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import com.metatrope.sidrat.testprogram.ForThreadTest;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.store.EventRepositoryFactory;
 
 import org.junit.Ignore;

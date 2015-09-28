@@ -1,9 +1,10 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import com.metatrope.sidrat.testprogram.ForFieldTrackingTest;
 
 import java.util.Map;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
@@ -20,7 +21,6 @@ public class SidratFieldTrackingTest extends BaseRecorderTest {
     @Test
     public void testFieldTracking() {
         recorder.record(ForFieldTrackingTest.class.getName());
-        replay.withSource("src/test/java");
         replay.gotoEvent(3);
         Map<String,CapturedLocalVariableValue> locals = replay.locals();
         Assert.assertEquals(1, locals.size());

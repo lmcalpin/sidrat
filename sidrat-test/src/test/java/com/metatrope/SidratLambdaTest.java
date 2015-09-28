@@ -1,8 +1,9 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import java.util.function.IntSupplier;
 import java.util.stream.IntStream;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
@@ -35,22 +36,23 @@ public class SidratLambdaTest extends BaseRecorderTest {
     public void testLambda() {
         recorder.record(ForLambdaTest.class.getName());
         SidratExecutionEvent execEvent = replay.gotoEvent(1);
-        int countLine21s = 0;
-        Long first21 = -1L;
+        int lambdaLineNumber = 22; // if the source code changes, adjust this line number
+        Long foundLambdaLine = -1L;
+        int countLambdaIterations = 0;
         int lastLine = -1;
         while (execEvent != null) {
             int currentLineNumber = execEvent.getLineNumber();
             System.out.println(execEvent.getTime() + " @ LN: " + currentLineNumber + " : " + execEvent.getClassName() + "#" + execEvent.getMethodName());
-            if (currentLineNumber == 21 && execEvent.getMethodName().equals("lambda$0")) {
-                if (first21 == -1L)
-                    first21 = execEvent.getTime();
-                countLine21s++;
+            if (currentLineNumber == lambdaLineNumber && (execEvent.getMethodName().equals("lambda$0") || execEvent.getMethodName().equals("lambda$main$1"))) {
+                if (foundLambdaLine == -1L)
+                    foundLambdaLine = execEvent.getTime();
+                countLambdaIterations++;
             }
             lastLine = execEvent.getLineNumber();
             execEvent = replay.readNext();
         }
-        Assert.assertEquals(5, countLine21s);
-        Assert.assertEquals(25, lastLine);
+        Assert.assertEquals(5, countLambdaIterations);
+        Assert.assertEquals(lambdaLineNumber + 4, lastLine);
         Assert.assertTrue(replay.locals().keySet().contains("test"));
         Assert.assertTrue(replay.locals().keySet().contains("x"));
         Assert.assertTrue(replay.locals().keySet().contains("y"));
@@ -60,9 +62,9 @@ public class SidratLambdaTest extends BaseRecorderTest {
         CapturedLocalVariableValue y = replay.locals().get("y");
         Assert.assertEquals("650", y.getCurrentValue().getValueAsString());
         // check history of x, go back in time to before first assignment
-        replay.gotoEvent(first21);
+        replay.gotoEvent(foundLambdaLine);
         Assert.assertNull(replay.locals().get("x"));
-        replay.gotoEvent(first21+4);
+        replay.gotoEvent(foundLambdaLine+4);
         Assert.assertEquals("65", replay.locals().get("x").getCurrentValue().getValueAsString());
     }
 }

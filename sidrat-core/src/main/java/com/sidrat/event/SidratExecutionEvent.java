@@ -54,4 +54,9 @@ public class SidratExecutionEvent extends SidratEvent {
             return null;
         return className + ":" + this.lineNumber;
     }
+    
+    @Override
+    public String toString() {
+        return method.getClassName() + "#" + method.getMethodName() + ":" + this.lineNumber;
+    }
 }

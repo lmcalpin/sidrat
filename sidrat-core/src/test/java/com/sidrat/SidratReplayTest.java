@@ -1,22 +1,21 @@
-package com.metatrope.sidrat;
+package com.sidrat;
 
-import com.metatrope.sidrat.testprogram.ForLocalVariableTest;
+import com.metatrope.sidrat.testprogram.SidrateSampleProgram;
 
 import com.sidrat.event.SidratExecutionEvent;
-import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.util.Tuple3;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SidratReplayTest extends BaseRecorderTest {
-    public SidratReplayTest(EventRepositoryFactory factory) {
-        super(factory);
+public class SidratReplayTest extends BaseReplayTest {
+    public SidratReplayTest() {
+        super();
     }
 
     @Test
     public void testLookupSourceCode() {
-        recorder.record(ForLocalVariableTest.class.getName());
+        recorder.record(SidrateSampleProgram.class.getName());
         replay.withSource("src/test/java");
         SidratExecutionEvent event = replay.gotoEvent(1);
         String sourceCode = replay.lookupSourceCode(event);

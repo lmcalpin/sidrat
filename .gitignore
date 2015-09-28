@@ -1,7 +1,5 @@
-sidrat-core/sidrat
-sidrat-core/sidrat-*-test
 sidrat-rb/
-sidrat-test*/
+**/sidrat-testrepo-*/
 sidrat-eclipse-plugin/
 .classpath
 .project

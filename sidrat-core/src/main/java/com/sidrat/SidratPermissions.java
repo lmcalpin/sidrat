@@ -2,6 +2,9 @@ package com.sidrat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
 
 /**
  * Keeps track of what we should and should not record.
@@ -13,6 +16,12 @@ public class SidratPermissions {
     private List<String> packageBlacklist = new ArrayList<>();
     private List<String> classWhitelist = new ArrayList<>();
     private boolean whitelistEverything = false;
+    
+    private static final Set<String> BLACKLISTED_PACKAGES = Sets.newHashSet("jdk.internal.",
+            "com.sidrat.",
+            "java.",
+            "org.junit.",
+            "sun.");
 
     public SidratPermissions() {
         allowAll();
@@ -64,7 +73,8 @@ public class SidratPermissions {
         if (classWhitelist.contains(classname))
             return true;
         for (String packageRoot : packageWhitelist) {
-            if (classname.startsWith(packageRoot + ".")) {
+            String packageRootDot = packageRoot.endsWith(".") ? packageRoot : packageRoot + ".";
+            if (classname.startsWith(packageRootDot)) {
                 return !onPackageBlacklist(classname);
             }
         }
@@ -72,14 +82,10 @@ public class SidratPermissions {
     }
 
     private boolean onPackageBlacklist(String classname) {
-        if (classname.startsWith("com.sidrat."))
-            return true;
-        if (classname.startsWith("java."))
-            return true;
-        if (classname.startsWith("org.junit."))
-            return true;
-        if (classname.startsWith("sun."))
-            return true;
+        for (String blacklistedPackage : BLACKLISTED_PACKAGES) {
+            if (classname.startsWith(blacklistedPackage))
+                return true;
+        }
         for (String packageRoot : packageBlacklist) {
             if (classname.startsWith(packageRoot + ".")) {
                 return true;

@@ -1,7 +1,8 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import com.metatrope.sidrat.testprogram.ForLoopTest;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 

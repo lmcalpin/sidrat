@@ -1,9 +1,10 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import com.metatrope.sidrat.testprogram.ForLocalVariableTest;
 
 import java.util.Map;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 
