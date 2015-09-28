@@ -1,8 +1,9 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import java.util.function.IntSupplier;
 import java.util.stream.IntStream;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;

@@ -1,4 +1,4 @@
-package com.metatrope.sidrat;
+package com.sidrat;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +17,8 @@ import com.sidrat.instrument.SidratAgent;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
@@ -47,12 +47,6 @@ public abstract class BaseRecorderTest {
         this.factory = factory;
     }
     
-    @BeforeClass
-    public static void beforeSuite() {
-        SidratRegistry.instance().getPermissions().whitelistPackage("com.metatrope");
-        SidratAgent.createAndLoadAgent();
-    }
-
     @Rule
     public TestName testName;
     
@@ -64,7 +58,9 @@ public abstract class BaseRecorderTest {
 
     @Before
     public void setup() {
-        repositoryName = "sidrat-test-" + (Math.random() * 100) + System.currentTimeMillis();
+        if (!SidratAgent.isInstrumentationAvailable())
+            Assert.fail("Sidrat agent is not running");
+        repositoryName = "sidrat-testrepo-" + System.currentTimeMillis();
         store = factory.store(repositoryName);
         recorder = SidratRegistry.instance().newRecorder();
         recorder.store(store);

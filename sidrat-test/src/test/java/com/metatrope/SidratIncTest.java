@@ -1,16 +1,15 @@
-package com.metatrope.sidrat;
+package com.metatrope;
 
 import java.util.Map;
 
+import com.sidrat.BaseRecorderTest;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("TODO")
 public class SidratIncTest extends BaseRecorderTest {
     public SidratIncTest(EventRepositoryFactory factory) {
         super(factory);
@@ -39,7 +38,8 @@ public class SidratIncTest extends BaseRecorderTest {
         }
 
         Map<String, CapturedLocalVariableValue> locals = replay.locals();
-        System.out.println(locals);
-        Assert.assertEquals(new Long(5L), time);
+        Assert.assertTrue(locals.keySet().contains("s"));
+        Assert.assertTrue(locals.keySet().contains("i"));
+        Assert.assertEquals(new Long(43L), time);
     }
 }

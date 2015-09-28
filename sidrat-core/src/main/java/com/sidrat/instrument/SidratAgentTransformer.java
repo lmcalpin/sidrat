@@ -38,6 +38,7 @@ public class SidratAgentTransformer implements ClassFileTransformer {
     public byte[] transform(ClassLoader classLoader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
         String adjustedClassName = className.replace("/", ".");
         if (SidratRegistry.instance().getPermissions().isAllowed(adjustedClassName)) {
+            logger.info("Instrumenting: " + adjustedClassName);
             try {
                 transformedClasses.add(className);
                 InstrumentedClass<?> instrumentedClass = instrumenter.instrument(adjustedClassName, classfileBuffer);
