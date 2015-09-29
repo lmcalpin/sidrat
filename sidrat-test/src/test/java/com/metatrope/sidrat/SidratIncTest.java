@@ -1,4 +1,4 @@
-package com.metatrope;
+package com.metatrope.sidrat;
 
 import java.util.Map;
 

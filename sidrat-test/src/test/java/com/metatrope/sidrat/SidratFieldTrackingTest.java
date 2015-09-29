@@ -1,4 +1,4 @@
-package com.metatrope;
+package com.metatrope.sidrat;
 
 import com.metatrope.sidrat.testprogram.ForFieldTrackingTest;
 
