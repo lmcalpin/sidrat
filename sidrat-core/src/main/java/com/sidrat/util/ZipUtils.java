@@ -26,15 +26,27 @@ public class ZipUtils {
     }
 
     public static <A,B> Map<A,B> zipAsMap(A[] as, B[] bs) {
-        return zipAsMap(Lists.newArrayList(as), Lists.newArrayList(bs));
+        return zipAsMap(Lists.newArrayList(as), Lists.newArrayList(bs), true);
+    }
+    
+    public static <A,B> Map<A,B> zipAsMap(A[] as, B[] bs, boolean sameSize) {
+        return zipAsMap(Lists.newArrayList(as), Lists.newArrayList(bs), sameSize);
     }
     
     public static <A,B> Map<A,B> zipAsMap(List<A> as, List<B> bs) {
-        if (as.size() != bs.size()) {
-            throw new IllegalArgumentException("the two lists must be ");
+        return zipAsMap(as, bs, true);
+    }
+
+    public static <A,B> Map<A,B> zipAsMap(List<A> as, List<B> bs, boolean sameSize) {
+        if (as.size() != bs.size() && sameSize) {
+            throw new IllegalArgumentException("the two lists must be equal in size");
+        }
+        int size = as.size();
+        if (!sameSize) {
+            size = Math.min(as.size(), bs.size());
         }
         Map<A,B> map = new HashMap<A,B>();
-        for (int idx = 0; idx < as.size(); idx++) {
+        for (int idx = 0; idx < size; idx++) {
             A a = as.get(idx);
             B b = bs.get(idx);
             map.put(a,b);

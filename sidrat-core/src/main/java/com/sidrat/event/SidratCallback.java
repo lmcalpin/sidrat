@@ -12,6 +12,7 @@ import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Logger;
 import com.sidrat.util.Objects;
 import com.sidrat.util.Pair;
+import com.sidrat.util.ZipUtils;
 
 public class SidratCallback {
     private static final Logger logger = new Logger();
@@ -38,21 +39,28 @@ public class SidratCallback {
         isRecording = false;
     }
 
-    // TODO: capture arguments
-    public static void enter(Object obj, String threadName, String clazz, String method) {
+    public static void enter(Object obj, String threadName, String clazz, String method, String argNames, Object[] argValues) {
         if (!isRecording)
             return;
         TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
-        pushFrame(trackedObj, threadName, clazz, method);
+        ExecutionLocation frame = pushFrame(trackedObj, threadName, clazz, method);
+        if (argValues.length > 0) {
+            String[] args = argNames.split(",");
+            Map<String,Object> argMap = ZipUtils.zipAsMap(args, argValues, false);
+            for (String var : argMap.keySet()) {
+                Object val = argMap.get(var);
+                SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
+                SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+            }
+        }
         SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame());
         SidratRegistry.instance().getRecorder().getEventStore().store(event);
         FRAME_EVENT_MAP.put(currentFrame(), event);
         ENTERED.set(Boolean.TRUE);
     }
 
-    // TODO: capture arguments
-    public static void enter(String threadName, String clazz, String method) {
-        enter(null, threadName, clazz, method);
+    public static void enter(String threadName, String clazz, String method, String argNames, Object[] argValues) {
+        enter(null, threadName, clazz, method, argNames, argValues);
     }
 
     public static void exit(byte val) {
@@ -212,7 +220,7 @@ public class SidratCallback {
         fieldChanged(obj, Character.valueOf(val), name);
     }
 
-    static void pushFrame(TrackedObject object, String threadName, String className, String methodName) {
+    static ExecutionLocation pushFrame(TrackedObject object, String threadName, String className, String methodName) {
         ExecutionLocation frame = new ExecutionLocation(object, threadName, className, methodName);
         Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
         if (stackFrames == null) {
@@ -220,6 +228,7 @@ public class SidratCallback {
             CALL_STACK.set(stackFrames);
         }
         stackFrames.push(frame);
+        return frame;
     }
 
     static void popFrame() {

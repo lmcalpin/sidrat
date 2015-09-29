@@ -1,10 +1,12 @@
 package com.sidrat.instrument;
 
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
 import com.sidrat.SidratProcessingException;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.LocalVariable;
 import com.sidrat.util.Logger;
 
@@ -28,7 +30,7 @@ public class MethodInstrumenter implements Opcode {
     private CtClass cc;
     private final String className, methodName;
     private CodeAttribute ca;
-    
+
     private static final Logger logger = new Logger();
 
     public MethodInstrumenter(CtBehavior ctBehavior) {
@@ -41,7 +43,7 @@ public class MethodInstrumenter implements Opcode {
         if (ca == null)
             throw new ClassInstrumentationException("Error instrumenting " + className + "; no line number info");
     }
-    
+
     public void instrument() {
         try {
             LineNumberAttribute ainfo = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
@@ -92,7 +94,8 @@ public class MethodInstrumenter implements Opcode {
                         int slot = getLocalVariableSlot(instruction.getPosition(), op);
                         LocalVariable localVariable = variables.get(slot);
                         if (localVariable != null) {
-                            String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", " + localVariable.getEnd() + ");";
+                            String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
+                                    + localVariable.getEnd() + ");";
                             instruction.insert(instructions, src);
                         } else {
                             // TODO: effectively final parameters passed in to a lambda are not being handled properly and end up here
@@ -102,19 +105,13 @@ public class MethodInstrumenter implements Opcode {
                 }
             }
             int firstLineNumber = ainfo.lineNumber(0);
-            int lastLineNumber = ainfo.lineNumber(ainfo.tableLength()-1);
+            int lastLineNumber = ainfo.lineNumber(ainfo.tableLength() - 1);
             logger.finer("Instrumented method " + methodName + " " + firstLineNumber + ":" + lastLineNumber);
-            //String signatureNames = getLocalVariablesFromMethodSignature(variables);
-            if ((flags & AccessFlag.STATIC)  != 0 || ctBehavior.getMethodInfo().isConstructor()) {
-//                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(\"" + className + "\",\""
-//                        + methodName + "\", " + signatureNames + ", $args);");
-              ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(Thread.currentThread().getName(), \"" + className + "\",\""
-              + methodName + "\");");
+            String signatureNames = getLocalVariablesFromMethodSignature(variables);
+            if ((flags & AccessFlag.STATIC) != 0 || ctBehavior.getMethodInfo().isConstructor()) {
+                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter(Thread.currentThread().getName(), \"" + className + "\",\"" + methodName + "\", \"" + signatureNames + "\", $args);");
             } else {
-//                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, \"" + className + "\",\""
-//                        + methodName + "\", " + signatureNames + ", $args);");
-                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, Thread.currentThread().getName(), \"" + className + "\",\""
-                        + methodName + "\");");
+                ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, Thread.currentThread().getName(), \"" + className + "\",\"" + methodName + "\", \"" + signatureNames + "\", $args);");
             }
             ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit($_);");
         } catch (CannotCompileException e) {
@@ -127,7 +124,7 @@ public class MethodInstrumenter implements Opcode {
             throw new SidratProcessingException("Error instrumenting: " + ctBehavior, t);
         }
     }
-    
+
     private Stack<Instruction> analyze(CodeIterator ci) throws BadBytecode {
         Stack<Instruction> instructions = new Stack<Instruction>();
         Instruction last = null;
@@ -151,13 +148,33 @@ public class MethodInstrumenter implements Opcode {
         int slot = opCodeSlotRef.length == 2 ? Integer.parseInt(opCodeSlotRef[1]) : ci.byteAt(pos + 1);
         return slot;
     }
-    
+
+    private String getLocalVariablesFromMethodSignature(Map<Integer, LocalVariable> variables) throws NotFoundException {
+        int memberShift = Modifier.isStatic(ctBehavior.getModifiers()) ? 0 : 1;
+        CtClass[] signatureTypes = ctBehavior.getParameterTypes();
+        if (signatureTypes.length == 0)
+            return "";
+        StringBuilder signatureNames = new StringBuilder("");
+        boolean foundVariable = false;
+        for (int i = memberShift; i < signatureTypes.length + memberShift; i++) {
+            if (foundVariable) {
+                signatureNames.append(",");
+            }
+            LocalVariable lv = variables.get(i);
+            if (lv != null) {
+                signatureNames.append(lv.getName());
+                foundVariable = true;
+            }
+        }
+        return signatureNames.toString();
+    }
+
     public static Map<Integer, LocalVariable> getLocalVariables(CtBehavior ctBehavior) throws NotFoundException {
         Map<Integer, LocalVariable> variables = new HashMap<Integer, LocalVariable>();
         CodeAttribute codeAttribute = ctBehavior.getMethodInfo().getCodeAttribute();
         LocalVariableAttribute lva = (LocalVariableAttribute) codeAttribute.getAttribute(LocalVariableAttribute.tag);
         if (lva != null) {
-            for(int i = 0; i < lva.tableLength(); i++) {
+            for (int i = 0; i < lva.tableLength(); i++) {
                 int rangeStart = lva.startPc(i);
                 int rangeEnd = rangeStart + lva.codeLength(i);
                 int lineNumberStart = ctBehavior.getMethodInfo().getLineNumber(rangeStart) - 1;
@@ -165,16 +182,17 @@ public class MethodInstrumenter implements Opcode {
                 LocalVariable localVariable = new LocalVariable(lva.variableName(i), lineNumberStart, lineNumberEnd);
                 variables.put(i, localVariable);
             }
-        };
+        }
+        ;
         return variables;
-    }    
+    }
 
     private static int lastLineNumber(CtBehavior ctBehavior, int rangeStart, int rangeEnd, int lineNumberStart) {
         int lineNumberEnd = ctBehavior.getMethodInfo().getLineNumber(rangeEnd);
         if (rangeStart == rangeEnd) {
             return lineNumberStart;
         }
-        // when inside a loop, the last bytecode may correspond to a line number *before* the point where the 
+        // when inside a loop, the last bytecode may correspond to a line number *before* the point where the
         // variable was declared; in this case, we recursively attempt to determine the last line number *after* the
         // variable was declared where the variable is still in scope
         if (lineNumberEnd < lineNumberStart) {
