@@ -19,6 +19,8 @@ public class ForThreadTest {
         new Thread(r).start();
         new Thread(r).start();
         cdl.await();
+        int sum = 5;
+        i[0] += sum;
         System.out.println("counted: " + i[0]);
     }
 }
