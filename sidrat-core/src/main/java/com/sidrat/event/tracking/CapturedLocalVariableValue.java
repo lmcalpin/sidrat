@@ -4,7 +4,7 @@ public class CapturedLocalVariableValue implements ValueTracker {
     private Long time;
     private TrackedVariable variable;
     private TrackedObject currentValue;
-    
+
     public CapturedLocalVariableValue(Long time, TrackedVariable variable, TrackedObject value) {
         this.time = time;
         this.variable = variable;

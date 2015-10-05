@@ -1,9 +1,8 @@
-package com.sidrat.instrument;
+package com.sidrat.instrumentation;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.instrument.Instrumentation;
-import java.lang.instrument.UnmodifiableClassException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,37 +20,23 @@ import org.apache.commons.io.IOUtils;
 /**
  * A Java premain agent that initializes the ClassFileTransformer that instruments classes so that Sidrat can
  * record program execution.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratAgent {
     private static boolean initialized = false;
     private static SidratAgentTransformer transformer = new SidratAgentTransformer();
 
-    public static boolean isInstrumentationAvailable() {
-        return initialized;
+    // TODO: ugly hack... is there a better way?
+    private static void addToClassLoader(File jar) throws MalformedURLException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        URL url = new File(jar.getAbsolutePath()).toURI().toURL();
+        Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
+        method.setAccessible(true);
+        method.invoke(ClassLoader.getSystemClassLoader(), new Object[] { url });
     }
 
     public static void agentmain(String agentArguments, Instrumentation instrumentation) throws Exception {
         premain(agentArguments, instrumentation);
-    }
-
-    public static void premain(String agentArguments, Instrumentation instrumentation) {
-        initialized = true;
-        instrumentation.addTransformer(transformer);
-    }
-    
-    public static void loadAgent(String agentPath) {
-        String nameOfRunningVM = ManagementFactory.getRuntimeMXBean().getName();
-        int p = nameOfRunningVM.indexOf('@');
-        String pid = nameOfRunningVM.substring(0, p);
-        try {
-            VirtualMachine vm = VirtualMachine.attach(pid);
-            vm.loadAgent(agentPath, "");
-            vm.detach();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static void createAndLoadAgent() {
@@ -61,7 +46,7 @@ public class SidratAgent {
             File tempAgentJar = createTempAgentJar();
             loadAgent(tempAgentJar.getAbsolutePath());
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-               tempAgentJar.delete(); 
+                tempAgentJar.delete();
             }));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -84,11 +69,25 @@ public class SidratAgent {
         return tempAgentJar;
     }
 
-    // TODO: ugly hack... is there a better way?
-    private static void addToClassLoader(File jar) throws MalformedURLException, NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        URL url = new File(jar.getAbsolutePath()).toURI().toURL();
-        Method method = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
-        method.setAccessible(true);
-        method.invoke(ClassLoader.getSystemClassLoader(), new Object[] { url });
+    public static boolean isInstrumentationAvailable() {
+        return initialized;
+    }
+
+    public static void loadAgent(String agentPath) {
+        String nameOfRunningVM = ManagementFactory.getRuntimeMXBean().getName();
+        int p = nameOfRunningVM.indexOf('@');
+        String pid = nameOfRunningVM.substring(0, p);
+        try {
+            VirtualMachine vm = VirtualMachine.attach(pid);
+            vm.loadAgent(agentPath, "");
+            vm.detach();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void premain(String agentArguments, Instrumentation instrumentation) {
+        initialized = true;
+        instrumentation.addTransformer(transformer);
     }
 }

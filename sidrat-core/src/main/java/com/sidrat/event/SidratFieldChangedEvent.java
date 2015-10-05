@@ -5,7 +5,7 @@ import com.sidrat.event.tracking.TrackedObject;
 
 /**
  * Triggered when a field value changes.
- *  
+ * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratFieldChangedEvent extends SidratEvent {
@@ -13,7 +13,7 @@ public class SidratFieldChangedEvent extends SidratEvent {
     private String uniqueID;
     private String variableName;
     private TrackedObject value;
-    
+
     public SidratFieldChangedEvent(Long time) {
         super(time);
     }

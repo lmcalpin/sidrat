@@ -31,7 +31,7 @@ public class SidratExecutionEvent extends SidratEvent {
     public int getLineNumber() {
         return lineNumber;
     }
-    
+
     public String getClassName() {
         return method.getClassName();
     }
@@ -39,7 +39,7 @@ public class SidratExecutionEvent extends SidratEvent {
     public String getMethodName() {
         return method.getMethodName();
     }
-    
+
     public Long getMethodEntryTime() {
         return method.getTime();
     }
@@ -54,7 +54,7 @@ public class SidratExecutionEvent extends SidratEvent {
             return null;
         return className + ":" + this.lineNumber;
     }
-    
+
     @Override
     public String toString() {
         return method.getClassName() + "#" + method.getMethodName() + ":" + this.lineNumber;

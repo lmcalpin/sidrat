@@ -1,4 +1,4 @@
-package com.sidrat.instrument;
+package com.sidrat.instrumentation;
 
 import com.sidrat.SidratPermissions;
 import com.sidrat.SidratProcessingException;
@@ -15,16 +15,16 @@ public class InstrumentingClassLoader extends java.lang.ClassLoader {
 
     private final ClassInstrumenter instrumenter;
     private final SidratPermissions permissions;
-    
+
     public InstrumentingClassLoader() {
         this(SidratRegistry.instance().getPermissions());
     }
-    
+
     public InstrumentingClassLoader(SidratPermissions permissions) {
         this.permissions = permissions;
         this.instrumenter = new ClassInstrumenter(permissions);
     }
-    
+
     @Override
     protected Class<?> loadClass(String className, boolean resolve) throws java.lang.ClassNotFoundException {
         Class<?> clazz = findLoadedClass(className);

@@ -8,15 +8,16 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ObjectsTest {
-    private class Foo {}
+    private class Foo {
+    }
 
     Set<Long> ids;
-    
+
     @Before
     public void setUp() {
         ids = new HashSet<>();
     }
-    
+
     @Test
     public void testUniqueIdForObject() {
         Foo foo = new Foo();
@@ -27,7 +28,7 @@ public class ObjectsTest {
             seenUnique(Objects.getUniqueIdentifier(new Foo()));
         }
     }
-    
+
     @Test
     public void testUniqueIdForNumber() {
         Integer one = new Integer(1);
@@ -41,10 +42,10 @@ public class ObjectsTest {
             seenUnique(Objects.getUniqueIdentifier(new Integer(i)));
         }
     }
-    
+
     private void seenUnique(Long id) {
         if (ids.contains(id)) {
-            Assert.fail("Saw duplicate id: " + id); 
+            Assert.fail("Saw duplicate id: " + id);
         }
         ids.add(id);
     }

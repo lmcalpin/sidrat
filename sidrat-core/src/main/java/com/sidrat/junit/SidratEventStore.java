@@ -10,6 +10,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SidratEventStore {
-    Class<?> factory();
+    Class<?>factory();
+
     String name();
 }

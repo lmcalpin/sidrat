@@ -5,14 +5,14 @@ import com.sidrat.event.tracking.ExecutionLocation;
 
 /**
  * Triggered when we start execution of a new method.
- *  
+ * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratMethodEntryEvent extends SidratEvent {
     private ExecutionLocation executionContext;
     private Long threadID;
     private String threadName;
-    
+
     public SidratMethodEntryEvent(ExecutionLocation executionContext) {
         this(SidratRegistry.instance().getRecorder().getClock().next(), executionContext, Thread.currentThread().getId(), Thread.currentThread().getName());
     }

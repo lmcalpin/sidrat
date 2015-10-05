@@ -25,7 +25,7 @@ import com.sidrat.util.Pair;
 
 /**
  * Reads an HSQLDB database Sidrat recording of a program execution.
- *  
+ * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
@@ -82,25 +82,25 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     }
 
     @Override
-    public Map<String,CapturedLocalVariableValue> locals(Long time) {
-        Map<String,Object> currentLine = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", time);
+    public Map<String, CapturedLocalVariableValue> locals(Long time) {
+        Map<String, Object> currentLine = jdbcHelper.first("SELECT id, lineNumber FROM executions WHERE id = ?", time);
         if (currentLine == null)
             return Collections.emptyMap();
         Integer lineNumberCurrent = (Integer) currentLine.get("LINENUMBER");
         List<Map<String, Object>> variables = jdbcHelper.query("SELECT * FROM variables WHERE rangeStart <= ? AND rangeEnd >= ?", lineNumberCurrent, lineNumberCurrent);
-        Map<String,CapturedLocalVariableValue> locals = Maps.newHashMap();
-        for (Map<String,Object> var : variables) {
-            String name = (String)var.get("VARIABLE_NAME");
-            Long id = (Long)var.get("ID");
-            String uuid = (String)var.get("UUID");
-            Integer rangeStart = (Integer)var.get("RANGESTART");
-            Integer rangeEnd = (Integer)var.get("RANGEEND");
-            TrackedVariable variable = new TrackedVariable(uuid, name, new Pair<Integer,Integer>(rangeStart, rangeEnd));
-            Long mostRecentUpdate = (Long)jdbcHelper.first("SELECT MAX(event_id) AS EVENT_ID FROM variable_updates WHERE variable_id = ? AND event_id <= ?", id, time).get("EVENT_ID");
+        Map<String, CapturedLocalVariableValue> locals = Maps.newHashMap();
+        for (Map<String, Object> var : variables) {
+            String name = (String) var.get("VARIABLE_NAME");
+            Long id = (Long) var.get("ID");
+            String uuid = (String) var.get("UUID");
+            Integer rangeStart = (Integer) var.get("RANGESTART");
+            Integer rangeEnd = (Integer) var.get("RANGEEND");
+            TrackedVariable variable = new TrackedVariable(uuid, name, new Pair<Integer, Integer>(rangeStart, rangeEnd));
+            Long mostRecentUpdate = (Long) jdbcHelper.first("SELECT MAX(event_id) AS EVENT_ID FROM variable_updates WHERE variable_id = ? AND event_id <= ?", id, time).get("EVENT_ID");
             if (mostRecentUpdate == null) {
                 locals.put(name, null);
             } else {
-                Map<String,Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ? AND vu.variable_id=?", mostRecentUpdate, id);
+                Map<String, Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ? AND vu.variable_id=?", mostRecentUpdate, id);
                 String val = (String) update.get("VALUE");
                 Long ref = (Long) update.get("REF");
                 String className = (String) update.get("CLAZZ");
@@ -111,13 +111,13 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         }
         return locals;
     }
-    
+
     @Override
-    public Map<String,CapturedFieldValue> eval(Long time, Long objectID) {
+    public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
         List<Map<String, Object>> fields = jdbcHelper.query("SELECT * FROM fields WHERE object_id = ?", objectID);
-        Map<String,CapturedFieldValue> values = Maps.newHashMap();
-        for (Map<String,Object> var : fields) {
-            String fieldName = (String)var.get("FIELD_NAME");
+        Map<String, CapturedFieldValue> values = Maps.newHashMap();
+        for (Map<String, Object> var : fields) {
+            String fieldName = (String) var.get("FIELD_NAME");
             Map<String, Object> update = jdbcHelper.first("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? AND fu.event_id <= ? ORDER BY event_id DESC", objectID, time);
             if (update != null) {
                 String value = (String) update.get("VALUE");
@@ -130,49 +130,49 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         }
         return values;
     }
-    
+
     @Override
-    public List<Pair<Long,TrackedObject>> fieldHistory(Long fieldID) {
+    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
         List<Map<String, Object>> updates = jdbcHelper.find("SELECT fu.*, o.clazz FROM field_updates fu LEFT OUTER JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? ORDER BY event_id DESC", fieldID);
         List<Pair<Long, TrackedObject>> changes = Lists.newArrayList();
-        for (Map<String,Object> update : updates) {
+        for (Map<String, Object> update : updates) {
             Long time = (Long) update.get("EVENT_ID");
             String value = (String) update.get("VALUE");
             Long ref = (Long) update.get("REF");
             String className = (String) update.get("CLAZZ");
             TrackedObject obj = new TrackedObject(className, value, ref);
-            Pair<Long,TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);
+            Pair<Long, TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);
             changes.add(timeAndValue);
         }
         return changes;
     }
-    
+
     @Override
-    public List<Pair<Long,TrackedObject>> localVariableHistory(String localVariableID) {
+    public List<Pair<Long, TrackedObject>> localVariableHistory(String localVariableID) {
         List<Map<String, Object>> updates = jdbcHelper.find("SELECT vu.*, v.clazz FROM variable_updates vu LEFT OUTER JOIN variables v ON vu.variable_id = v.id WHERE v.uuid = ? ORDER BY event_id DESC", localVariableID);
         List<Pair<Long, TrackedObject>> changes = Lists.newArrayList();
-        for (Map<String,Object> update : updates) {
+        for (Map<String, Object> update : updates) {
             Long time = (Long) update.get("EVENT_ID");
             String value = (String) update.get("VALUE");
             Long ref = (Long) update.get("REF");
             String className = (String) update.get("CLAZZ");
             TrackedObject obj = new TrackedObject(className, value, ref);
-            Pair<Long,TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);
+            Pair<Long, TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);
             changes.add(timeAndValue);
         }
         return changes;
     }
-    
+
     @Override
     public List<SidratExecutionEvent> executions(String className, String method, int lineNumber) {
         List<Map<String, Object>> rows = jdbcHelper.find(EVENTS_QUERY + "WHERE clazz=? AND method=? AND lineNumber=?", className, method, lineNumber);
         List<SidratExecutionEvent> events = Lists.newArrayList();
-        for (Map<String,Object> row : rows) {
+        for (Map<String, Object> row : rows) {
             events.add(getEvent(row));
         }
         return events;
     }
-        
+
     private String findThread(Long threadID) {
         String strThreadID = String.valueOf(threadID);
         String threadName = SystemState.current().getThreadName(strThreadID);
@@ -215,7 +215,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         event.setVariableName(fieldName);
         event.setValue(value);
     }
-
+    
     private void addLocalVariableDetails(Long time, SidratLocalVariableEvent event) {
         Map<String, Object> varUpdateDetails = jdbcHelper.first(
                 "SELECT v.variable_name, vu.value, v.rangeStart, v.rangeEnd FROM variable_updates vu LEFT JOIN variables v ON vu.variable_id = v.id WHERE vu.event_id = ?", time);

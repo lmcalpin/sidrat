@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Premain-Class: com.sidrat.instrument.SidratAgent
+Premain-Class: com.sidrat.instrumentation.SidratAgent
 Can-Redefine-Classes: true
 Can-Retransform-Classes: true
 Can-Set-Native-Method-Prefix: true

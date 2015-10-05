@@ -1,4 +1,4 @@
-package com.sidrat.instrument;
+package com.sidrat.instrumentation;
 
 import com.sidrat.SidratPermissions;
 import com.sidrat.util.Logger;

@@ -21,7 +21,6 @@ public class SidratThreadTest extends BaseRecorderTest {
     @Test
     public void testThreadTracking() {
         recorder.record(ForThreadTest.class.getName());
-        replay.withSource("src/test/java");
         replay.gotoEvent(1);
         Long lastEvent = 1L;
         SidratExecutionEvent event = replay.gotoEvent(1);
@@ -29,9 +28,9 @@ public class SidratThreadTest extends BaseRecorderTest {
             lastEvent = event.getTime();
             event = replay.readNext();
         }
-        Map<String,CapturedLocalVariableValue> locals = replay.locals();
+        Map<String, CapturedLocalVariableValue> locals = replay.locals();
         System.out.println(locals + "@" + lastEvent);
         String iArr = locals.get("i").getCurrentValue().getValueAsString();
-        //Assert.assertEquals("[90]", iArr);
+        Assert.assertEquals("[90]", iArr);
     }
 }

@@ -9,7 +9,7 @@ import com.sidrat.event.store.EventStore;
 
 public class InMemoryEventRepositoryFactory implements EventRepositoryFactory {
     private static Map<String, InMemoryEventRepository> STORES = new ConcurrentHashMap<>();
-    
+
     public InMemoryEventRepositoryFactory() {
     }
 
@@ -27,6 +27,5 @@ public class InMemoryEventRepositoryFactory implements EventRepositoryFactory {
             return null;
         return store;
     }
-
 
 }

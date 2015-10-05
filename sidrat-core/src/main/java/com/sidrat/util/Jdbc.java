@@ -30,7 +30,7 @@ public class Jdbc {
     public List<Map<String, Object>> find(String sql, Object... params) {
         return query(sql, params);
     }
-    
+
     public List<Map<String, Object>> query(String sql, Object... params) {
         try (Connection conn = provider.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(sql)) {

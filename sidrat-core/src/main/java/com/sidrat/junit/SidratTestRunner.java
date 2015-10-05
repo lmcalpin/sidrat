@@ -6,10 +6,10 @@ import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.mem.InMemoryEventRepository;
-import com.sidrat.instrument.ClassInstrumentationException;
-import com.sidrat.instrument.Instrumented;
-import com.sidrat.instrument.InstrumentingClassLoader;
-import com.sidrat.instrument.SidratAgentTransformer;
+import com.sidrat.instrumentation.ClassInstrumentationException;
+import com.sidrat.instrumentation.Instrumented;
+import com.sidrat.instrumentation.InstrumentingClassLoader;
+import com.sidrat.instrumentation.SidratAgentTransformer;
 
 import org.junit.Assert;
 import org.junit.runner.notification.RunNotifier;
@@ -17,16 +17,16 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 
 /**
- * Instrument the class we are testing so that we can create a Sidrat recording.  If the test fails, we
+ * Instrument the class we are testing so that we can create a Sidrat recording. If the test fails, we
  * will dump useful information, such as local variables, etc.
- *  
+ * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratTestRunner extends BlockJUnit4ClassRunner {
     public SidratTestRunner(Class<?> klass) throws InitializationError {
         super(instrument(klass));
     }
-    
+
     private static Class<?> instrument(Class<?> klass) {
         try {
             // don't instrument if the agent is running
@@ -43,7 +43,7 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
             return klass;
         }
     }
-    
+
     private static boolean instrumented(Class<?> klass) {
         for (Class<?> intf : klass.getInterfaces()) {
             if (intf.isAssignableFrom(Instrumented.class)) {
@@ -77,7 +77,7 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
             reader = memstore;
         }
         recorder.store(store);
-        final EventReader eventReader = reader; 
+        final EventReader eventReader = reader;
         notifier.addListener(new SidratRunListener(recorder, eventReader));
         super.run(notifier);
     }

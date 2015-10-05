@@ -1,4 +1,4 @@
-package com.sidrat.instrument;
+package com.sidrat.instrumentation;
 
 import java.io.IOException;
 
@@ -34,13 +34,13 @@ class InstrumentedClass<T> {
 
     private void createReplacement(ClassPool pool, Class<T> original) {
         String className = original.getName();
-        
+
         try {
             ctClass = pool.get(className);
         } catch (NotFoundException e1) {
             throw new SidratProcessingException("Could not locate: " + className);
         }
-        
+
         try {
             for (CtClass intf : ctClass.getInterfaces()) {
                 if (intf.getName().equalsIgnoreCase(Instrumented.class.getName())) {
@@ -50,7 +50,7 @@ class InstrumentedClass<T> {
         } catch (NotFoundException e) {
             throw new SidratProcessingException("Failed while examining: " + className);
         }
-        
+
         instrument(pool, className, ctClass);
     }
 
@@ -63,7 +63,7 @@ class InstrumentedClass<T> {
             throw new SidratProcessingException("Failed while processing: " + className, e);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     public Class<T> toClass() {
         try {
@@ -80,7 +80,7 @@ class InstrumentedClass<T> {
         } catch (NotFoundException e1) {
             throw new SidratProcessingException("Failed to add marker interface to " + className);
         }
-        
+
         for (final CtBehavior ctBehavior : ctClass.getDeclaredBehaviors()) {
             MethodInstrumenter methodInstrumenter = new MethodInstrumenter(ctBehavior);
             methodInstrumenter.instrument();

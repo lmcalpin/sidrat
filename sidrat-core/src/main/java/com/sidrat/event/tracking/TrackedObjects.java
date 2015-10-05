@@ -12,7 +12,7 @@ public class TrackedObjects {
         Long id = Objects.getUniqueIdentifier(obj);
         return id;
     }
-    
+
     public TrackedObject found(Object obj) {
         if (obj == null)
             return null;

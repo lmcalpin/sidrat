@@ -1,4 +1,4 @@
-package com.sidrat.instrument;
+package com.sidrat.instrumentation;
 
 /**
  * Marker interface to identify classes that have already been instrumented.

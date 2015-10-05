@@ -223,7 +223,7 @@ public class SidratReplayCli extends SidratReplay {
                     found = true;
                     print(eventReader.localVariableHistory(clvv.getVariable().getId()));
                 }
-            } 
+            }
             if (!found) {
                 out.println("Variable " + variable + " not found");
             }
@@ -235,13 +235,13 @@ public class SidratReplayCli extends SidratReplay {
             print(key, vals.get(key));
         }
     }
-    
+
     private void printLocalVariables(Map<String, CapturedLocalVariableValue> vals) {
         for (String key : vals.keySet()) {
             print(key, vals.get(key));
         }
     }
-    
+
     private void print(String key, TrackedObject value) {
         if (value == null) {
             out.println(key + " = null");
@@ -288,9 +288,9 @@ public class SidratReplayCli extends SidratReplay {
             }
         }
     }
-    
-    public void print(List<Pair<Long,TrackedObject>> valueChanges) {
-        for (Pair<Long,TrackedObject> valueChange : valueChanges) {
+
+    public void print(List<Pair<Long, TrackedObject>> valueChanges) {
+        for (Pair<Long, TrackedObject> valueChange : valueChanges) {
             out.println(" " + valueChange.getValue1() + ": " + valueChange.getValue2().getValueAsString());
         }
     }
@@ -318,7 +318,7 @@ public class SidratReplayCli extends SidratReplay {
         print(event);
         return event;
     }
-    
+
     @Override
     public SidratExecutionEvent prevEvent() {
         SidratExecutionEvent prevEvent = super.prevEvent();

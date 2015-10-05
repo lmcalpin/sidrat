@@ -1,4 +1,4 @@
-package com.sidrat.instrument;
+package com.sidrat.instrumentation;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -18,7 +18,7 @@ import com.sidrat.util.Logger;
  */
 public class SidratAgentTransformer implements ClassFileTransformer {
     private static final Logger logger = new Logger();
-    
+
     private ClassInstrumenter instrumenter = new ClassInstrumenter(SidratRegistry.instance().getPermissions());
     private static boolean isAgentActive = false;
     private Set<String> transformedClasses = new HashSet<>();
@@ -31,8 +31,10 @@ public class SidratAgentTransformer implements ClassFileTransformer {
         }
         isAgentActive = true;
     }
-    
-    public static boolean isActive() { return isAgentActive; }
+
+    public static boolean isActive() {
+        return isAgentActive;
+    }
 
     @Override
     public byte[] transform(ClassLoader classLoader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
@@ -43,7 +45,7 @@ public class SidratAgentTransformer implements ClassFileTransformer {
                 transformedClasses.add(className);
                 InstrumentedClass<?> instrumentedClass = instrumenter.instrument(adjustedClassName, classfileBuffer);
                 if (instrumentedClass == null) {
-                    return classfileBuffer; 
+                    return classfileBuffer;
                 }
                 return instrumentedClass.getReplacementBytebuffer();
             } catch (Exception e) {
@@ -53,7 +55,7 @@ public class SidratAgentTransformer implements ClassFileTransformer {
         }
         return null;
     }
-    
+
     public Set<String> getTransformedClasses() {
         return Collections.unmodifiableSet(transformedClasses);
     }

@@ -16,17 +16,13 @@ public class SidratPermissions {
     private List<String> packageBlacklist = new ArrayList<>();
     private List<String> classWhitelist = new ArrayList<>();
     private boolean whitelistEverything = false;
-    
-    private static final Set<String> BLACKLISTED_PACKAGES = Sets.newHashSet("jdk.internal.",
-            "com.sidrat.",
-            "java.",
-            "org.junit.",
-            "sun.");
+
+    private static final Set<String> BLACKLISTED_PACKAGES = Sets.newHashSet("jdk.internal.", "com.sidrat.", "java.", "org.junit.", "sun.");
 
     public SidratPermissions() {
         allowAll();
     }
-    
+
     /**
      * Do not use a whitelist; attempt to instrument all classes.
      * 

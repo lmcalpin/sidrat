@@ -20,7 +20,7 @@ import org.apache.commons.io.FileUtils;
 
 /**
  * Debugger for replaying Sidrat recordings.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratReplay {
@@ -31,26 +31,23 @@ public class SidratReplay {
     private File sourceDir;
     private List<String> invalidSourceFiles = Lists.newArrayList();
 
-    public SidratReplay(String fileName) {
-        this.eventReader = new HsqldbEventReader(fileName);
-    }
+    private String lastFile;
+
+    private List<String> lines;
 
     public SidratReplay(EventReader reader) {
         this.eventReader = reader;
     }
 
-    public SidratExecutionEvent readNext() {
-        if (event == null) {
-            event = eventReader.findFirst();
-        } else {
-            SidratExecutionEvent nextEvent = eventReader.findNext(event);
-            if (nextEvent == null) {
-                return null;
-            } else {
-                event = nextEvent;
-            }
+    public SidratReplay(String fileName) {
+        this.eventReader = new HsqldbEventReader(fileName);
+    }
+
+    public Map<String, CapturedFieldValue> eval(TrackedObject obj) {
+        if (event == null || obj == null) {
+            return Maps.newHashMap();
         }
-        return event;
+        return eventReader.eval(event.getTime(), obj.getUniqueID());
     }
 
     public SidratExecutionEvent gotoEvent(int id) {
@@ -62,15 +59,6 @@ public class SidratReplay {
         event = eventReader.find(id);
         return event;
     }
-    
-    public SidratExecutionEvent prevEvent() {
-        SidratExecutionEvent prevEvent = eventReader.findPrev(event);
-        if (prevEvent != null)
-            event = prevEvent;
-        else
-            return null;
-        return event;
-    }
 
     public Map<String, CapturedLocalVariableValue> locals() {
         if (event == null) {
@@ -78,25 +66,6 @@ public class SidratReplay {
         }
         return eventReader.locals(event.getTime());
     }
-
-    public Map<String, CapturedFieldValue> eval(TrackedObject obj) {
-        if (event == null || obj == null) {
-            return Maps.newHashMap();
-        }
-        return eventReader.eval(event.getTime(), obj.getUniqueID());
-    }
-
-    public Tuple3<String, String, Integer> split(String breakpoint) {
-        String[] split = breakpoint.split(":");
-        Integer lineNumber = Integer.parseInt(split[1]);
-        int lastDot = split[0].lastIndexOf('.');
-        String method = split[0].substring(lastDot + 1);
-        String className = split[0].substring(0, lastDot);
-        return new Tuple3<String, String, Integer>(className, method, lineNumber);
-    }
-
-    private String lastFile;
-    private List<String> lines;
 
     @SuppressWarnings("unchecked")
     public String lookupSourceCode(SidratExecutionEvent event) {
@@ -127,20 +96,52 @@ public class SidratReplay {
         return lines.get(event.getLineNumber() - 1);
     }
 
-    public SidratReplay withSource(String source) {
-        this.sourceDir = new File(source);
-        validateDir(this.sourceDir);
-        return this;
+    public SidratExecutionEvent prevEvent() {
+        SidratExecutionEvent prevEvent = eventReader.findPrev(event);
+        if (prevEvent != null)
+            event = prevEvent;
+        else
+            return null;
+        return event;
     }
 
-    private void validateFile(File file) {
-        if (!file.exists())
-            throw new SidratProcessingException("File not found: " + file.getName());
+    public SidratExecutionEvent readNext() {
+        if (event == null) {
+            event = eventReader.findFirst();
+        } else {
+            SidratExecutionEvent nextEvent = eventReader.findNext(event);
+            if (nextEvent == null) {
+                return null;
+            } else {
+                event = nextEvent;
+            }
+        }
+        return event;
+    }
+
+    public Tuple3<String, String, Integer> split(String breakpoint) {
+        String[] split = breakpoint.split(":");
+        Integer lineNumber = Integer.parseInt(split[1]);
+        int lastDot = split[0].lastIndexOf('.');
+        String method = split[0].substring(lastDot + 1);
+        String className = split[0].substring(0, lastDot);
+        return new Tuple3<String, String, Integer>(className, method, lineNumber);
     }
 
     private void validateDir(File file) {
         validateFile(file);
         if (!file.isDirectory())
-            throw new SidratProcessingException("Invalid path: " + file.getName());
+            throw new SidratProcessingException("Replay file path: " + file.getName());
+    }
+
+    private void validateFile(File file) {
+        if (!file.exists())
+            throw new SidratProcessingException("Replay file not found: " + file.getName());
+    }
+
+    public SidratReplay withSource(String source) {
+        this.sourceDir = new File(source);
+        validateDir(this.sourceDir);
+        return this;
     }
 }

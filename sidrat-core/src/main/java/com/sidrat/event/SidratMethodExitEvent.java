@@ -5,7 +5,7 @@ import com.sidrat.event.tracking.TrackedObject;
 
 /**
  * Triggered when we complete execution of a method.
- *  
+ * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratMethodExitEvent extends SidratEvent {
@@ -25,7 +25,7 @@ public class SidratMethodExitEvent extends SidratEvent {
         SidratMethodExitEvent event = new SidratMethodExitEvent(method, returns);
         return event;
     }
-    
+
     public Long getMethodEntryTime() {
         return method.getTime();
     }

@@ -33,13 +33,13 @@ public interface EventReader {
     /**
      * @return a map of local variables in scope at the specified time, and their current values
      */
-    public Map<String,CapturedLocalVariableValue> locals(Long time);
-    
+    public Map<String, CapturedLocalVariableValue> locals(Long time);
+
     /**
      * @return a map of an object's fields and current values at a specified time for a specified object
      */
-    public Map<String,CapturedFieldValue> eval(Long time, Long objectID);
-    
+    public Map<String, CapturedFieldValue> eval(Long time, Long objectID);
+
     /**
      * @return a list of SidratEvents where we execute the line of code described by 'loc'
      */
@@ -48,10 +48,10 @@ public interface EventReader {
     /**
      * @return history of assignments to a specified field
      */
-    public List<Pair<Long,TrackedObject>> fieldHistory(Long fieldID);
-    
+    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID);
+
     /**
      * @return history of assignments to a specified local variable
      */
-    public List<Pair<Long,TrackedObject>> localVariableHistory(String localVariableID);
+    public List<Pair<Long, TrackedObject>> localVariableHistory(String localVariableID);
 }

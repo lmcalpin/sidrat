@@ -10,7 +10,7 @@
 		<!-- primary modules -->
 		<module>sidrat-core</module>
 		<module>sidrat-test</module>
-		<module>sidrat-hibernate-repo</module>
+		<module>sidrat-jpa-repo</module>
 	</modules>
 	<build>
 		<plugins>

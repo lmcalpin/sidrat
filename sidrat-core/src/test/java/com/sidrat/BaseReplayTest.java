@@ -6,7 +6,7 @@ import java.io.IOException;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.mem.InMemoryEventRepositoryFactory;
-import com.sidrat.instrument.SidratAgent;
+import com.sidrat.instrumentation.SidratAgent;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -16,8 +16,8 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 
 /**
- * Base recorder test for Sidrat testing.  Uses the InMemoryEventRepository.  Automatically instruments classes.  The
- * class must not have been loaded before starting the test.  
+ * Base recorder test for Sidrat testing. Uses the InMemoryEventRepository. Automatically instruments classes. The
+ * class must not have been loaded before starting the test.
  *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
@@ -27,13 +27,13 @@ public abstract class BaseReplayTest {
     public BaseReplayTest() {
         this.factory = new InMemoryEventRepositoryFactory();
     }
-    
+
     @Rule
     public TestName testName;
-    
+
     protected SidratRecorder recorder;
     protected SidratReplay replay;
-    
+
     private EventStore store;
     private String repositoryName;
 
@@ -44,7 +44,7 @@ public abstract class BaseReplayTest {
             SidratAgent.createAndLoadAgent();
         }
     }
-    
+
     @Before
     public void setup() {
         repositoryName = "sidrat-testrepo-" + System.currentTimeMillis();
@@ -61,6 +61,6 @@ public abstract class BaseReplayTest {
         if (file.exists()) {
             FileUtils.deleteDirectory(file);
         }
-        
+
     }
 }

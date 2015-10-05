@@ -4,8 +4,6 @@ import static org.easymock.EasyMock.capture;
 
 import com.sidrat.SidratRegistry;
 import com.sidrat.event.store.EventStore;
-import com.sidrat.util.Pair;
-
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.junit.Assert;
@@ -24,18 +22,18 @@ public class SidratCallbackTest {
             SidratCallback.popFrame();
         }
     }
-    
+
     @Test
     public void testEnterPushesCurrentFrameToStack() {
-        SidratCallback.enter("main", "com.test", "foo", "args", new Object[]{null});
+        SidratCallback.enter("main", "com.test", "foo", "args", new Object[] { null });
         Assert.assertEquals("com.test", SidratCallback.currentFrame().getClassName());
         Assert.assertEquals("foo", SidratCallback.currentFrame().getMethodName());
     }
-    
+
     @Test
     public void testExitPopsCurrentFrameToStack() {
         Assert.assertNull(SidratCallback.currentFrame());
-        SidratCallback.enter("main", "com.test", "foo", "args", new Object[]{null});
+        SidratCallback.enter("main", "com.test", "foo", "args", new Object[] { null });
         Assert.assertNotNull(SidratCallback.currentFrame());
         SidratCallback.exit(null);
         Assert.assertNull(SidratCallback.currentFrame());
@@ -46,17 +44,17 @@ public class SidratCallbackTest {
         // expectations
         Capture<SidratMethodEntryEvent> capturedMethodEntry = new Capture<SidratMethodEntryEvent>();
         mockedEventStore.store(capture(capturedMethodEntry));
-        
+
         EasyMock.replay(mockedEventStore);
-        
-        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[]{null});
-        
+
+        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[] { null });
+
         EasyMock.verify(mockedEventStore);
-        
+
         Assert.assertEquals("com.Test", capturedMethodEntry.getValue().getClassName());
         Assert.assertEquals("foo", capturedMethodEntry.getValue().getMethodName());
     }
-    
+
     @Test
     public void testExec() {
         // expectations
@@ -64,19 +62,19 @@ public class SidratCallbackTest {
         Capture<SidratExecutionEvent> capturedExec = new Capture<SidratExecutionEvent>();
         mockedEventStore.store(capture(capturedMethodEntry));
         mockedEventStore.store(capture(capturedExec));
-        
+
         EasyMock.replay(mockedEventStore);
-        
-        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[]{null});
+
+        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[] { null });
         SidratCallback.exec(10);
-        
+
         EasyMock.verify(mockedEventStore);
-        
+
         Assert.assertEquals("com.Test", capturedExec.getValue().getClassName());
         Assert.assertEquals("foo", capturedExec.getValue().getMethodName());
         Assert.assertEquals(10, capturedExec.getValue().getLineNumber());
     }
-    
+
     @Test
     public void testVariableTracking() {
         // expectations
@@ -85,17 +83,17 @@ public class SidratCallbackTest {
         mockedEventStore.store(capture(capturedMethodEntry));
         mockedEventStore.store(capture(capturedLocalVariable));
         EasyMock.replay(mockedEventStore);
-        
+
         // local variable should have been logged in the LocalVariablesTracker when instrumenting
-        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[]{null});
+        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[] { null });
         SidratCallback.variableChanged("com.Test", "foo", 10, "bar", 10, 100);
-        
+
         EasyMock.verify(mockedEventStore);
-        
+
         Assert.assertEquals("bar", capturedLocalVariable.getValue().getVariableName());
         Assert.assertEquals("10", capturedLocalVariable.getValue().getTrackedValue().getValueAsString());
     }
-    
+
     @Test
     public void testFieldTracking() {
         // expectations
@@ -103,20 +101,20 @@ public class SidratCallbackTest {
         Capture<SidratFieldChangedEvent> capturedField = new Capture<SidratFieldChangedEvent>();
         mockedEventStore.store(capture(capturedMethodEntry));
         mockedEventStore.store(capture(capturedField));
-        
+
         EasyMock.replay(mockedEventStore);
-        
-        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[]{null});
+
+        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[] { null });
         Object obj = new Object();
         SidratCallback.fieldChanged(obj, 10, "foo");
-        
+
         EasyMock.verify(mockedEventStore);
-        
+
         Assert.assertEquals(obj.getClass().getName(), capturedField.getValue().getOwner().getClassName());
         Assert.assertEquals("foo", capturedField.getValue().getVariableName());
         Assert.assertEquals("10", capturedField.getValue().getTrackedValue().getValueAsString());
     }
-    
+
     @Test
     public void testIgnoreDuplicateExecs() {
         // expectations
@@ -124,14 +122,14 @@ public class SidratCallbackTest {
         Capture<SidratExecutionEvent> capturedExec = new Capture<SidratExecutionEvent>();
         mockedEventStore.store(capture(capturedMethodEntry));
         mockedEventStore.store(capture(capturedExec));
-        
+
         EasyMock.replay(mockedEventStore);
-        
-        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[]{null});
+
+        SidratCallback.enter("main", "com.Test", "foo", "args", new Object[] { null });
         SidratCallback.exec(6);
         SidratCallback.exec(6);
-        
+
         EasyMock.verify(mockedEventStore);
     }
-    
+
 }

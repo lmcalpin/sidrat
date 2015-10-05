@@ -22,17 +22,17 @@ import org.junit.runner.notification.RunListener;
 public class SidratRunListener extends RunListener {
     private final SidratRecorder recorder;
     private final EventReader eventReader;
-    
+
     public SidratRunListener() {
         this.recorder = SidratRegistry.instance().getRecorder();
         this.eventReader = new InMemoryEventRepository();
     }
-    
+
     public SidratRunListener(SidratRecorder recorder, EventReader eventReader) {
         this.recorder = recorder;
         this.eventReader = eventReader;
     }
-    
+
     @Override
     public void testFailure(Failure failure) throws Exception {
         render(failure);
@@ -50,7 +50,7 @@ public class SidratRunListener extends RunListener {
         SidratExecutionEvent exec = eventReader.find(lastEventCounter);
         System.out.println("Finished in: " + exec.getClassName() + "#" + exec.getMethodName() + "@" + exec.getLineNumber());
         Collection<CapturedLocalVariableValue> locals = eventReader.locals(lastEventCounter).values();
-        
+
         StringBuilder sb = new StringBuilder();
         for (CapturedLocalVariableValue local : locals) {
             sb.append(Strings.padEnd(local.getVariable().getName(), 35, ' '));

@@ -6,7 +6,6 @@ import java.util.Stack;
 
 import com.sidrat.SidratRegistry;
 import com.sidrat.event.tracking.ExecutionLocation;
-import com.sidrat.event.tracking.LocalVariable;
 import com.sidrat.event.tracking.TrackedObject;
 import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Logger;
@@ -46,7 +45,7 @@ public class SidratCallback {
         ExecutionLocation frame = pushFrame(trackedObj, threadName, clazz, method);
         if (argValues.length > 0) {
             String[] args = argNames.split(",");
-            Map<String,Object> argMap = ZipUtils.zipAsMap(args, argValues, false);
+            Map<String, Object> argMap = ZipUtils.zipAsMap(args, argValues, false);
             for (String var : argMap.keySet()) {
                 Object val = argMap.get(var);
                 SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);

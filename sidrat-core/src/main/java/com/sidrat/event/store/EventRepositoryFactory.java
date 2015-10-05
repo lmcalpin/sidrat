@@ -7,5 +7,6 @@ package com.sidrat.event.store;
  */
 public interface EventRepositoryFactory {
     public EventStore store(String name);
+
     public EventReader reader(String name);
 }

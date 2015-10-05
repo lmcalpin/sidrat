@@ -8,7 +8,7 @@ import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 
 /**
  * Starts Sidrat from the command line.
- *  
+ * 
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class Sidrat {

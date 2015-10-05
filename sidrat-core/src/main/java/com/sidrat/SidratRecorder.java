@@ -11,7 +11,6 @@ import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 import com.sidrat.event.tracking.LocalVariables;
 import com.sidrat.event.tracking.TrackedObjects;
-import com.sidrat.instrument.SidratAgent;
 
 /**
  * Records a program execution for future replay.

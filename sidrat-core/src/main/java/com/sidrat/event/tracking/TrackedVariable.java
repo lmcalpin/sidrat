@@ -8,7 +8,7 @@ public class TrackedVariable {
     private int lineNumberStart;
     private int lineNumberEnd;
 
-    public TrackedVariable(String id, String variableName, Pair<Integer,Integer> lineNumberRange) {
+    public TrackedVariable(String id, String variableName, Pair<Integer, Integer> lineNumberRange) {
         this.id = id;
         this.name = variableName;
         this.lineNumberStart = lineNumberRange.getValue1();

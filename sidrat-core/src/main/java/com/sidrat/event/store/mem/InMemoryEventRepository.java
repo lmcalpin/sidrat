@@ -36,10 +36,10 @@ public class InMemoryEventRepository implements EventRepository {
     Multimap<String, Pair<Long, TrackedObject>> localsHistory = ArrayListMultimap.create();
     Multimap<String, SidratExecutionEvent> executions = ArrayListMultimap.create();
     Multimap<Long, Pair<Long, String>> objectFields = ArrayListMultimap.create();
-    
+
     public InMemoryEventRepository() {
     }
-    
+
     @Override
     public void store(SidratExecutionEvent event) {
         executions.put(event.getClassName() + ":" + event.getMethodName() + "#" + event.getLineNumber(), event);
