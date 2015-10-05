@@ -9,19 +9,19 @@ package com.sidrat.bytecode;
 public class OperandStackValue {
     private OperandValueType type;
     private Instruction instruction;
-    private int[] values;
+    private Integer[] values;
 
     public OperandStackValue(OperandValueType type, Instruction instruction) {
-        this(type, instruction, (int[]) null);
+        this(type, instruction, (Integer[]) null);
     }
 
-    public OperandStackValue(OperandValueType type, Instruction instruction, int value) {
+    public OperandStackValue(OperandValueType type, Instruction instruction, Integer value) {
         this.type = type;
         this.instruction = instruction;
-        this.values = new int[] { value };
+        this.values = new Integer[] { value };
     }
 
-    public OperandStackValue(OperandValueType type, Instruction instruction, int[] values) {
+    public OperandStackValue(OperandValueType type, Instruction instruction, Integer[] values) {
         this.type = type;
         this.instruction = instruction;
         this.values = values;
@@ -31,7 +31,7 @@ public class OperandStackValue {
         return instruction;
     }
 
-    public int[] getParameters() {
+    public Integer[] getParameters() {
         return values;
     }
 

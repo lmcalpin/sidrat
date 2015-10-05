@@ -108,11 +108,11 @@ public class Instruction {
         return getParameters(new ParameterLength[] { len })[0];
     }
 
-    public int[] getParameters(ParameterLength[] len) {
+    public Integer[] getParameters(ParameterLength[] len) {
         if (len == null)
             return null;
         CodeIterator ci = ca.iterator();
-        int[] values = new int[len.length];
+        Integer[] values = new Integer[len.length];
         int idx = 0;
         int parameterPos = pos + 1;
         try {
@@ -126,7 +126,7 @@ public class Instruction {
                     break;
                 case U2:
                     {
-                        values[idx++] = ci.u16bitAt(parameterPos); // TODO
+                        values[idx++] = null; // TODO
                         parameterPos += 2;
                     }
                     break;
@@ -144,7 +144,7 @@ public class Instruction {
                     break;
                 case S4:
                     {
-                        values[idx++] = ci.s32bitAt(parameterPos); // TODO
+                        values[idx++] = null; // TODO
                         parameterPos += 4;
                     }
                     break;

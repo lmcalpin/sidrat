@@ -271,7 +271,7 @@ public enum Opcodes {
         }
     }
 
-    private void pushOperands(Instruction i, int[] parameters, Stack<OperandStackValue> stack) {
+    private void pushOperands(Instruction i, Integer[] parameters, Stack<OperandStackValue> stack) {
         if (pushes == null)
             return;
         for (OperandValueType type : pushes.getValues()) {
@@ -282,7 +282,7 @@ public enum Opcodes {
     public void simulate(Instruction i, Stack<OperandStackValue> stack) {
         popOperands(i, stack);
         // extract parameters
-        int[] paramValues = null;
+        Integer[] paramValues = null;
         if (parameters != null) {
             paramValues = i.getParameters(parameters.getParameters(ctx));
         }
