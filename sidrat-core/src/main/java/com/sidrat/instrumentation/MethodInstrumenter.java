@@ -14,12 +14,10 @@ import com.sidrat.bytecode.ParameterLength;
 import com.sidrat.event.tracking.LocalVariable;
 import com.sidrat.util.Logger;
 
-import javassist.CannotCompileException;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
-import javassist.bytecode.BadBytecode;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.CodeIterator;
 import javassist.bytecode.LineNumberAttribute;
@@ -110,13 +108,13 @@ public class MethodInstrumenter {
     }
 
     public void instrument() {
+        int currentLineNumber = -1;
         try {
             LineNumberAttribute ainfo = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
             int flags = ctBehavior.getMethodInfo().getAccessFlags();
             Map<Integer, LocalVariable> variables = getLocalVariables(ctBehavior);
             Collection<Instruction> instructions = Instruction.analyze(ctBehavior, ca);
             OperandStack stack = new OperandStack(ca);
-            int currentLineNumber = -1;
             for (Instruction instruction : instructions) {
                 int op = instruction.getOpcode();
                 int thisLineNumber = instruction.getLineNumber();
@@ -130,7 +128,7 @@ public class MethodInstrumenter {
                 logger.finest(instruction.toString());
                 // track assignments to fields
                 if (instruction.isFieldStore()) {
-                    int methodRefIdx = instruction.getParameter(ParameterLength.U1);
+                    int methodRefIdx = instruction.getParameter(ParameterLength.U2);
                     String fieldName = ctBehavior.getMethodInfo().getConstPool().getFieldrefName(methodRefIdx);
                     String refClassName = ca.getConstPool().getFieldrefClassName(methodRefIdx);
                     boolean staticField = op == Opcode.PUTSTATIC;
@@ -139,9 +137,9 @@ public class MethodInstrumenter {
                         String src = "com.sidrat.event.SidratCallback.fieldChanged(" + refClassName + ".class, " + staticFieldRef + ",\"" + fieldName + "\");";
                         instruction.insert(instructions, src);
                     } else {
-                        OperandStackValue stackValue = stack.peek(); // it will be popped below when we run the stack simulation
-                        if (stackValue.getType() != OperandValueType.OBJECTREF) {
-                            logger.severe("Stack is not in the expected state; we have a PUTFIELD without an OBJECTREF at the top of the stack");
+                        OperandStackValue stackValue = stack.peek2(); // it will be popped below when we run the stack simulation
+                        if (stackValue == null || stackValue.getType() != OperandValueType.OBJECTREF) {
+                            logger.severe("Stack is not in the expected state; we have a PUTFIELD without an OBJECTREF in the stack");
                         } else {
                             int prevOp = stackValue.getInstruction().getOpcode();
                             int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
@@ -158,7 +156,18 @@ public class MethodInstrumenter {
                 } else if (instruction.isLocalVariableUpdate()) {
                     // track assignments to local variables
                     if (instruction.isLocalVariableArrayUpdate()) {
-                        logger.severe("Not supported (yet)");
+                        OperandStackValue stackValue = stack.peek3();
+                        int prevOp = stackValue.getInstruction().getOpcode();
+                        int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
+                        LocalVariable localVariable = variables.get(slot);
+                        if (localVariable != null) {
+                            String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
+                                    + localVariable.getEnd() + ");";
+                            instruction.insert(instructions, src);
+                        } else {
+                            // TODO: effectively final parameters passed in to a lambda are not being handled properly and end up here
+                            logger.severe("Failed to locate variable loaded using op [" + instruction + "] at line number " + thisLineNumber);
+                        }
                     } else {
                         int slot = getLocalVariableSlot(instruction.getPosition(), op);
                         LocalVariable localVariable = variables.get(slot);
@@ -184,14 +193,8 @@ public class MethodInstrumenter {
                 ctBehavior.insertBefore("com.sidrat.event.SidratCallback.enter($0, Thread.currentThread().getName(), \"" + className + "\",\"" + methodName + "\", \"" + signatureNames + "\", $args);");
             }
             ctBehavior.insertAfter("com.sidrat.event.SidratCallback.exit($_);");
-        } catch (CannotCompileException e) {
-            throw new SidratProcessingException("Error instrumenting: " + ctBehavior.getLongName(), e);
-        } catch (BadBytecode e) {
-            throw new SidratProcessingException("Error instrumenting: " + ctBehavior.getLongName(), e);
-        } catch (NotFoundException e) {
-            throw new SidratProcessingException("Error instrumenting: " + ctBehavior.getLongName(), e);
-        } catch (Throwable t) {
-            throw new SidratProcessingException("Error instrumenting: " + ctBehavior, t);
+        } catch (Exception e) {
+            throw new SidratProcessingException(String.format("Error instrumenting: %s around line number %d", ctBehavior.getLongName(), currentLineNumber), e);
         }
     }
 }

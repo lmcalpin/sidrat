@@ -9,33 +9,22 @@ package com.sidrat.bytecode;
 public class OperandStackValue {
     private OperandValueType type;
     private Instruction instruction;
-    private Integer[] values;
 
     public OperandStackValue(OperandValueType type, Instruction instruction) {
-        this(type, instruction, (Integer[]) null);
-    }
-
-    public OperandStackValue(OperandValueType type, Instruction instruction, Integer value) {
         this.type = type;
         this.instruction = instruction;
-        this.values = new Integer[] { value };
-    }
-
-    public OperandStackValue(OperandValueType type, Instruction instruction, Integer[] values) {
-        this.type = type;
-        this.instruction = instruction;
-        this.values = values;
     }
 
     public Instruction getInstruction() {
         return instruction;
     }
 
-    public Integer[] getParameters() {
-        return values;
-    }
-
     public OperandValueType getType() {
         return type;
+    }
+
+    @Override
+    public String toString() {
+        return type.name();
     }
 }

@@ -31,6 +31,6 @@ public class SidratThreadTest extends BaseRecorderTest {
         Map<String, CapturedLocalVariableValue> locals = replay.locals();
         System.out.println(locals + "@" + lastEvent);
         String iArr = locals.get("i").getCurrentValue().getValueAsString();
-        Assert.assertEquals("[90]", iArr);
+        Assert.assertEquals("[95]", iArr);
     }
 }

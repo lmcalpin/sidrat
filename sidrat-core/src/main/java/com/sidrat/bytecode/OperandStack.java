@@ -18,10 +18,30 @@ public class OperandStack {
         return stack.peek();
     }
 
+    public OperandStackValue peek2() {
+        if (stack.isEmpty())
+            return null;
+        if (stack.size() == 1)
+            return null;
+        return stack.get(stack.size() - 2);
+    }
+
+    public OperandStackValue peek3() {
+        if (stack.isEmpty())
+            return null;
+        if (stack.size() < 3)
+            return null;
+        return stack.get(stack.size() - 3);
+    }
+
     public void simulate(Instruction i) {
         Opcodes opcode = Opcodes.fromMnemonic(i.getMnemonic());
         if (opcode != null) {
             opcode.simulate(i, stack);
         }
+    }
+
+    public int size() {
+        return stack.size();
     }
 }

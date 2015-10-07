@@ -19,6 +19,8 @@ import java.util.TreeMap;
 
 import com.sidrat.util.Logger;
 
+import javassist.bytecode.Descriptor;
+
 public enum Opcodes {
 // @formatter:off
     AALOAD(50, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
@@ -44,6 +46,7 @@ public enum Opcodes {
     BREAKPOINT(202),
     CALOAD(52, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     CASTORE(85, new Pops(VALUE, INDEX, ARRAYREF)),
+    CHECKCAST(192, Pops.OBJECTREF, Pushes.OBJECTREF, new Parameters(U2)),
     DLOAD(24, new Pushes(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     DLOAD_0(38, DLOAD),
     DLOAD_1(39, DLOAD),
@@ -56,6 +59,25 @@ public enum Opcodes {
     DSTORE_3(74, DSTORE),
     DALOAD(49, new Pops(INDEX, ARRAYREF), new Pushes(VALUE_WORD, VALUE_WORD)),
     DASTORE(82, new Pops(VALUE_WORD, VALUE_WORD, INDEX, ARRAYREF)),
+    DUP(89, new Pushes(VALUE_WORD)) {
+        @Override
+        protected void pushOperands(Instruction i, Stack<OperandStackValue> stack) {
+            OperandStackValue last = stack.pop();
+            stack.push(last);
+            stack.push(last);
+        }
+    },
+    DUP2(92, new Pushes(VALUE_WORD, VALUE_WORD)) {
+        @Override
+        protected void pushOperands(Instruction i, Stack<OperandStackValue> stack) {
+            OperandStackValue last = stack.pop();
+            OperandStackValue first = stack.pop();
+            stack.push(first);
+            stack.push(last);
+            stack.push(first);
+            stack.push(last);
+        }
+    },
     FLOAD(23, new Pushes(VALUE), new Parameters(U1).ifWide(U2)),
     FLOAD_0(34, FLOAD),
     FLOAD_1(35, FLOAD),
@@ -68,19 +90,73 @@ public enum Opcodes {
     FSTORE_3(70, FSTORE),
     FALOAD(48, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     FASTORE(81, new Pops(VALUE, INDEX, ARRAYREF)),
+    GETFIELD(180, new Pops(OBJECTREF), new Pushes(i -> {
+        int methodRefIdx = i.getParameter(U2);
+        String descriptor = i.getMethodInfo().getConstPool().getFieldrefType(methodRefIdx);
+        if (Descriptor.dataSize(descriptor) == 2)
+            return new OperandValueType[] { VALUE_WORD, VALUE_WORD };
+        if (descriptor.startsWith("L"))
+            return new OperandValueType[] { OBJECTREF };
+        return new OperandValueType[] { VALUE };
+    })),
+    GETSTATIC(178, new Pushes(i -> {
+        int methodRefIdx = i.getParameter(U2);
+        String descriptor = i.getMethodInfo().getConstPool().getFieldrefType(methodRefIdx);
+        if (Descriptor.dataSize(descriptor) == 2)
+            return new OperandValueType[] { VALUE_WORD, VALUE_WORD };
+        if (descriptor.startsWith("L"))
+            return new OperandValueType[] { OBJECTREF };
+        return new OperandValueType[] { VALUE };
+    })),
+    GOTO(167, Parameters.S2),
+    I2L(133, Pops.VALUE, Pushes.VALUEWORD_VALUEWORD),
+    ICONST_M1(2, Pushes.VALUE),
+    ICONST_0(3, Pushes.VALUE),
+    ICONST_1(4, Pushes.VALUE),
+    ICONST_2(5, Pushes.VALUE),
+    ICONST_3(6, Pushes.VALUE),
+    ICONST_4(7, Pushes.VALUE),
+    ICONST_5(8, Pushes.VALUE),
+    IADD(96, Pops.VALUE_VALUE, Pushes.VALUE),
     IALOAD(46, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     IASTORE(79, new Pops(VALUE, INDEX, ARRAYREF)),
+    IF_ICMPNE(160, Pops.VALUE_VALUE, Parameters.S2),
+    IF_ICMPGE(162, Pops.VALUE_VALUE, Parameters.S2),
+    IF_ICMPGT(163, Pops.VALUE_VALUE, Parameters.S2),
+    IF_ICMPLT(161, Pops.VALUE_VALUE, Parameters.S2),
+    IF_ICMPLE(164, Pops.VALUE_VALUE, Parameters.S2),
+    IFNE(154, Pops.VALUE, Parameters.S2),
+    IFEQ(153, Pops.VALUE, Parameters.S2),
+    IFGT(157, Pops.VALUE, Parameters.S2),
+    IFGE(156, Pops.VALUE, Parameters.S2),
+    IFLT(155, Pops.VALUE, Parameters.S2),
+    IFLE(158, Pops.VALUE, Parameters.S2),
+    IFNULL(198, Pops.OBJECTREF, Parameters.S2),
+    IFNONNULL(199, Pops.OBJECTREF, Parameters.S2),
     IINC(132, new Parameters(U1, S1).ifWide(U2, S2)),
     ILOAD(21, new Pushes(VALUE), new Parameters(U1).ifWide(U2)),
     ILOAD_0(26, ILOAD),
     ILOAD_1(27, ILOAD),
     ILOAD_2(28, ILOAD),
     ILOAD_3(29, ILOAD),
-    ISTORE(54, new Pops(VALUE), new Parameters(U1).ifWide(U2)),
+    IMUL(104, Pops.VALUE_VALUE, Pushes.VALUE),
+    INVOKEDYNAMIC(186, Pops.STATICMETHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2, U1, U1)), // last two U1s must be zero
+    INVOKEINTERFACE(185, Pops.METHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2, U1, U1)), // last U1 must be zero
+    INVOKEVIRTUAL(182, Pops.METHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2)),
+    INVOKESPECIAL(183, Pops.METHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2)),
+    INVOKESTATIC(184, Pops.STATICMETHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2)),
+    IRETURN(172, Pops.VALUE),
+    ISTORE(54, Pops.VALUE, new Parameters(U1).ifWide(U2)),
     ISTORE_0(59, ISTORE),
     ISTORE_1(60, ISTORE),
     ISTORE_2(61, ISTORE),
     ISTORE_3(62, ISTORE),
+    LCONST_0(9, Pushes.VALUEWORD_VALUEWORD),
+    LCONST_1(10, Pushes.VALUEWORD_VALUEWORD),
+    LCMP(148, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE)),
+    LDC(18, new Pushes(VALUE), new Parameters(U1)),
+    LDC_W(19, Pushes.VALUE, new Parameters(U2)),
+    LDC2_W(20, Pushes.VALUEWORD_VALUEWORD, new Parameters(U2)),
     LLOAD(22, new Pushes(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     LLOAD_0(30, LLOAD),
     LLOAD_1(31, LLOAD),
@@ -93,7 +169,11 @@ public enum Opcodes {
     LSTORE_3(66, LSTORE),
     LALOAD(47, new Pops(INDEX, ARRAYREF), new Pushes(VALUE_WORD, VALUE_WORD)),
     LASTORE(80, new Pops(VALUE_WORD, VALUE_WORD, INDEX, ARRAYREF)),
+    NEW(187, new Pushes(OBJECTREF), new Parameters(U1)),
+    NEWARRAY(188, new Pops(VALUE), new Pushes(OBJECTREF), new Parameters(U1)),
     NOP(0),
+    POP(87, Pops.VALUE),
+    POP2(88, Pops.VALUE_VALUE),
     PUTFIELD(181, new Pops(i -> {
         int methodRefIdx = i.getParameter(U1);
         String fieldName = i.getMethodInfo().getConstPool().getFieldrefName(methodRefIdx);
@@ -195,7 +275,8 @@ public enum Opcodes {
             }
         } catch (IllegalArgumentException e) { // ignore
         }
-        return null;
+        throw new IllegalStateException("Implement " + mnemonic);
+        // return null;
     }
 
     public static Opcodes fromOpcode(int code) {
@@ -258,6 +339,10 @@ public enum Opcodes {
         return code;
     }
 
+    protected Integer[] getParameters(Instruction i, ParameterLength[] len, Stack<OperandStackValue> stack) {
+        return i.getParameters(parameters.getParameters(ctx));
+    }
+
     private void popOperands(Instruction i, Stack<OperandStackValue> stack) {
         Stack<OperandStackValue> popped = new Stack<>();
         if (pops == null)
@@ -267,25 +352,23 @@ public enum Opcodes {
                 logger.warning("Stack was empty and we expected a value");
                 continue;
             }
+            logger.finest("  -- popped " + stack.peek().getType());
             popped.push(stack.pop());
         }
     }
 
-    private void pushOperands(Instruction i, Integer[] parameters, Stack<OperandStackValue> stack) {
+    protected void pushOperands(Instruction i, Stack<OperandStackValue> stack) {
         if (pushes == null)
             return;
-        for (OperandValueType type : pushes.getValues()) {
-            stack.push(new OperandStackValue(type, i, parameters));
+        for (OperandValueType type : pushes.getValues(i)) {
+            logger.finest("  -- pushed " + type);
+            stack.push(new OperandStackValue(type, i));
         }
     }
 
     public void simulate(Instruction i, Stack<OperandStackValue> stack) {
         popOperands(i, stack);
-        // extract parameters
-        Integer[] paramValues = null;
-        if (parameters != null) {
-            paramValues = i.getParameters(parameters.getParameters(ctx));
-        }
-        pushOperands(i, paramValues, stack);
+        pushOperands(i, stack);
+        logger.finest("  -- stack: " + stack);
     }
 }

@@ -86,6 +86,10 @@ public class Instruction {
         }
     }
 
+    public CtBehavior getBehavior() {
+        return ctBehavior;
+    }
+
     public int getLineNumber() {
         return lineNumber;
     }
@@ -120,31 +124,31 @@ public class Instruction {
                 switch (l) {
                 case U1:
                     {
-                        values[idx++] = ci.u16bitAt(parameterPos);
+                        values[idx++] = ci.byteAt(parameterPos);
                         parameterPos += 1;
                     }
                     break;
                 case U2:
                     {
-                        values[idx++] = null; // TODO
+                        values[idx++] = ci.u16bitAt(parameterPos);
                         parameterPos += 2;
                     }
                     break;
                 case S1:
                     {
-                        values[idx++] = ci.s16bitAt(parameterPos);
+                        values[idx++] = ci.byteAt(parameterPos);
                         parameterPos += 1;
                     }
                     break;
                 case S2:
                     {
-                        values[idx++] = ci.s32bitAt(parameterPos);
+                        values[idx++] = ci.s16bitAt(parameterPos);
                         parameterPos += 2;
                     }
                     break;
                 case S4:
                     {
-                        values[idx++] = null; // TODO
+                        values[idx++] = ci.s32bitAt(parameterPos);
                         parameterPos += 4;
                     }
                     break;
@@ -175,7 +179,7 @@ public class Instruction {
                 }
             }
         } catch (CannotCompileException e) {
-            logger.severe("Failed to compile [" + src + "] at line number [" + lineNumber + "]");
+            logger.severe("Failed to compile [" + src + "] at line number [" + lineNumber + "]", e);
         }
     }
 
