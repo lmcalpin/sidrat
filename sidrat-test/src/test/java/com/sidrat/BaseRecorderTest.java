@@ -5,11 +5,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
+import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventRepositoryFactory;
 import com.sidrat.event.store.mem.InMemoryEventRepositoryFactory;
+import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.instrumentation.SidratAgent;
 
 import org.apache.commons.io.FileUtils;
@@ -52,6 +55,21 @@ public abstract class BaseRecorderTest {
         factories.add(new Object[] { new HsqldbEventRepositoryFactory() });
         factories.add(new Object[] { new InMemoryEventRepositoryFactory() });
         return factories;
+    }
+
+    /**
+     * Execute each line and dump the local variables to stdout
+     */
+    public void dumpLocals() {
+        SidratExecutionEvent event = replay.gotoEvent(1);
+        int i = 0;
+        while (event != null) {
+            i++;
+            System.out.println(i + ": " + event.getLineNumber());
+            Map<String, CapturedLocalVariableValue> locals = replay.locals();
+            System.out.println(locals);
+            event = replay.readNext();
+        }
     }
 
     @Before

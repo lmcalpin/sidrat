@@ -47,11 +47,14 @@ public enum Opcodes {
     CALOAD(52, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     CASTORE(85, new Pops(VALUE, INDEX, ARRAYREF)),
     CHECKCAST(192, Pops.OBJECTREF, Pushes.OBJECTREF, new Parameters(U2)),
+    DCONST_0(14, Pushes.VALUEWORD_VALUEWORD),
+    DCONST_1(15, Pushes.VALUEWORD_VALUEWORD),
     DLOAD(24, new Pushes(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     DLOAD_0(38, DLOAD),
     DLOAD_1(39, DLOAD),
     DLOAD_2(40, DLOAD),
     DLOAD_3(41, DLOAD),
+    DMUL(107, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE_WORD, VALUE_WORD)),
     DSTORE(57, new Pops(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     DSTORE_0(71, DSTORE),
     DSTORE_1(72, DSTORE),
@@ -83,6 +86,7 @@ public enum Opcodes {
     FLOAD_1(35, FLOAD),
     FLOAD_2(36, FLOAD),
     FLOAD_3(37, FLOAD),
+    FMUL(106, Pops.VALUE_VALUE, Pushes.VALUE),
     FSTORE(56, new Pops(VALUE), new Parameters(U1).ifWide(U2)),
     FSTORE_0(67, FSTORE),
     FSTORE_1(68, FSTORE),
@@ -90,6 +94,9 @@ public enum Opcodes {
     FSTORE_3(70, FSTORE),
     FALOAD(48, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     FASTORE(81, new Pops(VALUE, INDEX, ARRAYREF)),
+    FCONST_0(11, Pushes.VALUE),
+    FCONST_1(12, Pushes.VALUE),
+    FCONST_2(13, Pushes.VALUE),
     GETFIELD(180, new Pops(OBJECTREF), new Pushes(i -> {
         int methodRefIdx = i.getParameter(U2);
         String descriptor = i.getMethodInfo().getConstPool().getFieldrefType(methodRefIdx);
@@ -151,6 +158,7 @@ public enum Opcodes {
     ISTORE_1(60, ISTORE),
     ISTORE_2(61, ISTORE),
     ISTORE_3(62, ISTORE),
+    LADD(97, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE_WORD, VALUE_WORD)),
     LCONST_0(9, Pushes.VALUEWORD_VALUEWORD),
     LCONST_1(10, Pushes.VALUEWORD_VALUEWORD),
     LCMP(148, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE)),
@@ -190,6 +198,7 @@ public enum Opcodes {
     RETURN(177), // void
     SALOAD(53, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     SASTORE(86, new Pops(VALUE, INDEX, ARRAYREF)),
+    SIPUSH(17, Pushes.VALUE, new Parameters(S2)),
     WIDE(196)
     ;
  // @formatter:on

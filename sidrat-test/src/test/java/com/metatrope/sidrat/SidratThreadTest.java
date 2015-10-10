@@ -17,7 +17,6 @@ public class SidratThreadTest extends BaseRecorderTest {
         super(factory);
     }
 
-    // verify we do not have a regression where the beginning of the for loop generates two events
     @Test
     public void testThreadTracking() {
         recorder.record(ForThreadTest.class.getName());

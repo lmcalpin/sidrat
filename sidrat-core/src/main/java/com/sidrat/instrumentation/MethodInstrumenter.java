@@ -2,9 +2,9 @@ package com.sidrat.instrumentation;
 
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.sidrat.SidratProcessingException;
 import com.sidrat.bytecode.Instruction;
 import com.sidrat.bytecode.OperandStack;
@@ -32,6 +32,7 @@ public class MethodInstrumenter {
     private MethodInfo methodInfo;
     private CtClass cc;
     private final String className, methodName;
+    private final int firstLineNumber, lastLineNumber;
 
     private CodeAttribute ca;
 
@@ -44,10 +45,13 @@ public class MethodInstrumenter {
         this.ca = methodInfo.getCodeAttribute();
         if (ca == null)
             throw new ClassInstrumentationException("Error instrumenting " + className + "; no line number info");
+        LineNumberAttribute ainfo = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
+        this.firstLineNumber = ainfo.lineNumber(0);
+        this.lastLineNumber = ainfo.lineNumber(ainfo.tableLength() - 1);
     }
 
-    public static Map<Integer, LocalVariable> getLocalVariables(CtBehavior ctBehavior) throws NotFoundException {
-        Map<Integer, LocalVariable> variables = new HashMap<Integer, LocalVariable>();
+    public static Multimap<Integer, LocalVariable> getLocalVariables(CtBehavior ctBehavior) throws NotFoundException {
+        Multimap<Integer, LocalVariable> variables = HashMultimap.create();
         CodeAttribute codeAttribute = ctBehavior.getMethodInfo().getCodeAttribute();
         LocalVariableAttribute lva = (LocalVariableAttribute) codeAttribute.getAttribute(LocalVariableAttribute.tag);
         if (lva != null) {
@@ -56,11 +60,11 @@ public class MethodInstrumenter {
                 int rangeEnd = rangeStart + lva.codeLength(i);
                 int lineNumberStart = ctBehavior.getMethodInfo().getLineNumber(rangeStart) - 1;
                 int lineNumberEnd = lastLineNumber(ctBehavior, rangeStart, rangeEnd, lineNumberStart);
-                LocalVariable localVariable = new LocalVariable(lva.variableName(i), lineNumberStart, lineNumberEnd);
-                variables.put(i, localVariable);
+                int slot = lva.index(i);
+                LocalVariable localVariable = new LocalVariable(slot, lva.variableName(i), lineNumberStart, lineNumberEnd);
+                variables.put(slot, localVariable);
             }
         }
-        ;
         return variables;
     }
 
@@ -78,7 +82,16 @@ public class MethodInstrumenter {
         return lineNumberEnd;
     }
 
-    private String getLocalVariablesFromMethodSignature(Map<Integer, LocalVariable> variables) throws NotFoundException {
+    private LocalVariable getLocalVariable(int slot, Multimap<Integer, LocalVariable> variables, int lineNumber) {
+        Collection<LocalVariable> variablesForSlot = variables.get(slot);
+        for (LocalVariable var : variablesForSlot) {
+            if (var.getStart() <= lineNumber && var.getEnd() >= lineNumber)
+                return var;
+        }
+        return null;
+    }
+
+    private String getLocalVariablesFromMethodSignature(Multimap<Integer, LocalVariable> variables) throws NotFoundException {
         int memberShift = Modifier.isStatic(ctBehavior.getModifiers()) ? 0 : 1;
         CtClass[] signatureTypes = ctBehavior.getParameterTypes();
         if (signatureTypes.length == 0)
@@ -89,7 +102,7 @@ public class MethodInstrumenter {
             if (foundVariable) {
                 signatureNames.append(",");
             }
-            LocalVariable lv = variables.get(i);
+            LocalVariable lv = getLocalVariable(i, variables, firstLineNumber);
             if (lv != null) {
                 signatureNames.append(lv.getName());
                 foundVariable = true;
@@ -110,9 +123,8 @@ public class MethodInstrumenter {
     public void instrument() {
         int currentLineNumber = -1;
         try {
-            LineNumberAttribute ainfo = (LineNumberAttribute) ca.getAttribute(LineNumberAttribute.tag);
             int flags = ctBehavior.getMethodInfo().getAccessFlags();
-            Map<Integer, LocalVariable> variables = getLocalVariables(ctBehavior);
+            Multimap<Integer, LocalVariable> variables = getLocalVariables(ctBehavior);
             Collection<Instruction> instructions = Instruction.analyze(ctBehavior, ca);
             OperandStack stack = new OperandStack(ca);
             for (Instruction instruction : instructions) {
@@ -143,7 +155,7 @@ public class MethodInstrumenter {
                         } else {
                             int prevOp = stackValue.getInstruction().getOpcode();
                             int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
-                            LocalVariable localVariable = variables.get(slot);
+                            LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
                             if (localVariable.getName().equals("this") && methodName.equals("<init>")) {
                                 // TODO: track this after call to super completes
                                 logger.severe("Failed to locate variable loaded using op [" + instruction + "] at line number " + thisLineNumber);
@@ -159,7 +171,7 @@ public class MethodInstrumenter {
                         OperandStackValue stackValue = stack.peek3();
                         int prevOp = stackValue.getInstruction().getOpcode();
                         int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
-                        LocalVariable localVariable = variables.get(slot);
+                        LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
                         if (localVariable != null) {
                             String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
                                     + localVariable.getEnd() + ");";
@@ -170,7 +182,7 @@ public class MethodInstrumenter {
                         }
                     } else {
                         int slot = getLocalVariableSlot(instruction.getPosition(), op);
-                        LocalVariable localVariable = variables.get(slot);
+                        LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
                         if (localVariable != null) {
                             String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
                                     + localVariable.getEnd() + ");";
@@ -183,8 +195,6 @@ public class MethodInstrumenter {
                 }
                 stack.simulate(instruction);
             }
-            int firstLineNumber = ainfo.lineNumber(0);
-            int lastLineNumber = ainfo.lineNumber(ainfo.tableLength() - 1);
             logger.finer("Instrumented method " + methodName + " " + firstLineNumber + ":" + lastLineNumber);
             String signatureNames = getLocalVariablesFromMethodSignature(variables);
             if ((flags & AccessFlag.STATIC) != 0 || ctBehavior.getMethodInfo().isConstructor()) {

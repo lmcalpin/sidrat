@@ -13,10 +13,6 @@ import org.junit.Test;
 
 public class SidratLambdaTest extends BaseRecorderTest {
     public static class ForLambdaTest {
-        public int run(IntSupplier r) {
-            return r.getAsInt();
-        }
-
         public static void main(String[] args) {
             System.out.println("start");
             int x = IntStream.range(10, 15).map(i -> i + 1).sum();
@@ -25,8 +21,12 @@ public class SidratLambdaTest extends BaseRecorderTest {
             System.out.println(x);
             System.out.println(y);
         }
+
+        public int run(IntSupplier r) {
+            return r.getAsInt();
+        }
     }
-    
+
     public SidratLambdaTest(EventRepositoryFactory factory) {
         super(factory);
     }
@@ -35,15 +35,18 @@ public class SidratLambdaTest extends BaseRecorderTest {
     @Test
     public void testLambda() {
         recorder.record(ForLambdaTest.class.getName());
-        SidratExecutionEvent execEvent = replay.gotoEvent(1);
-        int lambdaLineNumber = 22; // if the source code changes, adjust this line number
+        SidratExecutionEvent execEvent = replay.gotoEvent(3);
+        String lambdaMethodName = execEvent.getMethodName();
+        Assert.assertTrue(lambdaMethodName.contains("lambda"));
+        int lambdaLineNumber = 18; // if the source code changes, adjust this line number
         Long foundLambdaLine = -1L;
         int countLambdaIterations = 0;
         int lastLine = -1;
+        execEvent = replay.gotoEvent(1);
         while (execEvent != null) {
             int currentLineNumber = execEvent.getLineNumber();
             System.out.println(execEvent.getTime() + " @ LN: " + currentLineNumber + " : " + execEvent.getClassName() + "#" + execEvent.getMethodName());
-            if (currentLineNumber == lambdaLineNumber && (execEvent.getMethodName().equals("lambda$0") || execEvent.getMethodName().equals("lambda$main$1"))) {
+            if (currentLineNumber == lambdaLineNumber && execEvent.getMethodName().equals(lambdaMethodName)) {
                 if (foundLambdaLine == -1L)
                     foundLambdaLine = execEvent.getTime();
                 countLambdaIterations++;
@@ -64,7 +67,7 @@ public class SidratLambdaTest extends BaseRecorderTest {
         // check history of x, go back in time to before first assignment
         replay.gotoEvent(foundLambdaLine);
         Assert.assertNull(replay.locals().get("x"));
-        replay.gotoEvent(foundLambdaLine+4);
+        replay.gotoEvent(foundLambdaLine + 4);
         Assert.assertEquals("65", replay.locals().get("x").getCurrentValue().getValueAsString());
     }
 }
