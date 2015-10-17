@@ -47,21 +47,26 @@ public enum Opcodes {
     CALOAD(52, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     CASTORE(85, new Pops(VALUE, INDEX, ARRAYREF)),
     CHECKCAST(192, Pops.OBJECTREF, Pushes.OBJECTREF, new Parameters(U2)),
+    DADD(99, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
     DCONST_0(14, Pushes.VALUEWORD_VALUEWORD),
     DCONST_1(15, Pushes.VALUEWORD_VALUEWORD),
+    DDIV(111, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE_WORD, VALUE_WORD)),
     DLOAD(24, new Pushes(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     DLOAD_0(38, DLOAD),
     DLOAD_1(39, DLOAD),
     DLOAD_2(40, DLOAD),
     DLOAD_3(41, DLOAD),
     DMUL(107, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE_WORD, VALUE_WORD)),
+    DREM(115, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
     DSTORE(57, new Pops(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     DSTORE_0(71, DSTORE),
     DSTORE_1(72, DSTORE),
     DSTORE_2(73, DSTORE),
     DSTORE_3(74, DSTORE),
+    DSUB(103, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
     DALOAD(49, new Pops(INDEX, ARRAYREF), new Pushes(VALUE_WORD, VALUE_WORD)),
     DASTORE(82, new Pops(VALUE_WORD, VALUE_WORD, INDEX, ARRAYREF)),
+    DNEG(119, Pops.VALUEWORD_VALUEWORD, Pushes.VALUEWORD_VALUEWORD),
     DUP(89, new Pushes(VALUE_WORD)) {
         @Override
         protected void pushOperands(Instruction i, Stack<OperandStackValue> stack) {
@@ -81,12 +86,16 @@ public enum Opcodes {
             stack.push(last);
         }
     },
+    FADD(98, Pops.VALUE_VALUE, Pushes.VALUE),
+    FDIV(110, Pops.VALUE_VALUE, Pushes.VALUE),
     FLOAD(23, new Pushes(VALUE), new Parameters(U1).ifWide(U2)),
     FLOAD_0(34, FLOAD),
     FLOAD_1(35, FLOAD),
     FLOAD_2(36, FLOAD),
     FLOAD_3(37, FLOAD),
     FMUL(106, Pops.VALUE_VALUE, Pushes.VALUE),
+    FNEG(118, Pops.VALUE, Pushes.VALUE),
+    FREM(114, Pops.VALUE_VALUE, Pushes.VALUE),
     FSTORE(56, new Pops(VALUE), new Parameters(U1).ifWide(U2)),
     FSTORE_0(67, FSTORE),
     FSTORE_1(68, FSTORE),
@@ -97,6 +106,7 @@ public enum Opcodes {
     FCONST_0(11, Pushes.VALUE),
     FCONST_1(12, Pushes.VALUE),
     FCONST_2(13, Pushes.VALUE),
+    FSUB(102, Pops.VALUE_VALUE, Pushes.VALUE),
     GETFIELD(180, new Pops(OBJECTREF), new Pushes(i -> {
         int methodRefIdx = i.getParameter(U2);
         String descriptor = i.getMethodInfo().getConstPool().getFieldrefType(methodRefIdx);
@@ -116,6 +126,7 @@ public enum Opcodes {
         return new OperandValueType[] { VALUE };
     })),
     GOTO(167, Parameters.S2),
+    GOTO_W(200, Parameters.S4),
     I2L(133, Pops.VALUE, Pushes.VALUEWORD_VALUEWORD),
     ICONST_M1(2, Pushes.VALUE),
     ICONST_0(3, Pushes.VALUE),
@@ -127,6 +138,10 @@ public enum Opcodes {
     IADD(96, Pops.VALUE_VALUE, Pushes.VALUE),
     IALOAD(46, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     IASTORE(79, new Pops(VALUE, INDEX, ARRAYREF)),
+    IDIV(108, Pops.VALUE_VALUE, Pushes.VALUE),
+    IF_ACMPEQ(165, Pops.VALUE_VALUE, Parameters.S2),
+    IF_ACMPNE(166, Pops.VALUE_VALUE, Parameters.S2),
+    IF_ICMPEQ(159, Pops.VALUE_VALUE, Parameters.S2),
     IF_ICMPNE(160, Pops.VALUE_VALUE, Parameters.S2),
     IF_ICMPGE(162, Pops.VALUE_VALUE, Parameters.S2),
     IF_ICMPGT(163, Pops.VALUE_VALUE, Parameters.S2),
@@ -146,18 +161,25 @@ public enum Opcodes {
     ILOAD_1(27, ILOAD),
     ILOAD_2(28, ILOAD),
     ILOAD_3(29, ILOAD),
+    IOR(128, Pops.VALUE_VALUE, Pushes.VALUE),
     IMUL(104, Pops.VALUE_VALUE, Pushes.VALUE),
+    INEG(116, Pops.VALUE, Pushes.VALUE),
     INVOKEDYNAMIC(186, Pops.STATICMETHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2, U1, U1)), // last two U1s must be zero
     INVOKEINTERFACE(185, Pops.METHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2, U1, U1)), // last U1 must be zero
     INVOKEVIRTUAL(182, Pops.METHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2)),
     INVOKESPECIAL(183, Pops.METHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2)),
     INVOKESTATIC(184, Pops.STATICMETHODINVOCATION, Pushes.METHODINVOCATION, new Parameters(U2)),
+    IREM(112, Pops.VALUE_VALUE, Pushes.VALUE),
     IRETURN(172, Pops.VALUE),
+    ISHL(120, Pops.VALUE_VALUE, Pushes.VALUE),
     ISTORE(54, Pops.VALUE, new Parameters(U1).ifWide(U2)),
     ISTORE_0(59, ISTORE),
     ISTORE_1(60, ISTORE),
     ISTORE_2(61, ISTORE),
     ISTORE_3(62, ISTORE),
+    ISUB(100, Pops.VALUE_VALUE, Pushes.VALUE),
+    JSR(168, Pushes.VALUE, Parameters.S2),
+    JSR_W(201, Pushes.VALUE, Parameters.S4),
     LADD(97, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE_WORD, VALUE_WORD)),
     LCONST_0(9, Pushes.VALUEWORD_VALUEWORD),
     LCONST_1(10, Pushes.VALUEWORD_VALUEWORD),
@@ -165,16 +187,24 @@ public enum Opcodes {
     LDC(18, new Pushes(VALUE), new Parameters(U1)),
     LDC_W(19, Pushes.VALUE, new Parameters(U2)),
     LDC2_W(20, Pushes.VALUEWORD_VALUEWORD, new Parameters(U2)),
+    LDIV(109, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), new Pushes(VALUE_WORD, VALUE_WORD)),
     LLOAD(22, new Pushes(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     LLOAD_0(30, LLOAD),
     LLOAD_1(31, LLOAD),
     LLOAD_2(32, LLOAD),
     LLOAD_3(33, ILOAD),
+    LMUL(105, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
+    LOOKUPSWITCH(171, Pops.VALUE),
+    LNEG(117, Pops.VALUEWORD_VALUEWORD, Pushes.VALUEWORD_VALUEWORD),
+    LREM(113, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
+    LRETURN(173, Pops.VALUEWORD_VALUEWORD),
+    LSHL(121, new Pops(VALUE, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
     LSTORE(55, new Pops(VALUE_WORD, VALUE_WORD), new Parameters(U1).ifWide(U2)),
     LSTORE_0(63, LSTORE),
     LSTORE_1(64, LSTORE),
     LSTORE_2(65, LSTORE),
     LSTORE_3(66, LSTORE),
+    LSUB(101, new Pops(VALUE_WORD, VALUE_WORD, VALUE_WORD, VALUE_WORD), Pushes.VALUEWORD_VALUEWORD),
     LALOAD(47, new Pops(INDEX, ARRAYREF), new Pushes(VALUE_WORD, VALUE_WORD)),
     LASTORE(80, new Pops(VALUE_WORD, VALUE_WORD, INDEX, ARRAYREF)),
     NEW(187, new Pushes(OBJECTREF), new Parameters(U1)),
@@ -199,7 +229,45 @@ public enum Opcodes {
     SALOAD(53, new Pops(INDEX, ARRAYREF), new Pushes(VALUE)),
     SASTORE(86, new Pops(VALUE, INDEX, ARRAYREF)),
     SIPUSH(17, Pushes.VALUE, new Parameters(S2)),
-    WIDE(196)
+    SWAP(95, Pops.VALUEWORD_VALUEWORD, Pushes.VALUEWORD_VALUEWORD),
+    WIDE(196),
+    /*
+    TODO:
+    ISHR(122, ...
+    LSHR(123, ...
+    IUSHR(124, ...
+    LUSHR(125, ...
+    IAND(126, ...
+    LAND(127, ...
+    LOR(129, ...
+    IXOR(130, ...
+    LXOR(131, ...
+    I2F(134, ...
+    I2D(135, ...
+    L2I(136, ...
+    L2F(137, ...
+    L2D(138, ...
+    F2I(139, ...
+    F2L(140, ...
+    F2D(141, ...
+    D2I(142, ...
+    D2L(143, ...
+    D2F(144, ...
+    I2B(145, ...
+    I2C(146, ...
+    I2S(147, ...
+    FCMPL(149, ...
+    FCMPG(150, ...
+    DCMPL(151, ...
+    DCMPG(152, ...
+    TABLESWITCH(170, ...
+    FRETURN(174, ...
+    DRETURN(175, ...
+    INSTANCEOF(193, ...
+    MONITORENTER(194, ...
+    MONITOREXIT(195, ...
+    MULTIANEWARRAY(197, ...
+    */
     ;
  // @formatter:on
 
@@ -284,8 +352,8 @@ public enum Opcodes {
             }
         } catch (IllegalArgumentException e) { // ignore
         }
-        throw new IllegalStateException("Implement " + mnemonic);
-        // return null;
+        // throw new IllegalStateException("Implement " + mnemonic);
+        return null;
     }
 
     public static Opcodes fromOpcode(int code) {
