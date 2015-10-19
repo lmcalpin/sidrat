@@ -168,7 +168,11 @@ public class MethodInstrumenter {
                 } else if (instruction.isLocalVariableUpdate()) {
                     // track assignments to local variables
                     if (instruction.isLocalVariableArrayUpdate()) {
-                        OperandStackValue stackValue = stack.peek3();
+                        OperandStackValue stackValue;
+                        if (instruction.getOpcode() == Opcode.DASTORE || instruction.getOpcode() == Opcode.LASTORE)
+                            stackValue = stack.peek4();
+                        else
+                            stackValue = stack.peek3();
                         int prevOp = stackValue.getInstruction().getOpcode();
                         int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
                         LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);

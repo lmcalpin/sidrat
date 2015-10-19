@@ -34,6 +34,14 @@ public class OperandStack {
         return stack.get(stack.size() - 3);
     }
 
+    public OperandStackValue peek4() {
+        if (stack.isEmpty())
+            return null;
+        if (stack.size() < 4)
+            return null;
+        return stack.get(stack.size() - 4);
+    }
+
     public void simulate(Instruction i) {
         Opcodes opcode = Opcodes.fromMnemonic(i.getMnemonic());
         if (opcode != null) {

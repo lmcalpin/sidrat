@@ -17,6 +17,7 @@ import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.CodeIterator;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Mnemonic;
+import javassist.bytecode.Opcode;
 import javassist.compiler.CompileError;
 import javassist.compiler.Javac;
 
@@ -33,15 +34,16 @@ public class Instruction {
     private final CtBehavior ctBehavior;
     private final int lineNumber;
     private final String mnemonic;
-    private int next;
     private final int op;
-    private int pos;
     private final Instruction prev;
+    private Instruction next;
+    private int pos; // program counter
+    private int nextPos; // program counter
 
-    public Instruction(int pos, int lineNumber, int op, int next, Instruction prev, CodeAttribute ca, CtBehavior behavior) {
+    public Instruction(int pos, int lineNumber, int op, int nextPos, Instruction prev, CodeAttribute ca, CtBehavior behavior) {
         this.pos = pos;
         this.op = op;
-        this.next = next;
+        this.nextPos = nextPos;
         this.lineNumber = lineNumber;
         this.prev = prev;
         this.ca = ca;
@@ -61,6 +63,8 @@ public class Instruction {
             int next = ci.lookAhead();
             int thisLineNumber = methodInfo.getLineNumber(pos);
             Instruction instruction = new Instruction(pos, thisLineNumber, op, next, last, ca, ctBehavior);
+            if (last != null)
+                last.next = instruction;
             last = instruction;
             instructions.add(instruction);
         }
@@ -70,7 +74,10 @@ public class Instruction {
     private byte[] compile(Instruction sf, String src) throws CannotCompileException, BadBytecode, NotFoundException {
         Javac jv = new Javac(cc);
         try {
-            jv.recordLocalVariables(ca, sf.next);
+            int pc = sf.nextPos;
+            if (sf.next.op == Opcode.RETURN)
+                pc = sf.pos;
+            jv.recordLocalVariables(ca, pc);
             jv.recordParams(ctBehavior.getParameterTypes(), Modifier.isStatic(ctBehavior.getModifiers()));
             jv.setMaxLocals(ca.getMaxLocals());
             jv.compileStmnt(src);
@@ -168,14 +175,14 @@ public class Instruction {
         try {
             logger.finer("compiling \"" + src + "\" for " + lineNumber);
             CodeIterator ci = ca.iterator();
-            ci.move(next);
+            ci.move(nextPos);
             byte[] code = compile(this, src);
             ci.insert(code);
             int offset = code.length;
             for (Instruction instruction : instructions) {
                 if (instruction.pos > pos) {
                     instruction.pos += offset;
-                    instruction.next += offset;
+                    instruction.nextPos += offset;
                 }
             }
         } catch (CannotCompileException e) {

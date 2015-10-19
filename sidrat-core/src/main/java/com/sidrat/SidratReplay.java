@@ -50,6 +50,17 @@ public class SidratReplay {
         return eventReader.eval(event.getTime(), obj.getUniqueID());
     }
 
+    public SidratExecutionEvent gotoEnd() {
+        SidratExecutionEvent lastEvent = event;
+        while (event != null) {
+            event = readNext();
+            if (event != null)
+                lastEvent = event;
+        }
+        event = lastEvent;
+        return lastEvent;
+    }
+
     public SidratExecutionEvent gotoEvent(int id) {
         event = eventReader.find(new Long(id));
         return event;
