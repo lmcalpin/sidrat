@@ -14,8 +14,9 @@ public class Pops {
     private static final Logger logger = new Logger();
     public static final Pops OBJECTREF = new Pops(OperandValueType.OBJECTREF);
     public static final Pops VALUE = new Pops(OperandValueType.VALUE);
-    public static final Pops VALUE_VALUE = new Pops(OperandValueType.VALUE, OperandValueType.VALUE);
-    public static final Pops VALUEWORD_VALUEWORD = new Pops(OperandValueType.VALUE_WORD, OperandValueType.VALUE_WORD);
+    public static final Pops VALUE2 = new Pops(OperandValueType.VALUE, OperandValueType.VALUE);
+    public static final Pops VALUEWORD2 = new Pops(OperandValueType.VALUE_WORD, OperandValueType.VALUE_WORD);
+    public static final Pops VALUEWORD4 = new Pops(OperandValueType.VALUE_WORD, OperandValueType.VALUE_WORD, OperandValueType.VALUE_WORD, OperandValueType.VALUE_WORD);
     public static final Pops METHODINVOCATION = new Pops(i -> {
         int methodRefIdx = i.getParameter(ParameterLength.U2);
         String methodName = getName(i, methodRefIdx);
