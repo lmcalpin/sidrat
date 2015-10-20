@@ -1,5 +1,9 @@
 package com.sidrat.junit;
 
+import java.util.Collections;
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.sidrat.SidratRecorder;
 import com.sidrat.SidratRegistry;
 import com.sidrat.event.SidratCallback;
@@ -71,6 +75,8 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
                 throw new IllegalStateException("A Sidrat Event Store could not be initialized", e);
             }
         }
+        SidratHistory historyAnn = super.getTestClass().getJavaClass().getAnnotation(SidratHistory.class);
+        List<String> historyVars = historyAnn != null ? Lists.newArrayList(historyAnn.variables()) : Collections.emptyList();
         // default values
         if (store == null) {
             InMemoryEventRepository memstore = new InMemoryEventRepository();
@@ -79,7 +85,7 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
         }
         recorder.store(store);
         final EventReader eventReader = reader;
-        notifier.addListener(new SidratRunListener(recorder, eventReader));
+        notifier.addListener(new SidratRunListener(recorder, eventReader, historyVars));
         try {
             SidratCallback.startRecording();
             super.run(notifier);

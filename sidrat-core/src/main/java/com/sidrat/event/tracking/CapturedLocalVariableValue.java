@@ -11,6 +11,11 @@ public class CapturedLocalVariableValue implements ValueTracker {
         this.currentValue = value;
     }
 
+    @Override
+    public TrackedObject getCurrentValue() {
+        return currentValue;
+    }
+
     public Long getTime() {
         return time;
     }
@@ -20,7 +25,7 @@ public class CapturedLocalVariableValue implements ValueTracker {
     }
 
     @Override
-    public TrackedObject getCurrentValue() {
-        return currentValue;
+    public String toString() {
+        return variable.getId() + "@" + time;
     }
 }

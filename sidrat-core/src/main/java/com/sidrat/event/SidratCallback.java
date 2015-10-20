@@ -30,12 +30,13 @@ public class SidratCallback {
     // the SidratMethodEntryEvent that preceded them on the current stack frame.
     public static Map<ExecutionLocation, SidratMethodEntryEvent> FRAME_EVENT_MAP = new HashMap<ExecutionLocation, SidratMethodEntryEvent>();
 
-    public static void startRecording() {
-        isRecording = true;
-    }
-
-    public static void stopRecording() {
-        isRecording = false;
+    public static ExecutionLocation currentFrame() {
+        Stack<ExecutionLocation> stack = CALL_STACK.get();
+        if (stack == null)
+            return null;
+        if (stack.isEmpty())
+            return null;
+        return stack.peek();
     }
 
     public static void enter(Object obj, String threadName, String clazz, String method, String argNames, Object[] argValues) {
@@ -60,50 +61,6 @@ public class SidratCallback {
 
     public static void enter(String threadName, String clazz, String method, String argNames, Object[] argValues) {
         enter(null, threadName, clazz, method, argNames, argValues);
-    }
-
-    public static void exit(byte val) {
-        exit(Byte.valueOf(val));
-    }
-
-    public static void exit(int val) {
-        exit(Integer.valueOf(val));
-    }
-
-    public static void exit(short val) {
-        exit(Short.valueOf(val));
-    }
-
-    public static void exit(long val) {
-        exit(Long.valueOf(val));
-    }
-
-    public static void exit(boolean val) {
-        exit(Boolean.valueOf(val));
-    }
-
-    public static void exit(float val) {
-        exit(Float.valueOf(val));
-    }
-
-    public static void exit(double val) {
-        exit(Double.valueOf(val));
-    }
-
-    public static void exit(char val) {
-        exit(Character.valueOf(val));
-    }
-
-    public static void exit(Object returns) {
-        if (!isRecording)
-            return;
-        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(returns);
-        SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
-        SidratMethodExitEvent event = SidratMethodExitEvent.exiting(methodEntry, trackedObj);
-        SidratRegistry.instance().getRecorder().getEventStore().store(event);
-        FRAME_EVENT_MAP.remove(currentFrame());
-        popFrame();
-        LAST_LINE.set(null);
     }
 
     public static void exec(int lineNumber) {
@@ -133,48 +90,76 @@ public class SidratCallback {
             logger.debug(frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
     }
 
-    public static void variableChanged(String className, String methodName, Object val, String var, int start, int end) {
+    public static void exit(boolean val) {
+        exit(Boolean.valueOf(val));
+    }
+
+    public static void exit(byte val) {
+        exit(Byte.valueOf(val));
+    }
+
+    public static void exit(char val) {
+        exit(Character.valueOf(val));
+    }
+
+    public static void exit(double val) {
+        exit(Double.valueOf(val));
+    }
+
+    public static void exit(float val) {
+        exit(Float.valueOf(val));
+    }
+
+    public static void exit(int val) {
+        exit(Integer.valueOf(val));
+    }
+
+    public static void exit(long val) {
+        exit(Long.valueOf(val));
+    }
+
+    public static void exit(Object returns) {
         if (!isRecording)
             return;
-        SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(className, methodName, var, start, end);
-        ExecutionLocation frame = currentFrame();
-        TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
-        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
-        SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
-        if (logger.isDebugEnabled())
-            logger.debug("variableChanged " + var + " set to " + val);
+        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(returns);
+        SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
+        SidratMethodExitEvent event = SidratMethodExitEvent.exiting(methodEntry, trackedObj);
+        SidratRegistry.instance().getRecorder().getEventStore().store(event);
+        FRAME_EVENT_MAP.remove(currentFrame());
+        popFrame();
+        LAST_LINE.set(null);
     }
 
-    public static void variableChanged(String className, String methodName, byte val, String var, int start, int end) {
-        variableChanged(className, methodName, Byte.valueOf(val), var, start, end);
+    public static void exit(short val) {
+        exit(Short.valueOf(val));
     }
 
-    public static void variableChanged(String className, String methodName, int val, String var, int start, int end) {
-        variableChanged(className, methodName, Integer.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, boolean val, String name) {
+        fieldChanged(obj, Boolean.valueOf(val), name);
     }
 
-    public static void variableChanged(String className, String methodName, short val, String var, int start, int end) {
-        variableChanged(className, methodName, Short.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, byte val, String name) {
+        fieldChanged(obj, Byte.valueOf(val), name);
     }
 
-    public static void variableChanged(String className, String methodName, long val, String var, int start, int end) {
-        variableChanged(className, methodName, Long.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, char val, String name) {
+        fieldChanged(obj, Character.valueOf(val), name);
     }
 
-    public static void variableChanged(String className, String methodName, boolean val, String var, int start, int end) {
-        variableChanged(className, methodName, Boolean.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, double val, String name) {
+        fieldChanged(obj, Double.valueOf(val), name);
     }
 
-    public static void variableChanged(String className, String methodName, float val, String var, int start, int end) {
-        variableChanged(className, methodName, Float.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, float val, String name) {
+        fieldChanged(obj, Float.valueOf(val), name);
     }
 
-    public static void variableChanged(String className, String methodName, double val, String var, int start, int end) {
-        variableChanged(className, methodName, Double.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, int val, String name) {
+        fieldChanged(obj, Integer.valueOf(val), name);
     }
 
-    public static void variableChanged(String className, String methodName, char val, String var, int start, int end) {
-        variableChanged(className, methodName, Character.valueOf(val), var, start, end);
+    public static void fieldChanged(Object obj, long val, String name) {
+        fieldChanged(obj, Long.valueOf(val), name);
     }
 
     public static void fieldChanged(Object obj, Object val, String name) {
@@ -187,36 +172,13 @@ public class SidratCallback {
             logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
     }
 
-    public static void fieldChanged(Object obj, byte val, String name) {
-        fieldChanged(obj, Byte.valueOf(val), name);
-    }
-
-    public static void fieldChanged(Object obj, int val, String name) {
-        fieldChanged(obj, Integer.valueOf(val), name);
-    }
-
     public static void fieldChanged(Object obj, short val, String name) {
         fieldChanged(obj, Short.valueOf(val), name);
     }
 
-    public static void fieldChanged(Object obj, long val, String name) {
-        fieldChanged(obj, Long.valueOf(val), name);
-    }
-
-    public static void fieldChanged(Object obj, boolean val, String name) {
-        fieldChanged(obj, Boolean.valueOf(val), name);
-    }
-
-    public static void fieldChanged(Object obj, float val, String name) {
-        fieldChanged(obj, Float.valueOf(val), name);
-    }
-
-    public static void fieldChanged(Object obj, double val, String name) {
-        fieldChanged(obj, Double.valueOf(val), name);
-    }
-
-    public static void fieldChanged(Object obj, char val, String name) {
-        fieldChanged(obj, Character.valueOf(val), name);
+    static void popFrame() {
+        Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
+        stackFrames.pop();
     }
 
     static ExecutionLocation pushFrame(TrackedObject object, String threadName, String className, String methodName) {
@@ -230,17 +192,55 @@ public class SidratCallback {
         return frame;
     }
 
-    static void popFrame() {
-        Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
-        stackFrames.pop();
+    public static void startRecording() {
+        isRecording = true;
     }
 
-    public static ExecutionLocation currentFrame() {
-        Stack<ExecutionLocation> stack = CALL_STACK.get();
-        if (stack == null)
-            return null;
-        if (stack.isEmpty())
-            return null;
-        return stack.peek();
+    public static void stopRecording() {
+        isRecording = false;
+    }
+
+    public static void variableChanged(String className, String methodName, boolean val, String var, int start, int end) {
+        variableChanged(className, methodName, Boolean.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, byte val, String var, int start, int end) {
+        variableChanged(className, methodName, Byte.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, char val, String var, int start, int end) {
+        variableChanged(className, methodName, Character.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, double val, String var, int start, int end) {
+        variableChanged(className, methodName, Double.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, float val, String var, int start, int end) {
+        variableChanged(className, methodName, Float.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, int val, String var, int start, int end) {
+        variableChanged(className, methodName, Integer.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, long val, String var, int start, int end) {
+        variableChanged(className, methodName, Long.valueOf(val), var, start, end);
+    }
+
+    public static void variableChanged(String className, String methodName, Object val, String var, int start, int end) {
+        if (!isRecording)
+            return;
+        SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(className, methodName, var, start, end);
+        ExecutionLocation frame = currentFrame();
+        TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
+        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+        SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
+        if (logger.isDebugEnabled())
+            logger.debug("variableChanged " + trackedVar + " set to " + val);
+    }
+
+    public static void variableChanged(String className, String methodName, short val, String var, int start, int end) {
+        variableChanged(className, methodName, Short.valueOf(val), var, start, end);
     }
 }

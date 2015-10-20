@@ -1,5 +1,6 @@
 package com.sidrat.event.store.mem;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,7 @@ import com.sidrat.util.Pair;
 
 /**
  * An implementation of a Sidrat EventStore that retains a history of all program execution events in memory.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class InMemoryEventRepository implements EventRepository {
@@ -31,7 +32,7 @@ public class InMemoryEventRepository implements EventRepository {
     TreeMap<Long, SidratMethodEntryEvent> entries = new TreeMap<>();
     TreeMap<Long, SidratMethodExitEvent> exits = new TreeMap<>();
     TreeMap<Long, SidratFieldChangedEvent> fields = new TreeMap<>();
-    TreeMap<Long, SidratLocalVariableEvent> locals = new TreeMap<>();
+    TreeMap<Long, List<SidratLocalVariableEvent>> locals = new TreeMap<>();
     Multimap<Long, Pair<Long, TrackedObject>> fieldHistory = ArrayListMultimap.create();
     Multimap<String, Pair<Long, TrackedObject>> localsHistory = ArrayListMultimap.create();
     Multimap<String, SidratExecutionEvent> executions = ArrayListMultimap.create();
@@ -41,34 +42,32 @@ public class InMemoryEventRepository implements EventRepository {
     }
 
     @Override
-    public void store(SidratExecutionEvent event) {
-        executions.put(event.getClassName() + ":" + event.getMethodName() + "#" + event.getLineNumber(), event);
-        events.put(event.getTime(), event);
+    public void close() {
     }
 
     @Override
-    public void store(SidratMethodEntryEvent event) {
-        entries.put(event.getTime(), event);
+    public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
+        Collection<Pair<Long, String>> objectsFieldIds = objectFields.get(objectID);
+        Map<String, CapturedFieldValue> fields = new HashMap<>();
+        for (Pair<Long, String> fieldInfo : objectsFieldIds) {
+            Long fieldId = fieldInfo.getValue1();
+            String fieldName = fieldInfo.getValue2();
+            List<Pair<Long, TrackedObject>> fieldHistory = fieldHistory(fieldId);
+            TrackedObject latestFieldValue = fieldHistory.stream().max((p1, p2) -> p1.getValue1() > p2.getValue1() ? 1 : -1).get().getValue2();
+            CapturedFieldValue cfv = new CapturedFieldValue(time, objectID, latestFieldValue);
+            fields.put(fieldName, cfv);
+        }
+        return fields;
     }
 
     @Override
-    public void store(SidratMethodExitEvent event) {
-        exits.put(event.getTime(), event);
+    public List<SidratExecutionEvent> executions(String className, String methodName, int lineNumber) {
+        return (List<SidratExecutionEvent>) executions.get(className + ":" + methodName + "#" + lineNumber);
     }
 
     @Override
-    public void store(SidratFieldChangedEvent event) {
-        Pair<Long, String> fieldInfo = new Pair<>(event.getTrackedValue().getUniqueID(), event.getVariableName());
-        if (!objectFields.get(event.getOwnerUniqueID()).contains(fieldInfo))
-            objectFields.put(event.getOwnerUniqueID(), fieldInfo);
-        fieldHistory.put(event.getTrackedValue().getUniqueID(), new Pair<>(event.getTime(), event.getTrackedValue()));
-        fields.put(event.getTime(), event);
-    }
-
-    @Override
-    public void store(SidratLocalVariableEvent event) {
-        localsHistory.put(event.getUniqueID(), new Pair<>(event.getTime(), event.getTrackedValue()));
-        locals.put(event.getTime(), event);
+    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
+        return (List<Pair<Long, TrackedObject>>) fieldHistory.get(fieldID);
     }
 
     @Override
@@ -103,39 +102,16 @@ public class InMemoryEventRepository implements EventRepository {
     public Map<String, CapturedLocalVariableValue> locals(Long now) {
         Map<String, CapturedLocalVariableValue> ret = new HashMap<>();
         int currentLineNumber = find(now).getLineNumber();
-        for (SidratLocalVariableEvent var : locals.headMap(now, true).values()) {
-            if (var.getScopeStart() <= currentLineNumber && var.getScopeEnd() >= currentLineNumber) {
-                TrackedVariable variable = new TrackedVariable(var.getUniqueID(), var.getVariableName(), var.getVariableValidityRange());
-                CapturedLocalVariableValue value = new CapturedLocalVariableValue(var.getTime(), variable, var.getTrackedValue());
-                ret.put(var.getVariableName(), value);
+        for (List<SidratLocalVariableEvent> vars : locals.headMap(now, true).values()) {
+            for (SidratLocalVariableEvent var : vars) {
+                if (var.getScopeStart() <= currentLineNumber && var.getScopeEnd() >= currentLineNumber) {
+                    TrackedVariable variable = new TrackedVariable(var.getUniqueID(), var.getVariableName(), var.getVariableValidityRange());
+                    CapturedLocalVariableValue value = new CapturedLocalVariableValue(var.getTime(), variable, var.getTrackedValue());
+                    ret.put(var.getVariableName(), value);
+                }
             }
         }
         return ret;
-    }
-
-    @Override
-    public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
-        Collection<Pair<Long, String>> objectsFieldIds = objectFields.get(objectID);
-        Map<String, CapturedFieldValue> fields = new HashMap<>();
-        for (Pair<Long, String> fieldInfo : objectsFieldIds) {
-            Long fieldId = fieldInfo.getValue1();
-            String fieldName = fieldInfo.getValue2();
-            List<Pair<Long, TrackedObject>> fieldHistory = fieldHistory(fieldId);
-            TrackedObject latestFieldValue = fieldHistory.stream().max((p1, p2) -> p1.getValue1() > p2.getValue1() ? 1 : -1).get().getValue2();
-            CapturedFieldValue cfv = new CapturedFieldValue(time, objectID, latestFieldValue);
-            fields.put(fieldName, cfv);
-        }
-        return fields;
-    }
-
-    @Override
-    public List<SidratExecutionEvent> executions(String className, String methodName, int lineNumber) {
-        return (List<SidratExecutionEvent>) executions.get(className + ":" + methodName + "#" + lineNumber);
-    }
-
-    @Override
-    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
-        return (List<Pair<Long, TrackedObject>>) fieldHistory.get(fieldID);
     }
 
     @Override
@@ -144,6 +120,38 @@ public class InMemoryEventRepository implements EventRepository {
     }
 
     @Override
-    public void close() {
+    public void store(SidratExecutionEvent event) {
+        executions.put(event.getClassName() + ":" + event.getMethodName() + "#" + event.getLineNumber(), event);
+        events.put(event.getTime(), event);
+    }
+
+    @Override
+    public void store(SidratFieldChangedEvent event) {
+        Pair<Long, String> fieldInfo = new Pair<>(event.getTrackedValue().getUniqueID(), event.getVariableName());
+        if (!objectFields.get(event.getOwnerUniqueID()).contains(fieldInfo))
+            objectFields.put(event.getOwnerUniqueID(), fieldInfo);
+        fieldHistory.put(event.getTrackedValue().getUniqueID(), new Pair<>(event.getTime(), event.getTrackedValue()));
+        fields.put(event.getTime(), event);
+    }
+
+    @Override
+    public void store(SidratLocalVariableEvent event) {
+        localsHistory.put(event.getUniqueID(), new Pair<>(event.getTime(), event.getTrackedValue()));
+        List<SidratLocalVariableEvent> events = locals.get(event.getTime());
+        if (events == null) {
+            events = new ArrayList<>();
+        }
+        events.add(event);
+        locals.put(event.getTime(), events);
+    }
+
+    @Override
+    public void store(SidratMethodEntryEvent event) {
+        entries.put(event.getTime(), event);
+    }
+
+    @Override
+    public void store(SidratMethodExitEvent event) {
+        exits.put(event.getTime(), event);
     }
 }

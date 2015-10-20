@@ -13,7 +13,9 @@ import com.sidrat.event.store.hsqldb.HsqldbEventReader;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.event.tracking.TrackedObject;
+import com.sidrat.event.tracking.TrackedVariable;
 import com.sidrat.util.Logger;
+import com.sidrat.util.Pair;
 import com.sidrat.util.Tuple3;
 
 import org.apache.commons.io.FileUtils;
@@ -51,6 +53,9 @@ public class SidratReplay {
     }
 
     public SidratExecutionEvent gotoEnd() {
+        if (event == null) {
+            event = gotoEvent(1);
+        }
         SidratExecutionEvent lastEvent = event;
         while (event != null) {
             event = readNext();
@@ -69,6 +74,14 @@ public class SidratReplay {
     public SidratExecutionEvent gotoEvent(Long id) {
         event = eventReader.find(id);
         return event;
+    }
+
+    public List<Pair<Long, TrackedObject>> history(CapturedLocalVariableValue var) {
+        return eventReader.localVariableHistory(var.getVariable().getId());
+    }
+
+    public List<Pair<Long, TrackedObject>> history(TrackedVariable var) {
+        return eventReader.localVariableHistory(var.getId());
     }
 
     public Map<String, CapturedLocalVariableValue> locals() {

@@ -15,22 +15,6 @@ public class TrackedVariable {
         this.lineNumberEnd = lineNumberRange.getValue2();
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public int getLineNumberStart() {
-        return lineNumberStart;
-    }
-
-    public int getLineNumberEnd() {
-        return lineNumberEnd;
-    }
-
-    public String getId() {
-        return id;
-    }
-
     public static String getIdentity(String className, String methodName, String variableName) {
         StringBuilder sb = new StringBuilder();
         sb.append(className);
@@ -39,5 +23,26 @@ public class TrackedVariable {
         sb.append(':');
         sb.append(variableName);
         return sb.toString();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getLineNumberEnd() {
+        return lineNumberEnd;
+    }
+
+    public int getLineNumberStart() {
+        return lineNumberStart;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return getId() + "(" + getLineNumberStart() + ":" + getLineNumberEnd() + ")";
     }
 }

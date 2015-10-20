@@ -61,4 +61,9 @@ public class SidratLocalVariableEvent extends SidratEvent {
     public Pair<Integer, Integer> getVariableValidityRange() {
         return variableValidityRange;
     }
+
+    @Override
+    public String toString() {
+        return variableName + "(" + uniqueID + ")@" + super.getTime();
+    }
 }
