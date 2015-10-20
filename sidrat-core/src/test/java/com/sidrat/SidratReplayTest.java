@@ -3,14 +3,23 @@ package com.sidrat;
 import com.metatrope.sidrat.testprogram.SidrateSampleProgram;
 
 import com.sidrat.event.SidratExecutionEvent;
+import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.util.Tuple3;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 public class SidratReplayTest extends BaseReplayTest {
-    public SidratReplayTest() {
-        super();
+    public SidratReplayTest(EventRepositoryFactory factory) {
+        super(factory);
+    }
+
+    @Test
+    public void testBreakpointSplit() {
+        Tuple3<String, String, Integer> split = replay.split("com.metatrope.testprogram.ClassName.method:42");
+        Assert.assertEquals("com.metatrope.testprogram.ClassName", split.getValue1());
+        Assert.assertEquals("method", split.getValue2());
+        Assert.assertEquals(new Integer(42), split.getValue3());
     }
 
     @Test
@@ -26,13 +35,5 @@ public class SidratReplayTest extends BaseReplayTest {
         event = replay.gotoEvent(3);
         sourceCode = replay.lookupSourceCode(event);
         Assert.assertEquals("        int thirdVariable = 3;", sourceCode);
-    }
-
-    @Test
-    public void testBreakpointSplit() {
-        Tuple3<String, String, Integer> split = replay.split("com.metatrope.testprogram.ClassName.method:42");
-        Assert.assertEquals("com.metatrope.testprogram.ClassName", split.getValue1());
-        Assert.assertEquals("method", split.getValue2());
-        Assert.assertEquals(new Integer(42), split.getValue3());
     }
 }

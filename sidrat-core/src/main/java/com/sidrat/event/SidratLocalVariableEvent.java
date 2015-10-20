@@ -14,19 +14,29 @@ public class SidratLocalVariableEvent extends SidratEvent {
     private String uniqueID;
     private String variableName;
     private TrackedObject value;
+    private TrackedVariable var;
     private Pair<Integer, Integer> variableValidityRange; // for local variables
 
-    public SidratLocalVariableEvent(Long time) {
+    private SidratLocalVariableEvent(Long time) {
         super(time);
     }
 
     public static SidratLocalVariableEvent variableChanged(TrackedObject val, TrackedVariable var) {
         SidratLocalVariableEvent event = new SidratLocalVariableEvent(SidratRegistry.instance().getRecorder().getClock().current());
         event.value = val;
+        event.var = var;
         event.variableValidityRange = new Pair<Integer, Integer>(var.getLineNumberStart(), var.getLineNumberEnd());
         event.variableName = var.getName();
         event.uniqueID = var.getId();
         return event;
+    }
+
+    public String getClassName() {
+        return var.getClassName();
+    }
+
+    public String getMethodName() {
+        return var.getMethodName();
     }
 
     /**

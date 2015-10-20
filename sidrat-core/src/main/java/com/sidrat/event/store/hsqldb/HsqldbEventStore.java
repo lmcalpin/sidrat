@@ -23,13 +23,10 @@ import com.sidrat.util.JdbcConnectionProvider;
  * This implementation of EventStore uses HSQLDB to store events and run state information (changes to variables and fields).
  * It is highly unlikely that this will work even remotely well for any "real world" project. It is only intended to support
  * debugging small projects as a proof of concept.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
-    private String connString;
-    private Jdbc jdbcHelper = new Jdbc(this);
-
     static {
         try {
             Class.forName("org.hsqldb.jdbcDriver");
@@ -38,9 +35,40 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         }
     }
 
+    private String connString;
+
+    private Jdbc jdbcHelper = new Jdbc(this);
+
+    private Map<Long, String> persistedObjects = new HashMap<Long, String>();
+
+    private Map<String, Long> persistedFields = new HashMap<String, Long>();
+
+    private Map<String, Long> persistedVariables = new HashMap<String, Long>();
+
+    private List<Long> persistedThreads = new ArrayList<Long>();
+    private Map<String, Long> classes = new HashMap<String, Long>();
+    private Map<String, Long> methods = new HashMap<String, Long>();
+
     public HsqldbEventStore(String filename) {
         this.connString = "jdbc:hsqldb:file:" + filename + "/sidrat";
         init();
+    }
+
+    @Override
+    public void close() {
+        jdbcHelper.update("SHUTDOWN");
+    }
+
+    private Long foundObject(TrackedObject obj) {
+        if (obj == null)
+            return null;
+        String ownerClassName = obj.getClassName();
+        Long objectID = obj.getUniqueID();
+        if (!persistedObjects.keySet().contains(objectID)) {
+            jdbcHelper.insert("INSERT INTO objects VALUES(?,?)", objectID, ownerClassName);
+            persistedObjects.put(objectID, ownerClassName);
+        }
+        return objectID;
     }
 
     @Override
@@ -76,32 +104,16 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         jdbcHelper.update("CREATE TABLE method_args(id BIGINT, arg_name LONGVARCHAR, arg_value LONGVARCHAR)");
         jdbcHelper.update("CREATE TABLE method_exits(id BIGINT, methodentry_id BIGINT, ref BIGINT, value LONGVARCHAR)");
         jdbcHelper.update("CREATE TABLE executions(id BIGINT, methodentry_id BIGINT, lineNumber INTEGER)");
-        jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, uuid VARCHAR(255), variable_name VARCHAR(255), rangeStart INTEGER, rangeEnd INTEGER, clazz VARCHAR(255))");
+        jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, variable_name VARCHAR(255), method_id BIGINT, rangeStart INTEGER, rangeEnd INTEGER, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE variable_updates(event_id BIGINT, variable_id BIGINT, value LONGVARCHAR, ref BIGINT)");
         jdbcHelper.update("CREATE TABLE objects(id BIGINT, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE fields(id BIGINT IDENTITY, object_id BIGINT, field_name VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE field_updates(event_id BIGINT, field_id BIGINT, value LONGVARCHAR, ref BIGINT)");
     }
 
-    private Map<Long, String> persistedObjects = new HashMap<Long, String>();
-    private Map<String, Long> persistedFields = new HashMap<String, Long>();
-    private Map<String, Long> persistedVariables = new HashMap<String, Long>();
-    private List<Long> persistedThreads = new ArrayList<Long>();
-    private Map<String, Long> classes = new HashMap<String, Long>();
-    private Map<String, Long> methods = new HashMap<String, Long>();
-
     @Override
-    public void store(SidratLocalVariableEvent event) {
-        if (!persistedVariables.keySet().contains(event.getUniqueID())) {
-            Long id = jdbcHelper.insert("INSERT INTO variables(uuid, variable_name,rangeStart,rangeEnd,clazz) VALUES(?,?,?,?,?)", event.getUniqueID(), event.getVariableName(), event.getVariableValidityRange().getValue1(),
-                    event.getVariableValidityRange().getValue2(), event.getTrackedValue().getClassName());
-            persistedVariables.put(event.getUniqueID(), id);
-        }
-        Long variableID = persistedVariables.get(event.getUniqueID());
-        Long eventID = event.getTime();
-        Long objectID = foundObject(event.getTrackedValue());
-        String value = event.getTrackedValue() != null ? event.getTrackedValue().getValueAsString() : null;
-        jdbcHelper.insert("INSERT INTO variable_updates VALUES(?, ?, ?, ?)", eventID, variableID, value, objectID);
+    public void store(SidratExecutionEvent event) {
+        jdbcHelper.insert("INSERT INTO executions VALUES(?, ?, ?)", event.getTime(), event.getMethodEntryTime(), event.getLineNumber());
     }
 
     @Override
@@ -118,21 +130,19 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         jdbcHelper.insert("INSERT INTO field_updates VALUES(?, ?, ?, ?)", eventID, ownerID, event.getTrackedValue().getValueAsString(), objectID);
     }
 
-    private Long foundObject(TrackedObject obj) {
-        if (obj == null)
-            return null;
-        String ownerClassName = obj.getClassName();
-        Long objectID = obj.getUniqueID();
-        if (!persistedObjects.keySet().contains(objectID)) {
-            jdbcHelper.insert("INSERT INTO objects VALUES(?,?)", objectID, ownerClassName);
-            persistedObjects.put(objectID, ownerClassName);
-        }
-        return objectID;
-    }
-
     @Override
-    public void store(SidratExecutionEvent event) {
-        jdbcHelper.insert("INSERT INTO executions VALUES(?, ?, ?)", event.getTime(), event.getMethodEntryTime(), event.getLineNumber());
+    public void store(SidratLocalVariableEvent event) {
+        if (!persistedVariables.keySet().contains(event.getUniqueID())) {
+            Long methodId = (Long) jdbcHelper.first("SELECT id FROM methods WHERE class_id = (SELECT id FROM classes WHERE name=?) AND name = ?", event.getClassName(), event.getMethodName()).get("ID");
+            Long id = jdbcHelper.insert("INSERT INTO variables(variable_name, method_id, rangeStart, rangeEnd,clazz) VALUES(?,?,?,?,?)", event.getVariableName(), methodId, event.getVariableValidityRange().getValue1(),
+                    event.getVariableValidityRange().getValue2(), event.getTrackedValue().getClassName());
+            persistedVariables.put(event.getUniqueID(), id);
+        }
+        Long variableID = persistedVariables.get(event.getUniqueID());
+        Long eventID = event.getTime();
+        Long objectID = foundObject(event.getTrackedValue());
+        String value = event.getTrackedValue() != null ? event.getTrackedValue().getValueAsString() : null;
+        jdbcHelper.insert("INSERT INTO variable_updates VALUES(?, ?, ?, ?)", eventID, variableID, value, objectID);
     }
 
     @Override
@@ -168,11 +178,6 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         Long objectID = foundObject(event.getReturns());
         String value = event.getReturns() != null ? event.getReturns().getValueAsString() : null;
         jdbcHelper.insert("INSERT INTO method_exits VALUES(?, ?, ?, ?)", event.getTime(), event.getMethodEntryTime(), objectID, value);
-    }
-
-    @Override
-    public void close() {
-        jdbcHelper.update("SHUTDOWN");
     }
 
 }

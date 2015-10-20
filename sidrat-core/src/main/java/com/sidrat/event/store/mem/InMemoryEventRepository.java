@@ -100,12 +100,13 @@ public class InMemoryEventRepository implements EventRepository {
 
     @Override
     public Map<String, CapturedLocalVariableValue> locals(Long now) {
+        SidratExecutionEvent currentEvent = find(now);
         Map<String, CapturedLocalVariableValue> ret = new HashMap<>();
         int currentLineNumber = find(now).getLineNumber();
         for (List<SidratLocalVariableEvent> vars : locals.headMap(now, true).values()) {
             for (SidratLocalVariableEvent var : vars) {
-                if (var.getScopeStart() <= currentLineNumber && var.getScopeEnd() >= currentLineNumber) {
-                    TrackedVariable variable = new TrackedVariable(var.getUniqueID(), var.getVariableName(), var.getVariableValidityRange());
+                if (var.getScopeStart() <= currentLineNumber && var.getScopeEnd() >= currentLineNumber && var.getClassName().equals(currentEvent.getClassName()) && var.getMethodName().equals(currentEvent.getMethodName())) {
+                    TrackedVariable variable = new TrackedVariable(var.getClassName(), var.getMethodName(), var.getVariableName(), var.getVariableValidityRange());
                     CapturedLocalVariableValue value = new CapturedLocalVariableValue(var.getTime(), variable, var.getTrackedValue());
                     ret.put(var.getVariableName(), value);
                 }

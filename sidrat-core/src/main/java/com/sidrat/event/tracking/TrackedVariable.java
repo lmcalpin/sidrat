@@ -3,13 +3,17 @@ package com.sidrat.event.tracking;
 import com.sidrat.util.Pair;
 
 public class TrackedVariable {
-    private String id;
+    private final String id;
+    private final String className;
+    private final String methodName;
     private String name;
     private int lineNumberStart;
     private int lineNumberEnd;
 
-    public TrackedVariable(String id, String variableName, Pair<Integer, Integer> lineNumberRange) {
-        this.id = id;
+    public TrackedVariable(String className, String methodName, String variableName, Pair<Integer, Integer> lineNumberRange) {
+        this.id = getIdentity(className, methodName, variableName);
+        this.className = className;
+        this.methodName = methodName;
         this.name = variableName;
         this.lineNumberStart = lineNumberRange.getValue1();
         this.lineNumberEnd = lineNumberRange.getValue2();
@@ -25,6 +29,10 @@ public class TrackedVariable {
         return sb.toString();
     }
 
+    public String getClassName() {
+        return className;
+    }
+
     public String getId() {
         return id;
     }
@@ -35,6 +43,10 @@ public class TrackedVariable {
 
     public int getLineNumberStart() {
         return lineNumberStart;
+    }
+
+    public String getMethodName() {
+        return methodName;
     }
 
     public String getName() {

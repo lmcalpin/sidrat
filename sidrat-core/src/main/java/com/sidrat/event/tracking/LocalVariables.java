@@ -15,7 +15,7 @@ public class LocalVariables {
     public void found(String className, String method, String var, int start, int end) {
         String id = TrackedVariable.getIdentity(className, method, var);
         if (!trackedVariables.containsKey(id))
-            trackedVariables.put(id, new TrackedVariable(id, var, new Pair<Integer, Integer>(start, end)));
+            trackedVariables.put(id, new TrackedVariable(className, method, var, new Pair<Integer, Integer>(start, end)));
     }
 
     public TrackedVariable lookup(String className, String method, String var) {

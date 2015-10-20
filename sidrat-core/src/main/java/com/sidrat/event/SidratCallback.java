@@ -44,7 +44,7 @@ public class SidratCallback {
             return;
         TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
         ExecutionLocation frame = pushFrame(trackedObj, threadName, clazz, method);
-        if (argValues.length > 0) {
+        if (argValues != null && argValues.length > 0) {
             String[] args = argNames.split(",");
             Map<String, Object> argMap = ZipUtils.zipAsMap(args, argValues, false);
             for (String var : argMap.keySet()) {
