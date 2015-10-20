@@ -2,6 +2,7 @@ package com.sidrat.junit;
 
 import com.sidrat.SidratRecorder;
 import com.sidrat.SidratRegistry;
+import com.sidrat.event.SidratCallback;
 import com.sidrat.event.store.EventReader;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
@@ -19,7 +20,7 @@ import org.junit.runners.model.InitializationError;
 /**
  * Instrument the class we are testing so that we can create a Sidrat recording. If the test fails, we
  * will dump useful information, such as local variables, etc.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratTestRunner extends BlockJUnit4ClassRunner {
@@ -79,6 +80,11 @@ public class SidratTestRunner extends BlockJUnit4ClassRunner {
         recorder.store(store);
         final EventReader eventReader = reader;
         notifier.addListener(new SidratRunListener(recorder, eventReader));
-        super.run(notifier);
+        try {
+            SidratCallback.startRecording();
+            super.run(notifier);
+        } finally {
+            SidratCallback.stopRecording();
+        }
     }
 }
