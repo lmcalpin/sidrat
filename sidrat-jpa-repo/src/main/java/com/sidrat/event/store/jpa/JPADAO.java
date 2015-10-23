@@ -13,6 +13,11 @@ import javax.persistence.Query;
 
 import com.sidrat.event.store.jpa.model.BaseSidratEntity;
 
+/**
+ * Utility class for dealing with JPA.
+ *
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 public class JPADAO {
     @FunctionalInterface
     private interface FindSession<T> {
@@ -108,7 +113,7 @@ public class JPADAO {
         });
     }
 
-    public <T extends BaseSidratEntity> void persist(T entity) {
+    public <T extends BaseSidratEntity> void store(T entity) {
         updateSession(em -> em.merge(entity));
     }
 

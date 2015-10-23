@@ -56,7 +56,7 @@ public class JPAEventStore implements EventStore {
         execution.setId(event.getTime());
         execution.setMethodEntry(methodEntry);
         execution.setLineNumber(event.getLineNumber());
-        dao.persist(execution);
+        dao.store(execution);
     }
 
     @Override
