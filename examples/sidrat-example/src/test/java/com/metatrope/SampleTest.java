@@ -11,8 +11,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(SidratTestRunner.class)
-@SidratEventStore(factory = com.sidrat.event.store.mem.InMemoryEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
+// @SidratEventStore(factory = com.sidrat.event.store.mem.InMemoryEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
 // @SidratEventStore(factory = com.sidrat.event.store.hsqldb.HsqldbEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
+@SidratEventStore(factory = com.sidrat.event.store.jpa.JPAEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
 @SidratHistory(variables = { "sum" })
 public class SampleTest {
     @Test

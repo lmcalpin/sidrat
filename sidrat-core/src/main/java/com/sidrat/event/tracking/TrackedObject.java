@@ -23,18 +23,6 @@ public class TrackedObject implements Serializable {
         this.uniqueID = uniqueID;
     }
 
-    public String getClassName() {
-        return className;
-    }
-
-    public Long getUniqueID() {
-        return uniqueID;
-    }
-
-    public String getValueAsString() {
-        return value;
-    }
-
     private static String stringify(Object obj) {
         if (obj != null && obj instanceof Object[]) {
             return Arrays.deepToString((Object[]) obj);
@@ -57,14 +45,20 @@ public class TrackedObject implements Serializable {
     }
 
     @Override
-    public String toString() {
-        if (className == null) {
-            return "null";
-        }
-        if (uniqueID != null && className != null) {
-            return className + "#" + uniqueID;
-        }
-        throw new SidratProcessingException("TrackedObject corrupt: " + uniqueID);
+    public boolean equals(Object obj) {
+        return Objects.equals(this, obj);
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public Long getUniqueID() {
+        return uniqueID;
+    }
+
+    public String getValueAsString() {
+        return value;
     }
 
     @Override
@@ -73,7 +67,13 @@ public class TrackedObject implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return Objects.equals(this, obj);
+    public String toString() {
+        if (className == null) {
+            return "null";
+        }
+        if (uniqueID != null && className != null) {
+            return className + "#" + uniqueID;
+        }
+        throw new SidratProcessingException("TrackedObject corrupt: " + uniqueID);
     }
 }

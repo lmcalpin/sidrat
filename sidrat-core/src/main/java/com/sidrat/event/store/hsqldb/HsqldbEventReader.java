@@ -149,7 +149,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         String threadName = findThread(threadID);
         String className = (String) row.get("CLAZZ");
         String methodName = (String) row.get("METHOD");
-        TrackedObject trackedObject = new TrackedObject(className, objectInstanceID);
+        TrackedObject trackedObject = new TrackedObject(className, null, objectInstanceID);
         ExecutionLocation executionLocation = new ExecutionLocation(trackedObject, "main", className, methodName);
         SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntryTime, executionLocation, threadID, threadName);
         SidratExecutionEvent event = new SidratExecutionEvent(time, methodEntryEvent, lineNumber);
@@ -194,7 +194,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
 
     @Override
     public List<Pair<Long, TrackedObject>> localVariableHistory(String localVariableID) {
-        List<Map<String, Object>> updates = jdbcHelper.find("SELECT vu.*, v.clazz FROM variable_updates vu LEFT OUTER JOIN variables v ON vu.variable_id = v.id WHERE v.uuid = ? ORDER BY event_id DESC", localVariableID);
+        List<Map<String, Object>> updates = jdbcHelper.find("SELECT vu.*, v.clazz FROM variable_updates vu LEFT OUTER JOIN variables v ON vu.variable_id = v.id WHERE v.internal_name = ? ORDER BY event_id DESC", localVariableID);
         List<Pair<Long, TrackedObject>> changes = Lists.newArrayList();
         for (Map<String, Object> update : updates) {
             Long time = (Long) update.get("EVENT_ID");

@@ -104,7 +104,7 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
         jdbcHelper.update("CREATE TABLE method_args(id BIGINT, arg_name LONGVARCHAR, arg_value LONGVARCHAR)");
         jdbcHelper.update("CREATE TABLE method_exits(id BIGINT, methodentry_id BIGINT, ref BIGINT, value LONGVARCHAR)");
         jdbcHelper.update("CREATE TABLE executions(id BIGINT, methodentry_id BIGINT, lineNumber INTEGER)");
-        jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, variable_name VARCHAR(255), method_id BIGINT, rangeStart INTEGER, rangeEnd INTEGER, clazz VARCHAR(255))");
+        jdbcHelper.update("CREATE TABLE variables(id BIGINT IDENTITY, internal_name VARCHAR(255), variable_name VARCHAR(255), method_id BIGINT, rangeStart INTEGER, rangeEnd INTEGER, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE variable_updates(event_id BIGINT, variable_id BIGINT, value LONGVARCHAR, ref BIGINT)");
         jdbcHelper.update("CREATE TABLE objects(id BIGINT, clazz VARCHAR(255))");
         jdbcHelper.update("CREATE TABLE fields(id BIGINT IDENTITY, object_id BIGINT, field_name VARCHAR(255))");
@@ -134,8 +134,8 @@ public class HsqldbEventStore implements EventStore, JdbcConnectionProvider {
     public void store(SidratLocalVariableEvent event) {
         if (!persistedVariables.keySet().contains(event.getUniqueID())) {
             Long methodId = (Long) jdbcHelper.first("SELECT id FROM methods WHERE class_id = (SELECT id FROM classes WHERE name=?) AND name = ?", event.getClassName(), event.getMethodName()).get("ID");
-            Long id = jdbcHelper.insert("INSERT INTO variables(variable_name, method_id, rangeStart, rangeEnd,clazz) VALUES(?,?,?,?,?)", event.getVariableName(), methodId, event.getVariableValidityRange().getValue1(),
-                    event.getVariableValidityRange().getValue2(), event.getTrackedValue().getClassName());
+            Long id = jdbcHelper.insert("INSERT INTO variables(internal_name, variable_name, method_id, rangeStart, rangeEnd, clazz) VALUES(?,?,?,?,?,?)", event.getUniqueID(), event.getVariableName(), methodId,
+                    event.getVariableValidityRange().getValue1(), event.getVariableValidityRange().getValue2(), event.getTrackedValue().getClassName());
             persistedVariables.put(event.getUniqueID(), id);
         }
         Long variableID = persistedVariables.get(event.getUniqueID());

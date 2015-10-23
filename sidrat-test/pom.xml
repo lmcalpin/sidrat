@@ -6,12 +6,23 @@
 	<version>0.0.1-SNAPSHOT</version>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/test/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-javaagent:${project.build.directory}/agents/sidrat-agent.jar -Dcom.sidrat.agent.package.whitelist=com.metatrope</argLine>
+					<argLine>-javaagent:${project.build.directory}/agents/sidrat-agent.jar
+						-Dcom.sidrat.agent.package.whitelist=com.metatrope</argLine>
 					<workingDirectory>${basedir}/target</workingDirectory>
 				</configuration>
 			</plugin>
@@ -63,6 +74,35 @@
 			<artifactId>sidrat-core</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sidrat</groupId>
+			<artifactId>sidrat-jpa-repo</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901-1.jdbc4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.0.2.Final</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
+			<version>5.0.2.Final</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.1-api</artifactId>
+			<version>1.0.0.Final</version>
 		</dependency>
 	</dependencies>
 </project>

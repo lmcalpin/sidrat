@@ -67,7 +67,7 @@ public class SidratLambdaTest extends BaseRecorderTest {
         // check history of x, go back in time to before first assignment
         replay.gotoEvent(foundLambdaLine);
         Assert.assertNull(replay.locals().get("x"));
-        replay.gotoEvent(foundLambdaLine + 4);
+        replay.gotoEvent(foundLambdaLine + 5);
         Assert.assertEquals("65", replay.locals().get("x").getCurrentValue().getValueAsString());
     }
 }

@@ -64,5 +64,11 @@
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>com.sidrat</groupId>
+            <artifactId>sidrat-jpa-repo</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 </project>

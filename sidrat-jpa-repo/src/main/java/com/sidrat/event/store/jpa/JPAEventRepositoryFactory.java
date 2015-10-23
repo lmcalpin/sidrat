@@ -1,4 +1,4 @@
-package com.sidrat.event.store.hibernate;
+package com.sidrat.event.store.jpa;
 
 
 import com.sidrat.event.store.EventReader;
