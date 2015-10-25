@@ -6,10 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.SidratMethodEntryEvent;
 import com.sidrat.event.store.EventReader;
+import com.sidrat.event.store.jpa.model.EncounteredField;
+import com.sidrat.event.store.jpa.model.EncounteredVariable;
 import com.sidrat.event.store.jpa.model.Execution;
+import com.sidrat.event.store.jpa.model.FieldUpdate;
+import com.sidrat.event.store.jpa.model.LocalVariableUpdate;
 import com.sidrat.event.store.jpa.model.MethodEntry;
 import com.sidrat.event.tracking.CapturedFieldValue;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
@@ -40,8 +46,16 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
-        // TODO Auto-generated method stub
-        return null;
+        List<EncounteredField> fields = dao.find("FROM EncounteredField WHERE owner.id = :objectid", Collections.singletonMap("objectid", objectID));
+        Map<String, CapturedFieldValue> values = Maps.newHashMap();
+        for (EncounteredField field : fields) {
+            String fieldName = field.getName();
+            FieldUpdate update = dao.findFirst("FROM FieldUpdate WHERE field = :field AND id <= :id ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("field", field).put("id", time).build());
+            if (update != null) {
+                values.put(fieldName, update.asCapturedFieldValue());
+            }
+        }
+        return values;
     }
 
     @Override
@@ -56,13 +70,13 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
-        // TODO Auto-generated method stub
-        return null;
+        List<FieldUpdate> updates = dao.find("FROM FieldUpdate WHERE field.id = :fieldid ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("fieldid", fieldID).build());
+        return updates.stream().map(lvu -> new Pair<Long, TrackedObject>(lvu.getId(), lvu.asTrackedObject())).collect(Collectors.toList());
     }
 
     @Override
     public SidratExecutionEvent find(Long time) {
-        Execution execution = dao.findSingle("FROM Execution WHERE id=:time", Collections.singletonMap("time", time));
+        Execution execution = dao.findById(Execution.class, time);
         if (execution == null)
             return null;
         SidratExecutionEvent event = convert(execution);
@@ -98,13 +112,26 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public Map<String, CapturedLocalVariableValue> locals(Long time) {
-        // TODO Auto-generated method stub
-        return null;
+        Execution execution = dao.findById(Execution.class, time);
+        MethodEntry method = execution.getMethodEntry();
+        List<EncounteredVariable> localVariables = dao.find("FROM EncounteredVariable WHERE method = :method", Collections.singletonMap("method", method.getMethod()));
+        Map<String, CapturedLocalVariableValue> locals = new HashMap<>();
+        for (EncounteredVariable localVariable : localVariables) {
+            if (localVariable.getRangeStart() <= execution.getLineNumber() && localVariable.getRangeEnd() >= execution.getLineNumber()) {
+                LocalVariableUpdate latestUpdate = dao.findFirst("FROM LocalVariableUpdate WHERE localVariable = :var AND id <= :time ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("var", localVariable).put("time", time).build());
+                if (latestUpdate == null) {
+                    locals.put(localVariable.getVariableName(), null);
+                } else {
+                    locals.put(localVariable.getVariableName(), latestUpdate.asCapturedLocalVariableValue());
+                }
+            }
+        }
+        return locals;
     }
 
     @Override
     public List<Pair<Long, TrackedObject>> localVariableHistory(String localVariableID) {
-        // TODO Auto-generated method stub
-        return null;
+        List<LocalVariableUpdate> updates = dao.find("FROM LocalVariableUpdate WHERE localVariable.name = :var ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("var", localVariableID).build());
+        return updates.stream().map(lvu -> new Pair<Long, TrackedObject>(lvu.getId(), lvu.asTrackedObject())).collect(Collectors.toList());
     }
 }

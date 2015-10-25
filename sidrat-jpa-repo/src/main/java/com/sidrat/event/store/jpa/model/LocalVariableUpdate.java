@@ -1,7 +1,14 @@
 package com.sidrat.event.store.jpa.model;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import com.sidrat.event.tracking.CapturedLocalVariableValue;
+import com.sidrat.event.tracking.TrackedObject;
 
 /**
  * Stored whenever we update a local variable.
@@ -9,30 +16,41 @@ import javax.persistence.ManyToOne;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
+@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
 public class LocalVariableUpdate extends BaseSidratEntity {
-    @ManyToOne
-    private LocalVariable localVariable;
+    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+    private EncounteredVariable localVariable;
     private String value;
-    private Long objectId;
+    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+    private EncounteredObject object;
 
-    public LocalVariable getLocalVariable() {
+    public CapturedLocalVariableValue asCapturedLocalVariableValue() {
+        CapturedLocalVariableValue capturedValue = new CapturedLocalVariableValue(getId(), localVariable.asTrackedVariable(), asTrackedObject());
+        return capturedValue;
+    }
+
+    public TrackedObject asTrackedObject() {
+        return new TrackedObject(object.getClazz().getName(), value, object.getId());
+    }
+
+    public EncounteredVariable getLocalVariable() {
         return localVariable;
     }
 
-    public Long getObjectId() {
-        return objectId;
+    public EncounteredObject getObject() {
+        return object;
     }
 
     public String getValue() {
         return value;
     }
 
-    public void setLocalVariable(LocalVariable localVariable) {
+    public void setLocalVariable(EncounteredVariable localVariable) {
         this.localVariable = localVariable;
     }
 
-    public void setObjectId(Long objectId) {
-        this.objectId = objectId;
+    public void setObject(EncounteredObject object) {
+        this.object = object;
     }
 
     public void setValue(String value) {

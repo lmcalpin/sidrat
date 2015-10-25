@@ -4,45 +4,46 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 /**
- * Stored when we begin executing a method.
+ * Stored whenever we exit a method.
  *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
 @Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class MethodEntry extends BaseSidratEntity {
+public class MethodExit extends BaseSidratEntity {
+    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
+    private MethodEntry methodEntry;
     @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
     private EncounteredObject object;
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
-    private EncounteredThread thread;
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
-    private EncounteredMethod method;
+    @Lob
+    private String value;
 
-    public EncounteredMethod getMethod() {
-        return method;
+    public MethodEntry getMethodEntry() {
+        return methodEntry;
     }
 
     public EncounteredObject getObject() {
         return object;
     }
 
-    public EncounteredThread getThread() {
-        return thread;
+    public String getValue() {
+        return value;
     }
 
-    public void setMethod(EncounteredMethod method) {
-        this.method = method;
+    public void setMethodEntry(MethodEntry methodEntry) {
+        this.methodEntry = methodEntry;
     }
 
     public void setObject(EncounteredObject object) {
         this.object = object;
     }
 
-    public void setThread(EncounteredThread thread) {
-        this.thread = thread;
+    public void setValue(String value) {
+        this.value = value;
     }
 }

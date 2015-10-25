@@ -9,28 +9,33 @@ import javax.persistence.Table;
 
 import com.sidrat.event.store.jpa.Named;
 
+/**
+ * Stored whenever we encounter a local variable that we haven't seen before.
+ *
+ * @author Lawrence McAlpin (admin@lmcalpin.com)
+ */
 @Entity
 @Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class EncounteredMethod extends BaseSidratEntity implements Named {
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
-    private EncounteredClass clazz;
+public class EncounteredField extends BaseSidratEntity implements Named {
+    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+    private EncounteredObject owner;
     private String name;
-
-    public EncounteredClass getClazz() {
-        return clazz;
-    }
 
     @Override
     public String getName() {
         return name;
     }
 
-    public void setClazz(EncounteredClass object) {
-        this.clazz = object;
+    public EncounteredObject getObject() {
+        return owner;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setObject(EncounteredObject object) {
+        this.owner = object;
     }
 
 }

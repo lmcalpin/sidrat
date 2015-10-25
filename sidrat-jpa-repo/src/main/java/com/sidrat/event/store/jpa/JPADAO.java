@@ -1,6 +1,7 @@
 package com.sidrat.event.store.jpa;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,61 +21,78 @@ import com.sidrat.event.store.jpa.model.BaseSidratEntity;
  */
 public class JPADAO {
     @FunctionalInterface
-    private interface FindSession<T> {
+    private interface Session<T> {
         public T apply(EntityManager em);
-    }
-
-    @FunctionalInterface
-    private interface UpdateSession {
-        public void apply(EntityManager em);
     }
 
     EntityManagerFactory emf;
     private AtomicLong generatedId = new AtomicLong();
+    private String partition;
 
     public JPADAO(String partition) {
-        emf = Persistence.createEntityManagerFactory("sidrat");
+        this.emf = Persistence.createEntityManagerFactory("sidrat");
+        this.partition = partition;
+    }
+
+    private <T extends BaseSidratEntity> List<T> executePartitionedQuery(String jpaql, Map<String, Object> parameters, EntityManager em) {
+        return executePartitionedQuery(jpaql, parameters, em, -1);
     }
 
     @SuppressWarnings("unchecked")
+    private <T extends BaseSidratEntity> List<T> executePartitionedQuery(String jpaql, Map<String, Object> parameters, EntityManager em, int limit) {
+        // todo: criteria api?
+        if (jpaql.toUpperCase().contains(" WHERE ")) {
+            int indexOfWhere = jpaql.toUpperCase().indexOf(" WHERE ");
+            StringBuilder newJpaQl = new StringBuilder();
+            newJpaQl.append(jpaql.substring(0, indexOfWhere));
+            newJpaQl.append(" WHERE partition = :partition AND ");
+            newJpaQl.append(jpaql.substring(indexOfWhere + " WHERE ".length()));
+            jpaql = newJpaQl.toString();
+        } else {
+            jpaql += " WHERE partition = :partition";
+        }
+        Query query = em.createQuery(jpaql);
+        if (limit > -1)
+            query.setMaxResults(limit);
+        for (String key : parameters.keySet()) {
+            query.setParameter(key, parameters.get(key));
+        }
+        query.setParameter("partition", partition);
+        List<T> results = query.getResultList();
+        return results;
+    }
+
     public <T extends BaseSidratEntity> List<T> find(String jpaql, Map<String, Object> parameters) {
         return findSession(em -> {
-            Query query = em.createQuery(jpaql);
-            for (String key : parameters.keySet()) {
-                query.setParameter(key, parameters.get(key));
-            }
-            return query.getResultList();
+            return executePartitionedQuery(jpaql, parameters, em);
         });
+    }
+
+    public <T extends BaseSidratEntity> T findById(Class<T> clazz, Long id) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", id);
+        return findSingle("FROM " + clazz.getSimpleName() + " WHERE id = :id", params);
     }
 
     public <T extends BaseSidratEntity> T findFirst(String jpaql) {
         return findSingle(jpaql, Collections.emptyMap());
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends BaseSidratEntity> T findFirst(String jpaql, Map<String, Object> parameters) {
         return findSession(em -> {
-            Query query = em.createQuery(jpaql);
-            query.setMaxResults(1);
-            for (String key : parameters.keySet()) {
-                query.setParameter(key, parameters.get(key));
-            }
-            List<T> results = query.getResultList();
+            List<T> results = executePartitionedQuery(jpaql, parameters, em);
             if (results.isEmpty())
                 return null;
             return results.get(0);
         });
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends BaseSidratEntity & Named> T findOrCreate(T named) {
         return findSession(em -> {
-            Query query = em.createQuery("FROM " + named.getClass().getSimpleName() + " WHERE name = :name");
-            query.setParameter("name", named.getName());
-            List<T> results = query.getResultList();
+            List<T> results = executePartitionedQuery("FROM " + named.getClass().getSimpleName() + " WHERE name = :name", Collections.singletonMap("name", named.getName()), em, 2);
             if (results.isEmpty()) {
                 named.setId(generatedId.incrementAndGet());
-                return named;
+                return store(named);
             } else if (results.size() == 1) {
                 return results.get(0);
             }
@@ -82,7 +100,7 @@ public class JPADAO {
         });
     }
 
-    private <T> T findSession(FindSession<T> f) {
+    private <T> T findSession(Session<T> f) {
         EntityManager em = emf.createEntityManager();
         try {
             T results = f.apply(em);
@@ -96,15 +114,9 @@ public class JPADAO {
         return findSingle(jpaql, Collections.emptyMap());
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends BaseSidratEntity> T findSingle(String jpaql, Map<String, Object> parameters) {
         return findSession(em -> {
-            Query query = em.createQuery(jpaql);
-            query.setMaxResults(2);
-            for (String key : parameters.keySet()) {
-                query.setParameter(key, parameters.get(key));
-            }
-            List<T> results = query.getResultList();
+            List<T> results = executePartitionedQuery(jpaql, parameters, em, 2);
             if (results.isEmpty())
                 return null;
             if (results.size() > 1)
@@ -113,20 +125,23 @@ public class JPADAO {
         });
     }
 
-    public <T extends BaseSidratEntity> void store(T entity) {
-        updateSession(em -> em.merge(entity));
+    public <T extends BaseSidratEntity> T store(T entity) {
+        entity.setPartition(partition);
+        return updateSession(em -> em.merge(entity));
     }
 
-    private void updateSession(UpdateSession f) {
+    private <T> T updateSession(Session<T> f) {
         EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
+        T t = null;
         try {
             tx.begin();
-            f.apply(em);
+            t = f.apply(em);
             em.flush();
             tx.commit();
         } finally {
             em.close();
         }
+        return t;
     }
 }

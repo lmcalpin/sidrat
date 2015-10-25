@@ -51,8 +51,8 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
         List<Map<String, Object>> fields = jdbcHelper.query("SELECT * FROM fields WHERE object_id = ?", objectID);
         Map<String, CapturedFieldValue> values = Maps.newHashMap();
-        for (Map<String, Object> var : fields) {
-            String fieldName = (String) var.get("FIELD_NAME");
+        for (Map<String, Object> field : fields) {
+            String fieldName = (String) field.get("FIELD_NAME");
             Map<String, Object> update = jdbcHelper.first("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? AND fu.event_id <= ? ORDER BY event_id DESC", objectID, time);
             if (update != null) {
                 String value = (String) update.get("VALUE");
