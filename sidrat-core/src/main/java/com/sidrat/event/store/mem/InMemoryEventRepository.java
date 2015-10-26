@@ -33,10 +33,10 @@ public class InMemoryEventRepository implements EventRepository {
     TreeMap<Long, SidratMethodExitEvent> exits = new TreeMap<>();
     TreeMap<Long, SidratFieldChangedEvent> fields = new TreeMap<>();
     TreeMap<Long, List<SidratLocalVariableEvent>> locals = new TreeMap<>();
-    Multimap<Long, Pair<Long, TrackedObject>> fieldHistory = ArrayListMultimap.create();
+    Multimap<String, Pair<Long, TrackedObject>> fieldHistory = ArrayListMultimap.create();
     Multimap<String, Pair<Long, TrackedObject>> localsHistory = ArrayListMultimap.create();
     Multimap<String, SidratExecutionEvent> executions = ArrayListMultimap.create();
-    Multimap<Long, Pair<Long, String>> objectFields = ArrayListMultimap.create();
+    Multimap<String, Pair<String, String>> objectFields = ArrayListMultimap.create();
 
     public InMemoryEventRepository() {
     }
@@ -46,11 +46,11 @@ public class InMemoryEventRepository implements EventRepository {
     }
 
     @Override
-    public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
-        Collection<Pair<Long, String>> objectsFieldIds = objectFields.get(objectID);
+    public Map<String, CapturedFieldValue> eval(Long time, String objectID) {
+        Collection<Pair<String, String>> objectsFieldIds = objectFields.get(objectID);
         Map<String, CapturedFieldValue> fields = new HashMap<>();
-        for (Pair<Long, String> fieldInfo : objectsFieldIds) {
-            Long fieldId = fieldInfo.getValue1();
+        for (Pair<String, String> fieldInfo : objectsFieldIds) {
+            String fieldId = fieldInfo.getValue1();
             String fieldName = fieldInfo.getValue2();
             List<Pair<Long, TrackedObject>> fieldHistory = fieldHistory(fieldId);
             TrackedObject latestFieldValue = fieldHistory.stream().max((p1, p2) -> p1.getValue1() > p2.getValue1() ? 1 : -1).get().getValue2();
@@ -66,7 +66,7 @@ public class InMemoryEventRepository implements EventRepository {
     }
 
     @Override
-    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
+    public List<Pair<Long, TrackedObject>> fieldHistory(String fieldID) {
         return (List<Pair<Long, TrackedObject>>) fieldHistory.get(fieldID);
     }
 
@@ -128,7 +128,7 @@ public class InMemoryEventRepository implements EventRepository {
 
     @Override
     public void store(SidratFieldChangedEvent event) {
-        Pair<Long, String> fieldInfo = new Pair<>(event.getTrackedValue().getUniqueID(), event.getVariableName());
+        Pair<String, String> fieldInfo = new Pair<>(event.getTrackedValue().getUniqueID(), event.getVariableName());
         if (!objectFields.get(event.getOwnerUniqueID()).contains(fieldInfo))
             objectFields.put(event.getOwnerUniqueID(), fieldInfo);
         fieldHistory.put(event.getTrackedValue().getUniqueID(), new Pair<>(event.getTime(), event.getTrackedValue()));

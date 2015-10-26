@@ -1,6 +1,5 @@
 package com.sidrat.event.store.jpa.model;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
@@ -13,13 +12,13 @@ import javax.persistence.Table;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
-@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class MethodEntry extends BaseSidratEntity {
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
+@Table(indexes = { @Index(columnList = "partition,time,id") }) // tediously copied on all entities
+public class MethodEntry extends SidratEvent {
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredObject object;
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredThread thread;
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredMethod method;
 
     public EncounteredMethod getMethod() {

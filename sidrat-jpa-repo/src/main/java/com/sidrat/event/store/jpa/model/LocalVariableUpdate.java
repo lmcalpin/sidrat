@@ -1,6 +1,5 @@
 package com.sidrat.event.store.jpa.model;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
@@ -16,12 +15,12 @@ import com.sidrat.event.tracking.TrackedObject;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
-@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class LocalVariableUpdate extends BaseSidratEntity {
-    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+@Table(indexes = { @Index(columnList = "partition,time,id") }) // tediously copied on all entities
+public class LocalVariableUpdate extends SidratEvent {
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredVariable localVariable;
     private String value;
-    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredObject object;
 
     public CapturedLocalVariableValue asCapturedLocalVariableValue() {
@@ -30,7 +29,7 @@ public class LocalVariableUpdate extends BaseSidratEntity {
     }
 
     public TrackedObject asTrackedObject() {
-        return new TrackedObject(object.getClazz().getName(), value, object.getId());
+        return new TrackedObject(object.getClazz().getName(), value, object.getName());
     }
 
     public EncounteredVariable getLocalVariable() {

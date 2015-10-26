@@ -1,6 +1,5 @@
 package com.sidrat.event.store.jpa.model;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
@@ -16,21 +15,21 @@ import com.sidrat.event.tracking.TrackedObject;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
-@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class FieldUpdate extends BaseSidratEntity {
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
+@Table(indexes = { @Index(columnList = "partition,time,id") }) // tediously copied on all entities
+public class FieldUpdate extends SidratEvent {
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredField field;
     private String value;
-    @ManyToOne(cascade = { CascadeType.ALL }, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredObject ref;
 
     public CapturedFieldValue asCapturedFieldValue() {
-        CapturedFieldValue capturedValue = new CapturedFieldValue(getId(), field.getObject().getId(), asTrackedObject());
+        CapturedFieldValue capturedValue = new CapturedFieldValue(getId(), field.getObject().getName(), asTrackedObject());
         return capturedValue;
     }
 
     public TrackedObject asTrackedObject() {
-        return new TrackedObject(ref.getClazz().getName(), value, ref.getId());
+        return new TrackedObject(ref.getClazz().getName(), value, ref.getName());
     }
 
     public EncounteredField getField() {

@@ -7,17 +7,6 @@ import javax.persistence.Table;
 import com.sidrat.event.store.jpa.Named;
 
 @Entity
-@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class EncounteredClass extends BaseSidratEntity implements Named {
-    private String name;
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
+@Table(indexes = { @Index(columnList = "partition,name,id") }) // tediously copied on all entities
+public class EncounteredClass extends SidratValueObject implements Named {
 }

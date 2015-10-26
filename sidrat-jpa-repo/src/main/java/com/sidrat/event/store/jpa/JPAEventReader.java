@@ -37,20 +37,20 @@ public class JPAEventReader implements EventReader {
 
     private SidratExecutionEvent convert(Execution execution) {
         MethodEntry methodEntry = execution.getMethodEntry();
-        TrackedObject trackedObject = methodEntry.getObject() != null ? new TrackedObject(methodEntry.getObject().getClazz().getName(), null, methodEntry.getObject().getId()) : null;
+        TrackedObject trackedObject = methodEntry.getObject() != null ? new TrackedObject(methodEntry.getObject().getClazz().getName(), null, methodEntry.getObject().getName()) : null;
         ExecutionLocation executionLocation = new ExecutionLocation(trackedObject, methodEntry.getThread().getName(), methodEntry.getMethod().getClazz().getName(), methodEntry.getMethod().getName());
-        SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntry.getId(), executionLocation, methodEntry.getThread().getId(), methodEntry.getThread().getName());
-        SidratExecutionEvent event = new SidratExecutionEvent(execution.getId(), methodEntryEvent, execution.getLineNumber());
+        SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntry.getTime(), executionLocation, methodEntry.getThread().getId(), methodEntry.getThread().getName());
+        SidratExecutionEvent event = new SidratExecutionEvent(execution.getTime(), methodEntryEvent, execution.getLineNumber());
         return event;
     }
 
     @Override
-    public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
-        List<EncounteredField> fields = dao.find("FROM EncounteredField WHERE owner.id = :objectid", Collections.singletonMap("objectid", objectID));
+    public Map<String, CapturedFieldValue> eval(Long time, String objectID) {
+        List<EncounteredField> fields = dao.find("FROM EncounteredField WHERE owner.name = :objectid", Collections.singletonMap("objectid", String.valueOf(objectID)));
         Map<String, CapturedFieldValue> values = Maps.newHashMap();
         for (EncounteredField field : fields) {
             String fieldName = field.getName();
-            FieldUpdate update = dao.findFirst("FROM FieldUpdate WHERE field = :field AND id <= :id ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("field", field).put("id", time).build());
+            FieldUpdate update = dao.findFirst("FROM FieldUpdate WHERE field = :field AND time <= :time ORDER BY time DESC", ImmutableMap.<String, Object> builder().put("field", field).put("time", time).build());
             if (update != null) {
                 values.put(fieldName, update.asCapturedFieldValue());
             }
@@ -69,14 +69,14 @@ public class JPAEventReader implements EventReader {
     }
 
     @Override
-    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
-        List<FieldUpdate> updates = dao.find("FROM FieldUpdate WHERE field.id = :fieldid ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("fieldid", fieldID).build());
-        return updates.stream().map(lvu -> new Pair<Long, TrackedObject>(lvu.getId(), lvu.asTrackedObject())).collect(Collectors.toList());
+    public List<Pair<Long, TrackedObject>> fieldHistory(String fieldID) {
+        List<FieldUpdate> updates = dao.find("FROM FieldUpdate WHERE field.name = :fieldid ORDER BY time DESC", ImmutableMap.<String, Object> builder().put("fieldid", String.valueOf(fieldID)).build());
+        return updates.stream().map(lvu -> new Pair<Long, TrackedObject>(lvu.getTime(), lvu.asTrackedObject())).collect(Collectors.toList());
     }
 
     @Override
     public SidratExecutionEvent find(Long time) {
-        Execution execution = dao.findById(Execution.class, time);
+        Execution execution = dao.findByTime(Execution.class, time);
         if (execution == null)
             return null;
         SidratExecutionEvent event = convert(execution);
@@ -85,7 +85,7 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public SidratExecutionEvent findFirst() {
-        Execution execution = dao.findFirst("FROM Execution ORDER BY id ASC");
+        Execution execution = dao.findFirst("FROM Execution ORDER BY time ASC");
         if (execution == null)
             return null;
         SidratExecutionEvent event = convert(execution);
@@ -94,7 +94,7 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public SidratExecutionEvent findNext(SidratExecutionEvent lastEvent) {
-        Execution execution = dao.findFirst("FROM Execution WHERE id > :time ORDER BY id ASC", Collections.singletonMap("time", lastEvent.getTime()));
+        Execution execution = dao.findFirst("FROM Execution WHERE time > :time ORDER BY time ASC", Collections.singletonMap("time", lastEvent.getTime()));
         if (execution == null)
             return null;
         SidratExecutionEvent event = convert(execution);
@@ -103,7 +103,7 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public SidratExecutionEvent findPrev(SidratExecutionEvent lastEvent) {
-        Execution execution = dao.findFirst("FROM Execution WHERE id < :time ORDER BY id ASC", Collections.singletonMap("time", lastEvent.getTime()));
+        Execution execution = dao.findFirst("FROM Execution WHERE time < :time ORDER BY time ASC", Collections.singletonMap("time", lastEvent.getTime()));
         if (execution == null)
             return null;
         SidratExecutionEvent event = convert(execution);
@@ -112,13 +112,13 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public Map<String, CapturedLocalVariableValue> locals(Long time) {
-        Execution execution = dao.findById(Execution.class, time);
+        Execution execution = dao.findByTime(Execution.class, time);
         MethodEntry method = execution.getMethodEntry();
         List<EncounteredVariable> localVariables = dao.find("FROM EncounteredVariable WHERE method = :method", Collections.singletonMap("method", method.getMethod()));
         Map<String, CapturedLocalVariableValue> locals = new HashMap<>();
         for (EncounteredVariable localVariable : localVariables) {
             if (localVariable.getRangeStart() <= execution.getLineNumber() && localVariable.getRangeEnd() >= execution.getLineNumber()) {
-                LocalVariableUpdate latestUpdate = dao.findFirst("FROM LocalVariableUpdate WHERE localVariable = :var AND id <= :time ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("var", localVariable).put("time", time).build());
+                LocalVariableUpdate latestUpdate = dao.findFirst("FROM LocalVariableUpdate WHERE localVariable = :var AND time <= :time ORDER BY time DESC", ImmutableMap.<String, Object> builder().put("var", localVariable).put("time", time).build());
                 if (latestUpdate == null) {
                     locals.put(localVariable.getVariableName(), null);
                 } else {
@@ -131,7 +131,7 @@ public class JPAEventReader implements EventReader {
 
     @Override
     public List<Pair<Long, TrackedObject>> localVariableHistory(String localVariableID) {
-        List<LocalVariableUpdate> updates = dao.find("FROM LocalVariableUpdate WHERE localVariable.name = :var ORDER BY id DESC", ImmutableMap.<String, Object> builder().put("var", localVariableID).build());
-        return updates.stream().map(lvu -> new Pair<Long, TrackedObject>(lvu.getId(), lvu.asTrackedObject())).collect(Collectors.toList());
+        List<LocalVariableUpdate> updates = dao.find("FROM LocalVariableUpdate WHERE localVariable.name = :var ORDER BY time DESC", ImmutableMap.<String, Object> builder().put("var", localVariableID).build());
+        return updates.stream().map(lvu -> new Pair<Long, TrackedObject>(lvu.getTime(), lvu.asTrackedObject())).collect(Collectors.toList());
     }
 }

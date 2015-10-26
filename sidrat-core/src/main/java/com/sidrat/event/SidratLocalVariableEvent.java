@@ -42,7 +42,7 @@ public class SidratLocalVariableEvent extends SidratEvent {
     /**
      * @return a unique identifier for the object that this field points to
      */
-    public Long getReferenceUniqueID() {
+    public String getReferenceUniqueID() {
         if (value == null)
             return null;
         return value.getUniqueID();

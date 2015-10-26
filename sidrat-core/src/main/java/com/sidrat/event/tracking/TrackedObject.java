@@ -11,13 +11,13 @@ public class TrackedObject implements Serializable {
 
     private String className;
     private String value;
-    private Long uniqueID;
+    private String uniqueID;
 
-    public TrackedObject(Object value, Long uniqueID) {
+    public TrackedObject(Object value, String uniqueID) {
         this(value.getClass().getName(), stringify(value), uniqueID);
     }
 
-    public TrackedObject(String className, String value, Long uniqueID) {
+    public TrackedObject(String className, String value, String uniqueID) {
         this.className = className;
         this.value = value;
         this.uniqueID = uniqueID;
@@ -53,7 +53,7 @@ public class TrackedObject implements Serializable {
         return className;
     }
 
-    public Long getUniqueID() {
+    public String getUniqueID() {
         return uniqueID;
     }
 

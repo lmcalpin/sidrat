@@ -13,6 +13,8 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 
 import com.sidrat.event.store.jpa.model.BaseSidratEntity;
+import com.sidrat.event.store.jpa.model.SidratEvent;
+import com.sidrat.event.store.jpa.model.SidratValueObject;
 
 /**
  * Utility class for dealing with JPA.
@@ -68,10 +70,10 @@ public class JPADAO {
         });
     }
 
-    public <T extends BaseSidratEntity> T findById(Class<T> clazz, Long id) {
+    public <T extends SidratEvent> T findByTime(Class<T> clazz, Long time) {
         Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        return findSingle("FROM " + clazz.getSimpleName() + " WHERE id = :id", params);
+        params.put("time", time);
+        return findSingle("FROM " + clazz.getSimpleName() + " WHERE time = :time", params);
     }
 
     public <T extends BaseSidratEntity> T findFirst(String jpaql) {
@@ -87,11 +89,10 @@ public class JPADAO {
         });
     }
 
-    public <T extends BaseSidratEntity & Named> T findOrCreate(T named) {
+    public <T extends SidratValueObject> T findOrCreate(T named) {
         return findSession(em -> {
             List<T> results = executePartitionedQuery("FROM " + named.getClass().getSimpleName() + " WHERE name = :name", Collections.singletonMap("name", named.getName()), em, 2);
             if (results.isEmpty()) {
-                named.setId(generatedId.incrementAndGet());
                 return store(named);
             } else if (results.size() == 1) {
                 return results.get(0);
@@ -122,6 +123,14 @@ public class JPADAO {
             if (results.size() > 1)
                 throw new IllegalStateException("Too many results for: " + jpaql);
             return results.get(0);
+        });
+    }
+
+    public <T extends BaseSidratEntity> void persist(T entity) {
+        entity.setPartition(partition);
+        updateSession(em -> {
+            em.persist(entity);
+            return null;
         });
     }
 

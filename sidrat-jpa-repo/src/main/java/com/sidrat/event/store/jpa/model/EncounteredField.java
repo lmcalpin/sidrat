@@ -1,6 +1,5 @@
 package com.sidrat.event.store.jpa.model;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
@@ -15,27 +14,16 @@ import com.sidrat.event.store.jpa.Named;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
-@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class EncounteredField extends BaseSidratEntity implements Named {
-    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+@Table(indexes = { @Index(columnList = "partition,name,id") }) // tediously copied on all entities
+public class EncounteredField extends SidratValueObject implements Named {
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredObject owner;
-    private String name;
-
-    @Override
-    public String getName() {
-        return name;
-    }
 
     public EncounteredObject getObject() {
         return owner;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public void setObject(EncounteredObject object) {
         this.owner = object;
     }
-
 }

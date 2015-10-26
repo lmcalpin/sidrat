@@ -48,7 +48,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     }
 
     @Override
-    public Map<String, CapturedFieldValue> eval(Long time, Long objectID) {
+    public Map<String, CapturedFieldValue> eval(Long time, String objectID) {
         List<Map<String, Object>> fields = jdbcHelper.query("SELECT * FROM fields WHERE object_id = ?", objectID);
         Map<String, CapturedFieldValue> values = Maps.newHashMap();
         for (Map<String, Object> field : fields) {
@@ -56,7 +56,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
             Map<String, Object> update = jdbcHelper.first("SELECT fu.*, o.clazz FROM field_updates fu LEFT JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? AND fu.event_id <= ? ORDER BY event_id DESC", objectID, time);
             if (update != null) {
                 String value = (String) update.get("VALUE");
-                Long ref = (Long) update.get("REF");
+                String ref = (String) update.get("REF");
                 String className = (String) update.get("CLAZZ");
                 TrackedObject obj = new TrackedObject(className, value, ref);
                 CapturedFieldValue fieldValue = new CapturedFieldValue(time, objectID, obj);
@@ -77,13 +77,13 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
     }
 
     @Override
-    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID) {
+    public List<Pair<Long, TrackedObject>> fieldHistory(String fieldID) {
         List<Map<String, Object>> updates = jdbcHelper.find("SELECT fu.*, o.clazz FROM field_updates fu LEFT OUTER JOIN objects o ON fu.ref = o.id WHERE fu.field_id = ? ORDER BY event_id DESC", fieldID);
         List<Pair<Long, TrackedObject>> changes = Lists.newArrayList();
         for (Map<String, Object> update : updates) {
             Long time = (Long) update.get("EVENT_ID");
             String value = (String) update.get("VALUE");
-            Long ref = (Long) update.get("REF");
+            String ref = (String) update.get("REF");
             String className = (String) update.get("CLAZZ");
             TrackedObject obj = new TrackedObject(className, value, ref);
             Pair<Long, TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);
@@ -144,7 +144,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         Integer lineNumber = (Integer) row.get("LINENUMBER");
         Long time = (Long) row.get("ID");
         Long methodEntryTime = (Long) row.get("METHODENTRY_ID");
-        Long objectInstanceID = (Long) row.get("OBJECT_ID");
+        String objectInstanceID = (String) row.get("OBJECT_ID");
         Long threadID = (Long) row.get("THREAD_ID");
         String threadName = findThread(threadID);
         String className = (String) row.get("CLAZZ");
@@ -182,7 +182,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
             } else {
                 Map<String, Object> update = jdbcHelper.first("SELECT vu.value, vu.ref, o.clazz FROM variable_updates vu LEFT JOIN objects o ON vu.ref = o.id WHERE vu.event_id = ? AND vu.variable_id=?", mostRecentUpdate, id);
                 String val = (String) update.get("VALUE");
-                Long ref = (Long) update.get("REF");
+                String ref = (String) update.get("REF");
                 String varClass = (String) update.get("CLAZZ");
                 TrackedObject obj = new TrackedObject(varClass, val, ref);
                 CapturedLocalVariableValue value = new CapturedLocalVariableValue(time, variable, obj);
@@ -199,7 +199,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         for (Map<String, Object> update : updates) {
             Long time = (Long) update.get("EVENT_ID");
             String value = (String) update.get("VALUE");
-            Long ref = (Long) update.get("REF");
+            String ref = (String) update.get("REF");
             String className = (String) update.get("CLAZZ");
             TrackedObject obj = new TrackedObject(className, value, ref);
             Pair<Long, TrackedObject> timeAndValue = new Pair<Long, TrackedObject>(time, obj);

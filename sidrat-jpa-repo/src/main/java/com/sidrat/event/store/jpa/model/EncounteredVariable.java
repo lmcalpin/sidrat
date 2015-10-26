@@ -1,6 +1,5 @@
 package com.sidrat.event.store.jpa.model;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
@@ -17,11 +16,10 @@ import com.sidrat.util.Pair;
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 @Entity
-@Table(indexes = { @Index(columnList = "partition,id") }) // tediously copied on all entities
-public class EncounteredVariable extends BaseSidratEntity implements Named {
-    private String name;
+@Table(indexes = { @Index(columnList = "partition,name,id") }) // tediously copied on all value objects
+public class EncounteredVariable extends SidratValueObject implements Named {
     private String variableName;
-    @ManyToOne(cascade = { CascadeType.PERSIST }, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     private EncounteredMethod method;
     private Integer rangeStart;
     private Integer rangeEnd;
@@ -38,11 +36,6 @@ public class EncounteredVariable extends BaseSidratEntity implements Named {
 
     public EncounteredMethod getMethod() {
         return method;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     public Integer getRangeEnd() {
@@ -63,10 +56,6 @@ public class EncounteredVariable extends BaseSidratEntity implements Named {
 
     public void setMethod(EncounteredMethod method) {
         this.method = method;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public void setRangeEnd(Integer rangeEnd) {

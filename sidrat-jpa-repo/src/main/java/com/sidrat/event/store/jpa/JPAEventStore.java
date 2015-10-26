@@ -1,5 +1,7 @@
 package com.sidrat.event.store.jpa;
 
+import java.util.Collections;
+
 import com.google.common.collect.ImmutableMap;
 import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.SidratFieldChangedEvent;
@@ -40,25 +42,26 @@ public class JPAEventStore implements EventStore {
 
     // TODO: we should be able to do this without synchronization
     private synchronized EncounteredObject foundObject(TrackedObject trackedObject) {
-        EncounteredObject encounteredObject = dao.findById(EncounteredObject.class, trackedObject.getUniqueID());
+        EncounteredObject encounteredObject = dao.findSingle("FROM EncounteredObject WHERE name = :name", Collections.singletonMap("name", String.valueOf(trackedObject.getUniqueID())));
         if (encounteredObject != null)
             return encounteredObject;
         encounteredObject = new EncounteredObject();
-        encounteredObject.setId(trackedObject.getUniqueID());
+        encounteredObject.setName(trackedObject.getUniqueID());
         EncounteredClass encounteredObjectType = new EncounteredClass();
         encounteredObjectType.setName(trackedObject.getClassName());
         encounteredObject.setClazz(dao.findOrCreate(encounteredObjectType));
-        return dao.store(encounteredObject);
+        dao.persist(encounteredObject);
+        return encounteredObject;
     }
 
     @Override
     public void store(SidratExecutionEvent event) {
-        MethodEntry methodEntry = dao.findById(MethodEntry.class, event.getMethodEntryTime());
+        MethodEntry methodEntry = dao.findByTime(MethodEntry.class, event.getMethodEntryTime());
         Execution execution = new Execution();
-        execution.setId(event.getTime());
+        execution.setTime(event.getTime());
         execution.setMethodEntry(methodEntry);
         execution.setLineNumber(event.getLineNumber());
-        dao.store(execution);
+        dao.persist(execution);
     }
 
     @Override
@@ -68,11 +71,11 @@ public class JPAEventStore implements EventStore {
         field.setObject(foundObject(event.getOwner()));
         field = dao.findOrCreate(field);
         FieldUpdate update = new FieldUpdate();
-        update.setId(event.getTime());
+        update.setTime(event.getTime());
         update.setField(field);
         update.setRef(foundObject(event.getTrackedValue()));
         update.setValue(event.getTrackedValue().getValueAsString());
-        dao.store(update);
+        dao.persist(update);
     }
 
     @Override
@@ -91,17 +94,17 @@ public class JPAEventStore implements EventStore {
         localVariable.setRangeEnd(event.getScopeEnd());
         localVariable = dao.findOrCreate(localVariable);
         LocalVariableUpdate update = new LocalVariableUpdate();
-        update.setId(event.getTime());
+        update.setTime(event.getTime());
         update.setLocalVariable(localVariable);
         update.setObject(foundObject(event.getTrackedValue()));
         update.setValue(event.getTrackedValue().getValueAsString());
-        dao.store(update);
+        dao.persist(update);
     }
 
     @Override
     public void store(SidratMethodEntryEvent event) {
         MethodEntry methodEntry = new MethodEntry();
-        methodEntry.setId(event.getTime());
+        methodEntry.setTime(event.getTime());
         if (event.getExecutionContext().getObject() != null) {
             methodEntry.setObject(foundObject(event.getExecutionContext().getObject()));
         }
@@ -114,24 +117,24 @@ public class JPAEventStore implements EventStore {
         EncounteredThread encounteredThread = new EncounteredThread();
         encounteredThread.setName(event.getExecutionContext().getThreadName());
         methodEntry.setThread(dao.findOrCreate(encounteredThread));
-        dao.store(methodEntry);
+        dao.persist(methodEntry);
     }
 
     @Override
     public void store(SidratMethodExitEvent event) {
         MethodExit methodExit = new MethodExit();
-        methodExit.setId(event.getTime());
-        MethodEntry methodEntry = dao.findById(MethodEntry.class, event.getMethodEntryTime());
+        methodExit.setTime(event.getTime());
+        MethodEntry methodEntry = dao.findByTime(MethodEntry.class, event.getMethodEntryTime());
         methodExit.setMethodEntry(methodEntry);
         if (event.getReturns() != null) {
             EncounteredObject encounteredObject = new EncounteredObject();
-            encounteredObject.setId(event.getReturns().getUniqueID());
+            encounteredObject.setName(event.getReturns().getUniqueID());
             EncounteredClass encounteredObjectType = new EncounteredClass();
             encounteredObjectType.setName(event.getReturns().getClassName());
             encounteredObject.setClazz(dao.findOrCreate(encounteredObjectType));
             methodExit.setObject(encounteredObject);
             methodExit.setValue(event.getReturns().getValueAsString());
         }
-        dao.store(methodExit);
+        dao.persist(methodExit);
     }
 }

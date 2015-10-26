@@ -11,6 +11,21 @@ import com.sidrat.util.Pair;
 
 public interface EventReader {
     /**
+     * @return a map of an object's fields and current values at a specified time for a specified object
+     */
+    public Map<String, CapturedFieldValue> eval(Long time, String objectID);
+
+    /**
+     * @return a list of SidratEvents where we execute the line of code described by 'loc'
+     */
+    public List<SidratExecutionEvent> executions(String className, String methodName, int lineNumber);
+
+    /**
+     * @return history of assignments to a specified field
+     */
+    public List<Pair<Long, TrackedObject>> fieldHistory(String fieldID);
+
+    /**
      * @return details about the SidratExecutionEvent at the specified time
      */
     public SidratExecutionEvent find(Long time);
@@ -34,21 +49,6 @@ public interface EventReader {
      * @return a map of local variables in scope at the specified time, and their current values
      */
     public Map<String, CapturedLocalVariableValue> locals(Long time);
-
-    /**
-     * @return a map of an object's fields and current values at a specified time for a specified object
-     */
-    public Map<String, CapturedFieldValue> eval(Long time, Long objectID);
-
-    /**
-     * @return a list of SidratEvents where we execute the line of code described by 'loc'
-     */
-    public List<SidratExecutionEvent> executions(String className, String methodName, int lineNumber);
-
-    /**
-     * @return history of assignments to a specified field
-     */
-    public List<Pair<Long, TrackedObject>> fieldHistory(Long fieldID);
 
     /**
      * @return history of assignments to a specified local variable

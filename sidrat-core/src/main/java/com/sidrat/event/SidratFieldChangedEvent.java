@@ -5,7 +5,7 @@ import com.sidrat.event.tracking.TrackedObject;
 
 /**
  * Triggered when a field value changes.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 public class SidratFieldChangedEvent extends SidratEvent {
@@ -31,25 +31,25 @@ public class SidratFieldChangedEvent extends SidratEvent {
         return owner;
     }
 
-    public String getUniqueID() {
-        return uniqueID;
-    }
-
-    public String getVariableName() {
-        return variableName;
+    /**
+     * @return a unique identifier for the object that this field points to
+     */
+    public String getOwnerUniqueID() {
+        if (owner != null) {
+            return owner.getUniqueID();
+        }
+        return null;
     }
 
     public TrackedObject getTrackedValue() {
         return value;
     }
 
-    /**
-     * @return a unique identifier for the object that this field points to
-     */
-    public Long getOwnerUniqueID() {
-        if (owner != null) {
-            return owner.getUniqueID();
-        }
-        return null;
+    public String getUniqueID() {
+        return uniqueID;
+    }
+
+    public String getVariableName() {
+        return variableName;
     }
 }
