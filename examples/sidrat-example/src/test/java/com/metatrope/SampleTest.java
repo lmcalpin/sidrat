@@ -14,11 +14,13 @@ import org.junit.runner.RunWith;
 // @SidratEventStore(factory = com.sidrat.event.store.mem.InMemoryEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
 // @SidratEventStore(factory = com.sidrat.event.store.hsqldb.HsqldbEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
 @SidratEventStore(factory = com.sidrat.event.store.jpa.JPAEventRepositoryFactory.class, name = "sidrat-testrepo-hello")
-@SidratHistory(variables = { "sum" })
+@SidratHistory(variables = { "sum", "foo" })
 public class SampleTest {
     @Test
     public void testFailure() {
         Foo foo = new Foo();
+        foo.setValue("hi");
+        foo = foo; // TODO: need to track when a field changes upstack
         int result = foo.add(1, 5);
         int sum = 0;
         for (int i = 0; i < 5; i++) {

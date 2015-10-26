@@ -46,7 +46,7 @@ public class SidratPrimitiveTypeTest extends BaseRecorderTest {
         Assert.assertEquals("[3]", replay.locals().get("i").getCurrentValue().getValueAsString());
         replay.gotoEnd();
         Assert.assertEquals("[26.0]", replay.locals().get("f").getCurrentValue().getValueAsString());
-        Assert.assertEquals("[false, false]", replay.locals().get("bool").getCurrentValue().getValueAsString());
+        Assert.assertEquals("[false,false]", replay.locals().get("bool").getCurrentValue().getValueAsString());
     }
 
     @Test

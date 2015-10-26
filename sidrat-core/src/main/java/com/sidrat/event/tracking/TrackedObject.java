@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Objects;
 
+import com.google.gson.Gson;
 import com.sidrat.SidratProcessingException;
 
 public class TrackedObject implements Serializable {
@@ -24,6 +25,15 @@ public class TrackedObject implements Serializable {
     }
 
     private static String stringify(Object obj) {
+        // try to turn it into a JSON string
+        try {
+            Gson gson = new Gson();
+            String json = gson.toJson(obj);
+            return json;
+        } catch (Exception e) {
+            // can't JSONify it, so just toString it
+        }
+
         if (obj != null && obj instanceof Object[]) {
             return Arrays.deepToString((Object[]) obj);
         } else if (obj != null && obj instanceof int[]) {
