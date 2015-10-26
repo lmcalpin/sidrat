@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -13,6 +12,11 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 
 import com.sidrat.event.store.jpa.model.BaseSidratEntity;
+import com.sidrat.event.store.jpa.model.Execution;
+import com.sidrat.event.store.jpa.model.FieldUpdate;
+import com.sidrat.event.store.jpa.model.LocalVariableUpdate;
+import com.sidrat.event.store.jpa.model.MethodEntry;
+import com.sidrat.event.store.jpa.model.MethodExit;
 import com.sidrat.event.store.jpa.model.SidratEvent;
 import com.sidrat.event.store.jpa.model.SidratValueObject;
 
@@ -28,12 +32,28 @@ public class JPADAO {
     }
 
     EntityManagerFactory emf;
-    private AtomicLong generatedId = new AtomicLong();
     private String partition;
 
     public JPADAO(String partition) {
         this.emf = Persistence.createEntityManagerFactory("sidrat");
         this.partition = partition;
+    }
+
+    public void deleteAll() {
+        updateSession(em -> {
+            deleteTable(em, Execution.class);
+            deleteTable(em, MethodExit.class);
+            deleteTable(em, MethodEntry.class);
+            deleteTable(em, FieldUpdate.class);
+            deleteTable(em, LocalVariableUpdate.class);
+            return null;
+        });
+    }
+
+    private void deleteTable(EntityManager em, Class<? extends BaseSidratEntity> entity) {
+        Query query = em.createQuery("DELETE FROM " + entity.getSimpleName() + " WHERE partition = :partition");
+        query.setParameter("partition", partition);
+        query.executeUpdate();
     }
 
     private <T extends BaseSidratEntity> List<T> executePartitionedQuery(String jpaql, Map<String, Object> parameters, EntityManager em) {
@@ -121,7 +141,7 @@ public class JPADAO {
             if (results.isEmpty())
                 return null;
             if (results.size() > 1)
-                throw new IllegalStateException("Too many results for: " + jpaql);
+                throw new IllegalStateException("Too many results for: " + jpaql + " with parameters: " + parameters);
             return results.get(0);
         });
     }

@@ -11,7 +11,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>-javaagent:${project.build.directory}/agents/sidrat-agent.jar -Dcom.sidrat.agent.package.whitelist=com.metatrope</argLine>
+					<argLine>-javaagent:${project.build.directory}/agents/sidrat-agent.jar
+						-Dcom.sidrat.agent.package.whitelist=com.metatrope</argLine>
 					<workingDirectory>${basedir}/target</workingDirectory>
 				</configuration>
 			</plugin>
@@ -64,11 +65,29 @@
 			<version>0.0.1-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>com.sidrat</groupId>
-            <artifactId>sidrat-jpa-repo</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.1-901-1.jdbc4</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>5.0.2.Final</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-entitymanager</artifactId>
+			<version>5.0.2.Final</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.sidrat</groupId>
+			<artifactId>sidrat-jpa-repo</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

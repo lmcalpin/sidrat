@@ -32,17 +32,22 @@ import com.sidrat.event.tracking.TrackedObject;
 public class JPAEventStore implements EventStore {
     JPADAO dao;
 
-    public JPAEventStore(String name) {
-        dao = new JPADAO(name);
+    public JPAEventStore(String partition) {
+        dao = new JPADAO(partition);
+        eraseExisting(partition);
     }
 
     @Override
     public void close() {
     }
 
+    private void eraseExisting(String partition) {
+        dao.deleteAll();
+    }
+
     // TODO: we should be able to do this without synchronization
     private synchronized EncounteredObject foundObject(TrackedObject trackedObject) {
-        EncounteredObject encounteredObject = dao.findSingle("FROM EncounteredObject WHERE name = :name", Collections.singletonMap("name", String.valueOf(trackedObject.getUniqueID())));
+        EncounteredObject encounteredObject = dao.findSingle("FROM EncounteredObject WHERE name = :name", Collections.singletonMap("name", trackedObject.getUniqueID()));
         if (encounteredObject != null)
             return encounteredObject;
         encounteredObject = new EncounteredObject();

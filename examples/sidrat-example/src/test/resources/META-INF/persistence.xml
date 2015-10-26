@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<persistence version="2.1"
+	xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+                                http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+	<persistence-unit name="sidrat">
+		<description>Sidrat Recordings</description>
+		<provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+		<class>com.sidrat.event.store.jpa.model.Execution</class>
+        <class>com.sidrat.event.store.jpa.model.FieldUpdate</class>
+        <class>com.sidrat.event.store.jpa.model.LocalVariableUpdate</class>
+        <class>com.sidrat.event.store.jpa.model.MethodEntry</class>
+        <class>com.sidrat.event.store.jpa.model.MethodExit</class>
+        <class>com.sidrat.event.store.jpa.model.EncounteredClass</class>
+        <class>com.sidrat.event.store.jpa.model.EncounteredField</class>
+        <class>com.sidrat.event.store.jpa.model.EncounteredObject</class>
+        <class>com.sidrat.event.store.jpa.model.EncounteredMethod</class>
+        <class>com.sidrat.event.store.jpa.model.EncounteredThread</class>
+        <class>com.sidrat.event.store.jpa.model.EncounteredVariable</class>
+		<properties>
+			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
+			<property name="hibernate.connection.driver_class" value="org.postgresql.Driver" />
+			<property name="hibernate.hbm2ddl.auto" value="update" />
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql://server" />
+			<property name="javax.persistence.jdbc.user" value="sidrat" />
+			<property name="javax.persistence.jdbc.password" value="sidrat" />
+		</properties>
+	</persistence-unit>
+</persistence>
+
+    
