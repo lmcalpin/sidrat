@@ -168,8 +168,24 @@ public class SidratCallback {
         TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
         TrackedObject trackedVal = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
         SidratRegistry.instance().getRecorder().getEventStore().store(SidratFieldChangedEvent.fieldChanged(trackedObj, trackedVal, name));
-        if (logger.isDebugEnabled())
+
+        // go down the stack and find out if we have any local variables pointing to this object
+        // track the value change so when they come back in scope, we will know the current value
+        // TODO: this should be handled by the store so we can normalize the tracked object values
+        Stack<ExecutionLocation> stack = CALL_STACK.get();
+        for (ExecutionLocation stackFrame : stack) {
+            Map<TrackedVariable, TrackedObject> variables = stackFrame.getEncounteredVariables();
+            for (TrackedVariable var : variables.keySet()) {
+                TrackedObject referencingObj = variables.get(var);
+                if (referencingObj.getUniqueID().equals(trackedObj.getUniqueID())) {
+                    SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, var));
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
             logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
+        }
     }
 
     public static void fieldChanged(Object obj, short val, String name) {
@@ -235,6 +251,7 @@ public class SidratCallback {
         ExecutionLocation frame = currentFrame();
         TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
         TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+        frame.track(trackedVar, trackedObj);
         SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
         if (logger.isDebugEnabled())
             logger.debug("variableChanged " + trackedVar + " set to " + val);

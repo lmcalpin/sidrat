@@ -287,7 +287,7 @@ public enum Opcodes {
         }
     }
 
-    private static final InstructionContext ctx = new InstructionContext(); // TODO
+    private static final InstructionContext ctx = new InstructionContext(); // TODO handle wide ops
     private final int code;
     private Pops pops;
     private Pushes pushes;

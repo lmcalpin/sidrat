@@ -1,6 +1,8 @@
 package com.sidrat.event.tracking;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class ExecutionLocation implements Serializable {
@@ -8,33 +10,13 @@ public class ExecutionLocation implements Serializable {
 
     private final TrackedObject object;
     private final String threadName, className, methodName;
+    private Map<TrackedVariable, TrackedObject> encounteredVariables = new HashMap<>();
 
     public ExecutionLocation(TrackedObject object, String threadName, String className, String methodName) {
         this.object = object;
         this.threadName = threadName;
         this.className = className;
         this.methodName = methodName;
-    }
-
-    public TrackedObject getObject() {
-        return object;
-    }
-
-    public String getThreadName() {
-        return threadName;
-    }
-
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(threadName, className, methodName);
     }
 
     @Override
@@ -49,8 +31,37 @@ public class ExecutionLocation implements Serializable {
         return Objects.equals(threadName, other.threadName) && Objects.equals(className, other.className) && Objects.equals(methodName, other.methodName);
     }
 
+    public String getClassName() {
+        return className;
+    }
+
+    public Map<TrackedVariable, TrackedObject> getEncounteredVariables() {
+        return encounteredVariables;
+    }
+
+    public String getMethodName() {
+        return methodName;
+    }
+
+    public TrackedObject getObject() {
+        return object;
+    }
+
+    public String getThreadName() {
+        return threadName;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(className, methodName);
+    }
+
     @Override
     public String toString() {
-        return getThreadName() + ":" + getClassName() + "." + getMethodName();
+        return getClassName() + "." + getMethodName();
+    }
+
+    public void track(TrackedVariable var, TrackedObject val) {
+        encounteredVariables.put(var, val);
     }
 }

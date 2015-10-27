@@ -150,7 +150,7 @@ public class HsqldbEventReader implements EventReader, JdbcConnectionProvider {
         String className = (String) row.get("CLAZZ");
         String methodName = (String) row.get("METHOD");
         TrackedObject trackedObject = new TrackedObject(className, null, objectInstanceID);
-        ExecutionLocation executionLocation = new ExecutionLocation(trackedObject, "main", className, methodName);
+        ExecutionLocation executionLocation = new ExecutionLocation(trackedObject, threadName, className, methodName);
         SidratMethodEntryEvent methodEntryEvent = new SidratMethodEntryEvent(methodEntryTime, executionLocation, threadID, threadName);
         SidratExecutionEvent event = new SidratExecutionEvent(time, methodEntryEvent, lineNumber);
         return event;
