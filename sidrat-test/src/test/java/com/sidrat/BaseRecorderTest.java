@@ -11,6 +11,8 @@ import com.sidrat.event.SidratExecutionEvent;
 import com.sidrat.event.store.EventRepositoryFactory;
 import com.sidrat.event.store.EventStore;
 import com.sidrat.event.store.hsqldb.HsqldbEventRepositoryFactory;
+import com.sidrat.event.store.jpa.JPAEventRepositoryFactory;
+import com.sidrat.event.store.mem.InMemoryEventRepositoryFactory;
 import com.sidrat.event.tracking.CapturedLocalVariableValue;
 import com.sidrat.instrumentation.SidratAgent;
 
@@ -52,8 +54,8 @@ public abstract class BaseRecorderTest {
     public static Collection<Object[]> configs() {
         List<Object[]> factories = new ArrayList<>();
         factories.add(new Object[] { new HsqldbEventRepositoryFactory() });
-        // factories.add(new Object[] { new InMemoryEventRepositoryFactory() });
-        // factories.add(new Object[] { new JPAEventRepositoryFactory() });
+        factories.add(new Object[] { new InMemoryEventRepositoryFactory() });
+        factories.add(new Object[] { new JPAEventRepositoryFactory() });
         return factories;
     }
 
