@@ -62,6 +62,8 @@ public class ExecutionLocation implements Serializable {
     }
 
     public void track(TrackedVariable var, TrackedObject val) {
+        assert var != null;
+        assert val != null;
         encounteredVariables.put(var, val);
     }
 }

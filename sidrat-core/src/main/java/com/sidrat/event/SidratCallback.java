@@ -275,6 +275,10 @@ public class SidratCallback {
             Pair<ExecutionLocation, SidratMethodEntryEvent> frame = currentFrame();
             ExecutionLocation executionLocation = frame.getValue1();
             TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(executionLocation.getClassName(), executionLocation.getMethodName(), var);
+            if (trackedVar == null) {
+                logger.severe("Couldn't find " + var + " in " + executionLocation);
+                return;
+            }
             TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
             executionLocation.track(trackedVar, trackedObj);
             SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
