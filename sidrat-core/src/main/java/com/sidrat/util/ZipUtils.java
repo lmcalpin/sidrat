@@ -1,15 +1,23 @@
 package com.sidrat.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
-
 public class ZipUtils {
+    private static <E> List<E> newArrayList(E... t) {
+        if (t == null || t.length == 0) {
+            return Collections.emptyList();
+        }
+        List<E> list = new ArrayList<E>(t.length);
+        Collections.addAll(list, t);
+        return list;
+    }
+
     public static <A, B> List<Pair<A, B>> zip(A[] as, B[] bs) {
-        return zip(Lists.newArrayList(as), Lists.newArrayList(bs));
+        return zip(newArrayList(as), newArrayList(bs));
     }
 
     public static <A, B> List<Pair<A, B>> zip(List<A> as, List<B> bs) {
@@ -26,11 +34,11 @@ public class ZipUtils {
     }
 
     public static <A, B> Map<A, B> zipAsMap(A[] as, B[] bs) {
-        return zipAsMap(Lists.newArrayList(as), Lists.newArrayList(bs), true);
+        return zipAsMap(newArrayList(as), newArrayList(bs), true);
     }
 
     public static <A, B> Map<A, B> zipAsMap(A[] as, B[] bs, boolean sameSize) {
-        return zipAsMap(Lists.newArrayList(as), Lists.newArrayList(bs), sameSize);
+        return zipAsMap(newArrayList(as), newArrayList(bs), sameSize);
     }
 
     public static <A, B> Map<A, B> zipAsMap(List<A> as, List<B> bs) {

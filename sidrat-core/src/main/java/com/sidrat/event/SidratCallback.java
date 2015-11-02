@@ -21,10 +21,7 @@ public class SidratCallback {
     public static ThreadLocal<Pair<ExecutionLocation, Integer>> LAST_LINE = new ThreadLocal<Pair<ExecutionLocation, Integer>>();
     public static ThreadLocal<Stack<ExecutionLocation>> CALL_STACK = new ThreadLocal<Stack<ExecutionLocation>>();
     public static ThreadLocal<Boolean> ENTERED = new ThreadLocal<Boolean>();
-
-    static {
-        ENTERED.set(Boolean.FALSE);
-    }
+    public static ThreadLocal<Boolean> EXECUTING = new ThreadLocal<Boolean>();
 
     // we use this map to link SidratExecutionEvent and SidratMethodExitEvents back to
     // the SidratMethodEntryEvent that preceded them on the current stack frame.
@@ -42,21 +39,23 @@ public class SidratCallback {
     public static void enter(Object obj, String threadName, String clazz, String method, String argNames, Object[] argValues) {
         if (!isRecording)
             return;
-        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
-        ExecutionLocation frame = pushFrame(trackedObj, threadName, clazz, method);
-        if (argValues != null && argValues.length > 0) {
-            String[] args = argNames.split(",");
-            Map<String, Object> argMap = ZipUtils.zipAsMap(args, argValues, false);
-            for (String var : argMap.keySet()) {
-                Object val = argMap.get(var);
-                SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
-                SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+        preventRecursion(() -> {
+            TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
+            ExecutionLocation frame = pushFrame(trackedObj, threadName, clazz, method);
+            if (argValues != null && argValues.length > 0) {
+                String[] args = argNames.split(",");
+                Map<String, Object> argMap = ZipUtils.zipAsMap(args, argValues, false);
+                for (String var : argMap.keySet()) {
+                    Object val = argMap.get(var);
+                    SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
+                    SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+                }
             }
-        }
-        SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame());
-        SidratRegistry.instance().getRecorder().getEventStore().store(event);
-        FRAME_EVENT_MAP.put(currentFrame(), event);
-        ENTERED.set(Boolean.TRUE);
+            SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(currentFrame());
+            SidratRegistry.instance().getRecorder().getEventStore().store(event);
+            FRAME_EVENT_MAP.put(currentFrame(), event);
+            ENTERED.set(Boolean.TRUE);
+        });
     }
 
     public static void enter(String threadName, String clazz, String method, String argNames, Object[] argValues) {
@@ -66,28 +65,30 @@ public class SidratCallback {
     public static void exec(int lineNumber) {
         if (!isRecording)
             return;
-        // a single line of code might be invoked if there are multiple statements on the same line (or a for statement), but
-        // we only want to log each line of code once
-        Pair<ExecutionLocation, Integer> lastLoc = LAST_LINE.get();
-        if (lastLoc != null && lastLoc.getValue1().equals(currentFrame()) && lastLoc.getValue2() == lineNumber) {
-            // don't do anything if we already processed this line
-            return;
-        }
+        preventRecursion(() -> {
+            // a single line of code might be invoked if there are multiple statements on the same line (or a for statement), but
+            // we only want to log each line of code once
+            Pair<ExecutionLocation, Integer> lastLoc = LAST_LINE.get();
+            if (lastLoc != null && lastLoc.getValue1().equals(currentFrame()) && lastLoc.getValue2() == lineNumber) {
+                // don't do anything if we already processed this line
+                return;
+            }
 
-        // log this event to the event store
-        SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
-        LAST_LINE.set(new Pair<ExecutionLocation, Integer>(currentFrame(), lineNumber));
-        ExecutionLocation frame = methodEntry.getExecutionContext();
-        Long time = methodEntry.getTime();
-        if (ENTERED.get().booleanValue()) {
-            ENTERED.set(Boolean.FALSE);
-        } else {
-            time = SidratRegistry.instance().getRecorder().getClock().next();
-        }
-        SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(time, methodEntry, lineNumber);
-        SidratRegistry.instance().getRecorder().getEventStore().store(executionEvent);
-        if (logger.isDebugEnabled())
-            logger.debug(frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
+            // log this event to the event store
+            SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
+            LAST_LINE.set(new Pair<ExecutionLocation, Integer>(currentFrame(), lineNumber));
+            ExecutionLocation frame = methodEntry.getExecutionContext();
+            Long time = methodEntry.getTime();
+            if (ENTERED.get().booleanValue()) {
+                ENTERED.set(Boolean.FALSE);
+            } else {
+                time = SidratRegistry.instance().getRecorder().getClock().next();
+            }
+            SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(time, methodEntry, lineNumber);
+            SidratRegistry.instance().getRecorder().getEventStore().store(executionEvent);
+            if (logger.isDebugEnabled())
+                logger.debug(frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
+        });
     }
 
     public static void exit(boolean val) {
@@ -121,13 +122,16 @@ public class SidratCallback {
     public static void exit(Object returns) {
         if (!isRecording)
             return;
-        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(returns);
-        SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
-        SidratMethodExitEvent event = SidratMethodExitEvent.exiting(methodEntry, trackedObj);
-        SidratRegistry.instance().getRecorder().getEventStore().store(event);
-        FRAME_EVENT_MAP.remove(currentFrame());
-        popFrame();
-        LAST_LINE.set(null);
+        preventRecursion(() -> {
+            TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(returns);
+            SidratMethodEntryEvent methodEntry = FRAME_EVENT_MAP.get(currentFrame());
+            SidratMethodExitEvent event = SidratMethodExitEvent.exiting(methodEntry, trackedObj);
+            SidratRegistry.instance().getRecorder().getEventStore().store(event);
+            FRAME_EVENT_MAP.remove(currentFrame());
+            popFrame();
+            LAST_LINE.set(null);
+            EXECUTING.set(Boolean.FALSE);
+        });
     }
 
     public static void exit(short val) {
@@ -165,27 +169,29 @@ public class SidratCallback {
     public static void fieldChanged(Object obj, Object val, String name) {
         if (!isRecording)
             return;
-        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
-        TrackedObject trackedVal = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
-        SidratRegistry.instance().getRecorder().getEventStore().store(SidratFieldChangedEvent.fieldChanged(trackedObj, trackedVal, name));
+        preventRecursion(() -> {
+            TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(obj);
+            TrackedObject trackedVal = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+            SidratRegistry.instance().getRecorder().getEventStore().store(SidratFieldChangedEvent.fieldChanged(trackedObj, trackedVal, name));
 
-        // go down the stack and find out if we have any local variables pointing to this object
-        // track the value change so when they come back in scope, we will know the current value
-        // TODO: this should be handled by the store so we can normalize the tracked object values
-        Stack<ExecutionLocation> stack = CALL_STACK.get();
-        for (ExecutionLocation stackFrame : stack) {
-            Map<TrackedVariable, TrackedObject> variables = stackFrame.getEncounteredVariables();
-            for (TrackedVariable var : variables.keySet()) {
-                TrackedObject referencingObj = variables.get(var);
-                if (referencingObj.getUniqueID().equals(trackedObj.getUniqueID())) {
-                    SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, var));
+            // go down the stack and find out if we have any local variables pointing to this object
+            // track the value change so when they come back in scope, we will know the current value
+            // TODO: this should be handled by the store so we can normalize the tracked object values
+            Stack<ExecutionLocation> stack = CALL_STACK.get();
+            for (ExecutionLocation stackFrame : stack) {
+                Map<TrackedVariable, TrackedObject> variables = stackFrame.getEncounteredVariables();
+                for (TrackedVariable var : variables.keySet()) {
+                    TrackedObject referencingObj = variables.get(var);
+                    if (referencingObj.getUniqueID().equals(trackedObj.getUniqueID())) {
+                        SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, var));
+                    }
                 }
             }
-        }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
-        }
+            if (logger.isDebugEnabled()) {
+                logger.debug("fieldChanged " + name + " for object " + Objects.getUniqueIdentifier(obj) + " set to " + val);
+            }
+        });
     }
 
     public static void fieldChanged(Object obj, short val, String name) {
@@ -195,6 +201,14 @@ public class SidratCallback {
     static void popFrame() {
         Stack<ExecutionLocation> stackFrames = CALL_STACK.get();
         stackFrames.pop();
+    }
+
+    private static void preventRecursion(Runnable r) {
+        if (EXECUTING.get() != null && EXECUTING.get().booleanValue())
+            return;
+        EXECUTING.set(Boolean.TRUE);
+        r.run();
+        EXECUTING.set(Boolean.FALSE);
     }
 
     static ExecutionLocation pushFrame(TrackedObject object, String threadName, String className, String methodName) {
@@ -209,6 +223,8 @@ public class SidratCallback {
     }
 
     public static void startRecording() {
+        ENTERED.set(Boolean.FALSE);
+        EXECUTING.set(Boolean.FALSE);
         isRecording = true;
     }
 
@@ -247,14 +263,16 @@ public class SidratCallback {
     public static void variableChanged(String className, String methodName, Object val, String var, int start, int end) {
         if (!isRecording)
             return;
-        SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(className, methodName, var, start, end);
-        ExecutionLocation frame = currentFrame();
-        TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
-        TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
-        frame.track(trackedVar, trackedObj);
-        SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
-        if (logger.isDebugEnabled())
-            logger.debug("variableChanged " + trackedVar + " set to " + val);
+        preventRecursion(() -> {
+            SidratRegistry.instance().getRecorder().getLocalVariablesTracker().found(className, methodName, var, start, end);
+            ExecutionLocation frame = currentFrame();
+            TrackedVariable trackedVar = SidratRegistry.instance().getRecorder().getLocalVariablesTracker().lookup(frame.getClassName(), frame.getMethodName(), var);
+            TrackedObject trackedObj = SidratRegistry.instance().getRecorder().getObjectTracker().found(val);
+            frame.track(trackedVar, trackedObj);
+            SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
+            if (logger.isDebugEnabled())
+                logger.debug("variableChanged " + trackedVar + " set to " + val);
+        });
     }
 
     public static void variableChanged(String className, String methodName, short val, String var, int start, int end) {
