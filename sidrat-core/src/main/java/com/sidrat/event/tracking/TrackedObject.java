@@ -30,6 +30,8 @@ public class TrackedObject implements Serializable {
             Gson gson = new Gson();
             String json = gson.toJson(obj);
             return json;
+        } catch (StackOverflowError er) {
+            return obj.toString();
         } catch (Exception e) {
             // can't JSONify it, so just toString it
         }

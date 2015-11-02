@@ -156,7 +156,9 @@ public class MethodInstrumenter {
                             int prevOp = stackValue.getInstruction().getOpcode();
                             int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
                             LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
-                            if (localVariable.getName().equals("this") && methodName.equals("<init>")) {
+                            if (localVariable == null) {
+                                logger.severe("TODO: figure this out");
+                            } else if (localVariable.getName().equals("this") && methodName.equals("<init>")) {
                                 // TODO: track this after call to super completes
                                 logger.severe("Failed to locate variable loaded using op [" + instruction + "] at line number " + thisLineNumber);
                             } else {

@@ -15,7 +15,7 @@ import javassist.NotFoundException;
 /**
  * A class that has been instrumented by Sidrat to invoke callbacks whenever we begin or end execution of a method, or
  * alter the state of a field or local variable.
- * 
+ *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
 class InstrumentedClass<T> {
@@ -64,17 +64,17 @@ class InstrumentedClass<T> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public Class<T> toClass() {
+    public byte[] getReplacementBytebuffer() {
         try {
-            Class<T> replacement = ctClass.toClass();
-            return replacement;
-        } catch (CannotCompileException e) {
-            throw new SidratProcessingException("Error enhancing: " + ctClass.getName(), e);
+            return ctClass.toBytecode();
+        } catch (IOException | CannotCompileException e) {
+            throw new SidratProcessingException("Error creating bytecode: " + ctClass.getName(), e);
         }
     }
 
     private void instrument(ClassPool pool, String className, CtClass ctClass) {
+        if (ctClass.isInterface())
+            return;
         try {
             ctClass.addInterface(pool.get(Instrumented.class.getName()));
         } catch (NotFoundException e1) {
@@ -87,11 +87,13 @@ class InstrumentedClass<T> {
         }
     }
 
-    public byte[] getReplacementBytebuffer() {
+    @SuppressWarnings("unchecked")
+    public Class<T> toClass() {
         try {
-            return ctClass.toBytecode();
-        } catch (IOException | CannotCompileException e) {
-            throw new SidratProcessingException("Error creating bytecode: " + ctClass.getName(), e);
+            Class<T> replacement = ctClass.toClass();
+            return replacement;
+        } catch (CannotCompileException e) {
+            throw new SidratProcessingException("Error enhancing: " + ctClass.getName(), e);
         }
     }
 }
