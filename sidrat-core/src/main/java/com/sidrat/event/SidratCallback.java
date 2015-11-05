@@ -60,15 +60,15 @@ public class SidratCallback {
     public static void exec(int lineNumber) {
         if (!isRecording)
             return;
-        preventRecursion(() -> {
-            // a single line of code might be invoked if there are multiple statements on the same line (or a for statement), but
-            // we only want to log each line of code once
-            Pair<ExecutionLocation, Integer> lastLoc = LAST_LINE.get();
-            if (lastLoc != null && lastLoc.getValue1().equals(currentFrame()) && lastLoc.getValue2() == lineNumber) {
-                // don't do anything if we already processed this line
-                return;
-            }
+        // a single line of code might be invoked if there are multiple statements on the same line (or a for statement), but
+        // we only want to log each line of code once
+        Pair<ExecutionLocation, Integer> lastLoc = LAST_LINE.get();
+        if (lastLoc != null && lastLoc.getValue1().equals(currentFrame().getValue1()) && lastLoc.getValue2() == lineNumber) {
+            // don't do anything if we already processed this line
+            return;
+        }
 
+        preventRecursion(() -> {
             // log this event to the event store
             ExecutionLocation location = peekFrame().getValue1();
             SidratMethodEntryEvent methodEntry = peekFrame().getValue2();

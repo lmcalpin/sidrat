@@ -27,8 +27,8 @@ public class SidratCallbackTest {
     @Test
     public void testEnterPushesCurrentFrameToStack() {
         SidratCallback.enter("main", "com.test", "foo", "args", new Object[] { null });
-        Assert.assertEquals("com.test", SidratCallback.currentFrame().getClassName());
-        Assert.assertEquals("foo", SidratCallback.currentFrame().getMethodName());
+        Assert.assertEquals("com.test", SidratCallback.currentFrame().getValue1().getClassName());
+        Assert.assertEquals("foo", SidratCallback.currentFrame().getValue1().getMethodName());
     }
 
     @Test
