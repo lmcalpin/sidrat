@@ -48,7 +48,7 @@ public class SidratCallback {
             }
             SidratMethodEntryEvent event = SidratMethodEntryEvent.entering(executionLocation);
             SidratRegistry.instance().getRecorder().getEventStore().store(event);
-            CALL_STACK.get().add(new Pair<>(executionLocation, event));
+            pushFrame(new Pair<>(executionLocation, event));
             ENTERED.set(Boolean.TRUE);
         });
     }
