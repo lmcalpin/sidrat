@@ -1,9 +1,8 @@
 package com.metatrope.sidrat.testprogram;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
-
-import org.junit.Ignore;
 
 public class ForThreadTest {
     public static void main(String[] args) throws InterruptedException {
@@ -18,7 +17,7 @@ public class ForThreadTest {
         };
         new Thread(r).start();
         new Thread(r).start();
-        cdl.await();
+        cdl.await(25, TimeUnit.SECONDS);
         int sum = 5;
         i[0] += sum;
         System.out.println("counted: " + i[0]);
