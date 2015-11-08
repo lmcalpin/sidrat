@@ -7,7 +7,8 @@ the recording later.  Because you would be simply reviewing a recording, you can
 variables change over time; you could debug a system on a machine that can't access databases or other external systems that
 the application is dependent on.
 
-This system will record each line of code executed and track changes to local variables and fields.  It supports some basic debugging, with next and back commands, as well as a "goto" command.
+This system will record each line of code executed and track changes to local variables and fields.  It supports some basic debugging, 
+with next and back commands, as well as a "goto" command.
 
 There are several ways to use Sidrat:
 
@@ -62,4 +63,4 @@ replay.gotoEvent(1);
 
 Warning
 ---
-This is *very far* from being complete.  It is an experiment and a work in progress.
+This is *very far* from being complete.  It is an experiment and a toy that will only work on very simple programs.

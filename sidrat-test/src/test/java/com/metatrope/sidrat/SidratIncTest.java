@@ -15,7 +15,6 @@ public class SidratIncTest extends BaseRecorderTest {
         super(factory);
     }
 
-    // verify we do not have a regression where the beginning of the for loop generates two events
     @Test
     public void testLocalVariableTracking() {
         recorder.record(() -> {

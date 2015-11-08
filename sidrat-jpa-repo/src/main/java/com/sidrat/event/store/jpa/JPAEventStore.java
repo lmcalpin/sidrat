@@ -29,6 +29,7 @@ import com.sidrat.event.tracking.TrackedObject;
  *
  * @author Lawrence McAlpin (admin@lmcalpin.com)
  */
+// TODO: we should be able to do this without synchronization
 public class JPAEventStore implements EventStore {
     JPADAO dao;
 
@@ -45,8 +46,7 @@ public class JPAEventStore implements EventStore {
         dao.deleteAll();
     }
 
-    // TODO: we should be able to do this without synchronization
-    private synchronized EncounteredObject foundObject(TrackedObject trackedObject) {
+    private EncounteredObject foundObject(TrackedObject trackedObject) {
         EncounteredObject encounteredObject = dao.findSingle("FROM EncounteredObject WHERE name = :name", Collections.singletonMap("name", trackedObject.getUniqueID()));
         if (encounteredObject != null)
             return encounteredObject;
@@ -60,7 +60,7 @@ public class JPAEventStore implements EventStore {
     }
 
     @Override
-    public void store(SidratExecutionEvent event) {
+    public synchronized void store(SidratExecutionEvent event) {
         MethodEntry methodEntry = dao.findByTime(MethodEntry.class, event.getMethodEntryTime());
         Execution execution = new Execution();
         execution.setTime(event.getTime());
@@ -70,7 +70,7 @@ public class JPAEventStore implements EventStore {
     }
 
     @Override
-    public void store(SidratFieldChangedEvent event) {
+    public synchronized void store(SidratFieldChangedEvent event) {
         EncounteredField field = new EncounteredField();
         field.setName(event.getUniqueID());
         field.setObject(foundObject(event.getOwner()));
@@ -84,7 +84,7 @@ public class JPAEventStore implements EventStore {
     }
 
     @Override
-    public void store(SidratLocalVariableEvent event) {
+    public synchronized void store(SidratLocalVariableEvent event) {
         EncounteredMethod method = dao.findSingle("FROM EncounteredMethod WHERE clazz.name = :className AND name = :methodName",
                 ImmutableMap.<String, Object> builder().put("className", event.getClassName()).put("methodName", event.getMethodName()).build());
         if (method == null) {
@@ -107,7 +107,7 @@ public class JPAEventStore implements EventStore {
     }
 
     @Override
-    public void store(SidratMethodEntryEvent event) {
+    public synchronized void store(SidratMethodEntryEvent event) {
         MethodEntry methodEntry = new MethodEntry();
         methodEntry.setTime(event.getTime());
         if (event.getExecutionContext().getObject() != null) {
@@ -126,7 +126,7 @@ public class JPAEventStore implements EventStore {
     }
 
     @Override
-    public void store(SidratMethodExitEvent event) {
+    public synchronized void store(SidratMethodExitEvent event) {
         MethodExit methodExit = new MethodExit();
         methodExit.setTime(event.getTime());
         MethodEntry methodEntry = dao.findByTime(MethodEntry.class, event.getMethodEntryTime());

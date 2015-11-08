@@ -1,8 +1,9 @@
-package com.sidrat;
+package com.sidrat.cli;
 
 import java.util.Arrays;
 
-import com.sidrat.cli.SidratReplayCli;
+import com.sidrat.SidratRecorder;
+import com.sidrat.SidratRegistry;
 import com.sidrat.event.store.hsqldb.HsqldbEventReader;
 import com.sidrat.event.store.hsqldb.HsqldbEventStore;
 
