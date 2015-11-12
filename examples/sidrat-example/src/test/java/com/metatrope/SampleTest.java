@@ -20,7 +20,6 @@ public class SampleTest {
     public void testFailure() {
         Foo foo = new Foo();
         foo.setValue("hi");
-        foo = foo; // TODO: need to track when a field changes upstack
         int result = foo.add(1, 5);
         int sum = 0;
         for (int i = 0; i < 5; i++) {
