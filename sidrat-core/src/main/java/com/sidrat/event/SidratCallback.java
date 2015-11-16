@@ -83,7 +83,7 @@ public class SidratCallback {
             SidratExecutionEvent executionEvent = SidratExecutionEvent.exec(time, methodEntry, lineNumber);
             SidratRegistry.instance().getRecorder().getEventStore().store(executionEvent);
             if (logger.isDebugEnabled())
-                logger.debug(frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
+                logger.debug(" --> " + frame.getClassName() + "." + frame.getMethodName() + "@" + lineNumber);
         });
     }
 
@@ -283,7 +283,7 @@ public class SidratCallback {
             executionLocation.track(trackedVar, trackedObj);
             SidratRegistry.instance().getRecorder().getEventStore().store(SidratLocalVariableEvent.variableChanged(trackedObj, trackedVar));
             if (logger.isDebugEnabled())
-                logger.debug("variableChanged " + trackedVar + " set to " + val);
+                logger.debug("variableChanged " + trackedVar + " set to " + trackedObj.getValueAsString());
         });
     }
 

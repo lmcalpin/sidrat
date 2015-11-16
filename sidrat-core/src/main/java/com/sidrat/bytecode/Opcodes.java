@@ -365,21 +365,21 @@ public enum Opcodes {
         return BY_CODE.get(code);
     }
 
-    public static boolean isFieldStore(int code) {
-        Opcodes op = Opcodes.fromOpcode(code);
-        return op == PUTSTATIC || op == PUTFIELD;
-    }
-
-    public static boolean isLocalVariableArrayUpdate(int code) {
+    public static boolean isArrayUpdate(int code) {
         Opcodes op = Opcodes.fromOpcode(code);
         if (op == IASTORE || op == LASTORE || op == FASTORE || op == DASTORE || op == AASTORE || op == BASTORE || op == CASTORE || op == SASTORE)
             return true;
         return false;
     }
 
+    public static boolean isFieldStore(int code) {
+        Opcodes op = Opcodes.fromOpcode(code);
+        return op == PUTSTATIC || op == PUTFIELD;
+    }
+
     public static boolean isLocalVariableLoad(int code) {
         Opcodes op = Opcodes.fromOpcode(code);
-        if (op == ILOAD || op == LLOAD || op == FLOAD || op == DLOAD || op == ALOAD)
+        if (op == ILOAD || op == LLOAD || op == FLOAD || op == DLOAD)
             return true;
         if (op == ILOAD_0 || op == ILOAD_1 || op == ILOAD_2 || op == ILOAD_3)
             return true;
@@ -389,7 +389,7 @@ public enum Opcodes {
             return true;
         if (op == DLOAD_0 || op == DLOAD_1 || op == DLOAD_2 || op == DLOAD_3)
             return true;
-        if (op == ALOAD_0 || op == ALOAD_1 || op == ALOAD_2 || op == ALOAD_3)
+        if (isReferenceLoad(code))
             return true;
         if (op == IALOAD || op == LALOAD || op == FALOAD || op == DALOAD || op == AALOAD || op == BALOAD || op == CALOAD || op == SALOAD)
             return true;
@@ -398,7 +398,7 @@ public enum Opcodes {
 
     public static boolean isLocalVariableUpdate(int code) {
         Opcodes op = Opcodes.fromOpcode(code);
-        if (op == ISTORE || op == LSTORE || op == FSTORE || op == DSTORE || op == ASTORE)
+        if (op == ISTORE || op == LSTORE || op == FSTORE || op == DSTORE)
             return true;
         if (op == ISTORE_0 || op == ISTORE_1 || op == ISTORE_2 || op == ISTORE_3)
             return true;
@@ -408,11 +408,25 @@ public enum Opcodes {
             return true;
         if (op == DSTORE_0 || op == DSTORE_1 || op == DSTORE_2 || op == DSTORE_3)
             return true;
-        if (op == ASTORE_0 || op == ASTORE_1 || op == ASTORE_2 || op == ASTORE_3)
+        if (isReferenceUpdate(code))
             return true;
-        if (isLocalVariableArrayUpdate(code))
-            return true;
+        if (isArrayUpdate(code))
+            return false;
         if (op == IINC)
+            return true;
+        return false;
+    }
+
+    public static boolean isReferenceLoad(int code) {
+        Opcodes op = Opcodes.fromOpcode(code);
+        if (op == ALOAD || op == ALOAD_0 || op == ALOAD_1 || op == ALOAD_2 || op == ALOAD_3)
+            return true;
+        return false;
+    }
+
+    public static boolean isReferenceUpdate(int code) {
+        Opcodes op = Opcodes.fromOpcode(code);
+        if (op == ASTORE || op == ASTORE_0 || op == ASTORE_1 || op == ASTORE_2 || op == ASTORE_3)
             return true;
         return false;
     }

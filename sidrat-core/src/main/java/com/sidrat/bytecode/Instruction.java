@@ -190,12 +190,12 @@ public class Instruction {
         }
     }
 
-    public boolean isFieldStore() {
-        return Opcodes.isFieldStore(op);
+    public boolean isArrayUpdate() {
+        return Opcodes.isArrayUpdate(op);
     }
 
-    public boolean isLocalVariableArrayUpdate() {
-        return Opcodes.isLocalVariableArrayUpdate(op);
+    public boolean isFieldStore() {
+        return Opcodes.isFieldStore(op);
     }
 
     public boolean isLocalVariableLoad() {
@@ -205,6 +205,14 @@ public class Instruction {
 
     public boolean isLocalVariableUpdate() {
         return Opcodes.isLocalVariableUpdate(op);
+    }
+
+    public boolean isReferenceLoad() {
+        return Opcodes.isReferenceLoad(op);
+    }
+
+    public boolean isReferenceUpdate() {
+        return Opcodes.isReferenceUpdate(op);
     }
 
     public Instruction prev() {

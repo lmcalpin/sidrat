@@ -169,37 +169,45 @@ public class MethodInstrumenter {
                     }
                 } else if (instruction.isLocalVariableUpdate()) {
                     // track assignments to local variables
-                    if (instruction.isLocalVariableArrayUpdate()) {
-                        OperandStackValue stackValue;
-                        if (instruction.getOpcode() == Opcode.DASTORE || instruction.getOpcode() == Opcode.LASTORE)
-                            stackValue = stack.peek4();
-                        else
-                            stackValue = stack.peek3();
-                        int prevOp = stackValue.getInstruction().getOpcode();
-                        int slot = getLocalVariableSlot(stackValue.getInstruction().getPosition(), prevOp);
-                        LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
-                        if (localVariable != null) {
-                            String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
-                                    + localVariable.getEnd() + ");";
-                            instruction.insert(instructions, src);
-                        } else {
-                            // TODO: effectively final parameters passed in to a lambda are not being handled properly and end up here
-                            logger.severe("Failed to locate variable loaded using op [" + instruction + "] at line number " + thisLineNumber);
+                    int slot = getLocalVariableSlot(instruction.getPosition(), op);
+                    LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
+                    if (localVariable != null) {
+                        if (instruction.isReferenceUpdate()) {
+                            // top of stack should be an OBJECTREF -- associate the variable name with it
+                            OperandStackValue stackValue = stack.peek();
+                            stackValue.setLocalVariable(localVariable);
                         }
+                        String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
+                                + localVariable.getEnd() + ");";
+                        instruction.insert(instructions, src);
                     } else {
-                        int slot = getLocalVariableSlot(instruction.getPosition(), op);
-                        LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
-                        if (localVariable != null) {
-                            String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
-                                    + localVariable.getEnd() + ");";
-                            instruction.insert(instructions, src);
-                        } else {
-                            // TODO: effectively final parameters passed in to a lambda are not being handled properly and end up here
-                            logger.severe("Failed to locate variable loaded using op [" + instruction + "] at line number " + thisLineNumber);
-                        }
+                        // TODO: effectively final parameters passed in to a lambda are not being handled properly and end up here
+                        logger.severe("Failed to locate variable loaded using op [" + instruction + "] at line number " + thisLineNumber);
+                    }
+                } else if (instruction.isArrayUpdate()) {
+                    OperandStackValue stackValue;
+                    if (instruction.getOpcode() == Opcode.DASTORE || instruction.getOpcode() == Opcode.LASTORE)
+                        stackValue = stack.peek4();
+                    else
+                        stackValue = stack.peek3();
+                    LocalVariable localVariable = stackValue.getLocalVariable();
+                    if (localVariable != null) {
+                        String src = "com.sidrat.event.SidratCallback.variableChanged(\"" + className + "\",\"" + methodName + "\"," + localVariable.getName() + ",\"" + localVariable.getName() + "\"," + localVariable.getStart() + ", "
+                                + localVariable.getEnd() + ");";
+                        instruction.insert(instructions, src);
+                    } else {
+                        logger.warning("TODO");
                     }
                 }
                 stack.simulate(instruction);
+                if (instruction.isLocalVariableLoad() && instruction.isReferenceLoad()) {
+                    // if we load a reference into a local variable, keep track of the association
+                    // so later array reference updates can be tracked
+                    int slot = getLocalVariableSlot(instruction.getPosition(), op);
+                    LocalVariable localVariable = getLocalVariable(slot, variables, thisLineNumber);
+                    OperandStackValue stackValue = stack.peek();
+                    stackValue.setLocalVariable(localVariable);
+                }
             }
             logger.finer("Instrumented method " + methodName + " " + firstLineNumber + ":" + lastLineNumber);
             String signatureNames = getLocalVariablesFromMethodSignature(variables);
